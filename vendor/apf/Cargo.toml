@@ -1,0 +1,29 @@
+# Vendored from https://github.com/mihasm/apf at 6800d6c24a3a56aa5887050d16396960cafd5a99 (MIT).
+# Trimmed to the crates NoDAW uses; patched (see ../../patches/ and NODAW-PATCHES.md).
+[workspace]
+resolver = "2"
+members = ["crates/apf", "crates/apf-webview", "crates/apf-test"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Miha Smrekar"]
+rust-version = "1.85"
+repository = "https://github.com/mihasm/apf"
+homepage = "https://github.com/mihasm/apf"
+readme = "README.md"
+keywords = ["audio", "plugin", "clap", "vst3", "synthesizer"]
+categories = ["multimedia::audio"]
+
+[workspace.dependencies]
+apf = { path = "crates/apf", version = "0.1.0" }
+apf-webview = { path = "crates/apf-webview", version = "0.1.0" }
+apf-test = { path = "crates/apf-test", version = "0.1.0" }
+clap-sys = "0.5"
+wry = "0.57"
+raw-window-handle = "0.6"
+
+[patch.crates-io]
+# MIT replacement of an MPL-2.0 transitive dependency of wry (see third_party/option-ext).
+option-ext = { path = "third_party/option-ext" }

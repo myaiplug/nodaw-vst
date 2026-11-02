@@ -1,0 +1,35 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.screw",
+  "name": "Lo-Fi Vinyl Drift",
+  "type": "Tape",
+  "subtype": "Lo-Fi",
+  "mood": [
+    "Dusty",
+    "Warm"
+  ],
+  "description": "A slow drift and a rolled-off top",
+  "author": "NoDAW",
+  "params": {
+    "in_gain": 0,
+    "out_gain": 0,
+    "mix": 100,
+    "pitch": -1.2,
+    "wow": 18,
+    "wow_rate": 0.45,
+    "flutter": 22,
+    "lowpass": 6800,
+    "bass": 2.5,
+    "rev_mix": 16,
+    "rev_decay": 1.8,
+    "rev_size": 1,
+    "rev_damp": 6000,
+    "rev_pre": 20,
+    "chop_pattern": "Off",
+    "chop_rate": "1/8",
+    "chop_depth": 100,
+    "width": 100,
+    "limiter": true,
+    "ceiling": -1
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.screw",
+  "name": "Trap Roll Chop",
+  "type": "Chop",
+  "subtype": "Roll",
+  "mood": [
+    "Rhythmic",
+    "Aggressive"
+  ],
+  "description": "A sixteenth-note roll with half-level ghost hits",
+  "author": "NoDAW",
+  "params": {
+    "in_gain": 0,
+    "out_gain": 0,
+    "mix": 100,
+    "pitch": -3,
+    "wow": 0,
+    "wow_rate": 0.7,
+    "flutter": 0,
+    "lowpass": 20000,
+    "bass": 2,
+    "rev_mix": 34,
+    "rev_decay": 3.2,
+    "rev_size": 1,
+    "rev_damp": 6000,
+    "rev_pre": 20,
+    "chop_pattern": "Trap Roll",
+    "chop_rate": "1/16",
+    "chop_depth": 90,
+    "width": 100,
+    "limiter": true,
+    "ceiling": -1
+  }
+}

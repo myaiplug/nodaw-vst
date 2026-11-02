@@ -1,0 +1,35 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.screw",
+  "name": "Half-Time Haze",
+  "type": "Chop",
+  "subtype": "Half-time",
+  "mood": [
+    "Heavy",
+    "Hazy"
+  ],
+  "description": "Half-time duck with long reverb between hits",
+  "author": "NoDAW",
+  "params": {
+    "in_gain": 0,
+    "out_gain": 0,
+    "mix": 100,
+    "pitch": -4,
+    "wow": 0,
+    "wow_rate": 0.7,
+    "flutter": 0,
+    "lowpass": 11500,
+    "bass": 3,
+    "rev_mix": 40,
+    "rev_decay": 4.5,
+    "rev_size": 1,
+    "rev_damp": 6000,
+    "rev_pre": 20,
+    "chop_pattern": "Half-time",
+    "chop_rate": "1/16",
+    "chop_depth": 85,
+    "width": 100,
+    "limiter": true,
+    "ceiling": -1
+  }
+}
