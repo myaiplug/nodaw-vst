@@ -1,0 +1,36 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.screw",
+  "name": "Houston Drip",
+  "type": "Screw",
+  "subtype": "Heavy",
+  "mood": [
+    "Dark",
+    "Deep",
+    "Warm"
+  ],
+  "description": "Deep drop, rounded top, slow wobble",
+  "author": "NoDAW",
+  "params": {
+    "in_gain": 0,
+    "out_gain": 0,
+    "mix": 100,
+    "pitch": -7,
+    "wow": 10,
+    "wow_rate": 0.35,
+    "flutter": 8,
+    "lowpass": 8200,
+    "bass": 5,
+    "rev_mix": 22,
+    "rev_decay": 2.8,
+    "rev_size": 1,
+    "rev_damp": 6000,
+    "rev_pre": 20,
+    "chop_pattern": "Off",
+    "chop_rate": "1/8",
+    "chop_depth": 100,
+    "width": 100,
+    "limiter": true,
+    "ceiling": -1.5
+  }
+}

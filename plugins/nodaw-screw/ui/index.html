@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NoDAW Screw</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- apf.js is served by the framework: it defines window.apf and binds every data-param* element. -->
+<script src="/__apf/apf.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app" class="app">
+
+  <header class="top">
+    <div class="brand" title="NoDAW Screw">
+      <span class="logo">NODAW</span><span class="prod">SCREW</span>
+    </div>
+    <div class="presets" data-apf-presets></div>
+    <div class="tools">
+      <div class="seg" role="group" aria-label="A/B compare">
+        <button type="button" id="ab-a" class="on" title="Compare slot A">A</button>
+        <button type="button" id="ab-b" title="Compare slot B">B</button>
+        <button type="button" id="ab-copy" class="ico" title="Copy the current settings to the other slot" aria-label="Copy to the other slot">
+          <svg viewBox="0 0 16 16"><path d="M3 8h9M9 4.5 12.5 8 9 11.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="seg" role="group" aria-label="History">
+        <button type="button" id="undo" class="ico" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>
+          <svg viewBox="0 0 16 16"><path d="M5.5 3.5 2.5 6.5l3 3M3 6.5h6.5a3.5 3.5 0 0 1 0 7H7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" id="redo" class="ico" title="Redo (Ctrl+Shift+Z)" aria-label="Redo" disabled>
+          <svg viewBox="0 0 16 16"><path d="m10.5 3.5 3 3-3 3M13 6.5H6.5a3.5 3.5 0 0 0 0 7H9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <label class="power" title="Bypass (the sound stays in time: latency is compensated)">
+        <input type="checkbox" data-param="bypass" aria-label="Bypass">
+        <span class="power-ico"><svg viewBox="0 0 16 16"><path d="M8 1.8v5.6M4.6 4a5.2 5.2 0 1 0 6.8 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+        <span class="power-txt">Bypass</span>
+      </label>
+      <button type="button" class="ico solo" data-apf-maximize></button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="stage">
+      <div class="display" id="display">
+        <canvas id="spec" aria-label="Spectrum analyzer: input and output, with the filter and warmth curve"></canvas>
+        <div class="legend">
+          <span class="lg lg-in"><i></i>Input</span>
+          <span class="lg lg-out"><i></i>Output</span>
+          <span class="lg lg-eq"><i></i>Tone</span>
+          <button type="button" id="tilt" class="lg-btn" title="Spectrum slope: compensates the natural roll-off (3 dB/oct)">3 dB/oct</button>
+        </div>
+        <div class="speed" id="speed" aria-live="off"><span class="speed-v">100.0%</span><span class="speed-l">speed</span></div>
+      </div>
+
+      <div class="chop" id="chop">
+        <div class="chop-ctl">
+          <h3>Chop</h3>
+          <label class="sel"><span data-param-name="chop_pattern"></span><select data-param="chop_pattern"></select></label>
+          <label class="sel"><span data-param-name="chop_rate"></span><select data-param="chop_rate"></select></label>
+        </div>
+        <div class="chop-depth" id="chop-depth-slot"></div>
+        <div class="steps" id="steps" role="group" aria-label="Chop pattern, 16 steps"></div>
+      </div>
+    </section>
+
+    <aside class="meters" aria-label="Level meters">
+      <canvas id="meters"></canvas>
+    </aside>
+  </main>
+
+  <section class="rack" id="rack">
+    <div class="panel p-screw"><h3>Screw</h3><div class="grid" id="g-screw"></div></div>
+    <div class="panel p-tone"><h3>Tone <i>&amp;</i> Space</h3><div class="grid" id="g-space"></div></div>
+    <div class="panel p-out"><h3>Output</h3>
+      <div class="grid" id="g-out">
+        <label class="limiter" id="limiter" title="True-peak limiter at the ceiling">
+          <input type="checkbox" data-param="limiter" aria-label="Limiter">
+          <span class="sw"><i></i></span><span class="limiter-l">Limiter</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span class="f-item" id="f-lat" title="Reported to the host for delay compensation">Latency —</span>
+    <span class="f-sep"></span>
+    <span class="f-item" id="f-sr">— kHz</span>
+    <span class="f-sep"></span>
+    <span class="f-item" id="f-tr"><i class="dot"></i><b>Free-run</b></span>
+    <span class="f-hint" id="f-hint">Drag to adjust · Shift for fine · Double-click to reset · Right-click for MIDI learn</span>
+    <span class="f-ver">NoDAW · v0.1</span>
+  </footer>
+  <div data-apf-resize-grip></div>
+</div>
+<div id="tip" class="tip" role="status"></div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+plug-in: NoDAW Screw (one object for component and controller)
+an effect: its main input gets the test signal
+parameters: 22, 20 moved by the edits, 0 MIDI controllers
+program: 1 'Classic Screw' of 12
+state: 371 bytes component, 0 bytes controller
+baseline: a second instance with A's history: largest sample difference 0, band difference 0.00 dB
+the edits change the sound by 4.74 dB (bands), largest sample difference 0.518
+the program loaded 8 blocks later: largest sample difference 0.467 (the load time matters: restores are compared by spectrum and with a twin)
+ok    project load: state after activation and a short render: band difference 0.03 dB, 0 of 21 values stale, state saved again unchanged
+ok    project load: state right after creation, before setupProcessing: band difference 0.48 dB, 0 of 21 values stale, state saved again unchanged; vs state right after activation: largest sample difference 0
+ok    state while deactivated, after playing: band difference 0.58 dB, 0 of 21 values stale, state saved again unchanged; vs state after the reactivation: largest sample difference 0
+ok    state into an instance that played something else: band difference 0.60 dB, 0 of 21 values stale, state saved again unchanged
+ok    state twice (copy, then undo/redo): band difference 0.11 dB, 0 of 21 values stale, state saved again unchanged
+ok    state, then the host re-sends every parameter it shows: band difference 0.03 dB, 0 of 21 values stale, state saved again unchanged; vs no re-send: largest sample difference 0
+ok    host order: setState, the controller's setComponentState, its setState: band difference 0.03 dB, 0 of 21 values stale, state saved again unchanged; vs setState alone: largest sample difference 0
+ok    program from the host's list (no state): band difference 0.03 dB, 0 of 21 values stale, state saved again unchanged
+OK: every restored session sounds as saved and shows its values

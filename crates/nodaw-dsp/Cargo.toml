@@ -1,0 +1,9 @@
+[package]
+name = "nodaw-dsp"
+description = "Pure, allocation-free-at-runtime DSP building blocks for NoDAW plugins (no unsafe, no dependencies)"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-NoDAW-Proprietary"
+publish = false
+
+[dependencies]

@@ -1,0 +1,8 @@
+ok    project load: state after activation and a short render: band difference 0.26 dB, 0 
+ok    project load: state right after creation, before setupProcessing: band difference 0.
+ok    state while deactivated, after playing: band difference 0.67 dB, 0 of 21 values stal
+ok    state into an instance that played something else: band difference 0.12 dB, 0 of 21 
+ok    state twice (copy, then undo/redo): band difference 0.46 dB, 0 of 21 values stale, s
+ok    state, then the host re-sends every parameter it shows: band difference 0.26 dB, 0 o
+ok    host order: setState, the controller's setComponentState, its setState: band differe
+ok    program from the host's list (no state): band difference 0.00 dB, 0 of 21 values sta
