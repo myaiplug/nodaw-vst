@@ -1,0 +1,6 @@
+target/
+dist/
+node_modules/
+vendor/apf/target/
+*.log
+.DS_Store
