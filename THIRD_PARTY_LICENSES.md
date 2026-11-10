@@ -86,3 +86,9 @@ Used by `plugins/nodaw-screw/src/license.rs` (HMAC-signed state file, HTTPS to G
 | subtle | BSD-3-Clause |
 | webpki-roots (Mozilla's CA list) | CDLA-Permissive-2.0 |
 | icu_* , litemap, tinystr, writeable, yoke, zerofrom, zerotrie, zerovec, potential_utf | Unicode-3.0 |
+
+## Added with the plugin suite (Racks, Harmonic Space, Chronos Dynamic EQ, Temporal Pitch Portal, Chronos Weaver)
+
+No new third-party code is shipped. The five plugins use only `apf`/`apf-webview` (MIT, vendored), the in-house `nodaw-dsp` and `nodaw-kit` crates, and the crates already listed above (`hmac`, `sha2`, `ureq` and its TLS stack, now pulled in once through `nodaw-kit` instead of `nodaw-screw`). `Cargo.lock` gains no external package compared with Screw 0.2.0. All DSP (EQ, dynamics, saturation, limiter, FDN reverb, delay, flanger, SOLA pitch shifter, WSOLA time warp, STFT/FFT) is original code in `crates/nodaw-dsp`. The fonts are the same three OFL fonts above.
+
+Development-only (not shipped): `scripts/ui-mock` uses `puppeteer-core` (Apache-2.0) and a locally installed Chrome to take the UI screenshots.
