@@ -65,55 +65,40 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace
-      - name: Build NoDAW Screw.vst3 + .clap (static CRT, no VC++ redistributable needed)
-        env:
-          RUSTFLAGS: -C target-feature=+crt-static
-          CARGO_TARGET_DIR: target/crt-static
-        run: |
-          LIBS=$(cargo rustc --color never --release -p nodaw-screw --lib --crate-type staticlib -- --print native-static-libs 2>&1 | tr -d '\r' | grep -o 'native-static-libs: .*' | sed 's/native-static-libs: //' | tr ' ' '\n' | grep -v '^/defaultlib' | grep -v '^$' | paste -sd';')
-          echo "native libs: $LIBS"
-          ROOT=$(cygpath -m "$PWD")
-          cmake -S vendor/apf/wrapper -B C:/b -G "Visual Studio 17 2022" -A x64 \
-            -DFETCHCONTENT_BASE_DIR=C:/b/_deps -DCPM_SOURCE_CACHE=C:/cpm \
-            -DAPF_STATICLIB="$ROOT/target/crt-static/release/nodaw_screw.lib" "-DAPF_NATIVE_LIBS=$LIBS" \
-            "-DAPF_NAME=NoDAW Screw" -DAPF_TARGET=nodaw_screw -DAPF_BUNDLE_ID=com.nodaw.screw -DAPF_CLAP_ID=com.nodaw.screw \
-            -DAPF_VERSION=0.2.0 "-DAPF_FORMATS=CLAP;VST3" -DAPF_STANDALONE=OFF \
-            -DAPF_AU_TYPE=aufx -DAPF_AU_SUBTYPE=NdSc -DAPF_AU_MANUFACTURER=NdDw -DAPF_AU_MANUFACTURER_NAME=NoDAW \
-            -DAPF_ASSET_DIR="$ROOT/dist/windows"
-          cmake --build C:/b --config Release --target nodaw_screw_all
-          # The Visual Studio generator puts them in VST3/ and CLAP/Release/: gather both in pkg/.
-          mkdir -p dist/windows/pkg
-          cp -r "dist/windows/VST3/NoDAW Screw.vst3" dist/windows/pkg/
-          cp "$(find dist/windows/CLAP -name 'NoDAW Screw.clap' | head -1)" dist/windows/pkg/
-          find dist/windows/pkg
-          test -f "dist/windows/pkg/NoDAW Screw.vst3/Contents/x86_64-win/NoDAW Screw.vst3"
-          test -f "dist/windows/pkg/NoDAW Screw.clap"
-      - name: Steinberg VST3 validator on the Windows binary
+      - name: Build every plugin's .vst3 + .clap (static CRT, no VC++ redistributable needed)
+        run: ./scripts/build-windows-ci.sh
+      - name: Steinberg VST3 validator on every Windows binary
         run: |
           SDK=$(dirname "$(find /c/cpm -path '*/public.sdk/source/vst/hosting/module.h' | head -1)")/../../../..
           SDK=$(cd "$SDK" && cygpath -m "$(pwd)"); echo "SDK=$SDK"
           cmake -S "$SDK" -B C:/v3 -G "Visual Studio 17 2022" -A x64 -DSMTG_ENABLE_VST3_HOSTING_EXAMPLES=ON -DSMTG_ENABLE_VST3_PLUGIN_EXAMPLES=OFF -DSMTG_ENABLE_VSTGUI_SUPPORT=OFF -DSMTG_CREATE_PLUGIN_LINK=OFF
           cmake --build C:/v3 --config Release --target validator
           V=$(find /c/v3 -name validator.exe | head -1)
-          "$V" "dist/windows/pkg/NoDAW Screw.vst3" | tee vst3-validator-windows.txt
-          grep -E "Result: [0-9]+ tests passed, 0 tests failed" vst3-validator-windows.txt
+          mkdir -p validator-windows; fail=0
+          for b in dist/windows/pkg/*.vst3; do
+            n=$(basename "$b" .vst3)
+            "$V" "$b" > "validator-windows/$n.txt" 2>&1 || true
+            if grep -qE "Result: [0-9]+ tests passed, 0 tests failed" "validator-windows/$n.txt"; then echo "$n: $(grep -E 'Result:' "validator-windows/$n.txt" | tail -1)"; else echo "$n: FAILED"; tail -40 "validator-windows/$n.txt"; fail=1; fi
+          done
+          exit $fail
       - uses: actions/upload-artifact@v4
         with:
-          name: NoDAW-Screw-windows
+          name: NoDAW-plugins-windows
           path: |
             dist/windows/pkg
-            vst3-validator-windows.txt
+            validator-windows
           if-no-files-found: error
 
-  # PULP (AGPL-3.0, public: github.com/myaiplug/pulp-daw-public) with NoDAW Screw in its bundled
-  # Plugins folder. Built here, in the private repo, so the closed plugin binary never goes into the
-  # public repo: PULP's source is only checked out and built; Screw stays a separate program that
-  # PULP loads at run time.
+  # PULP (AGPL-3.0, public: github.com/myaiplug/pulp-daw-public) with every NoDAW plugin in its
+  # bundled Plugins folder. Built here, in the private repo, so the closed plugin binary never goes into the
+  # public repo: PULP's source is only checked out and built; the plugins stay separate programs
+  # that PULP loads at run time.
   pulp-bundle:
     runs-on: windows-2022
     needs: windows
     timeout-minutes: 90
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
           repository: myaiplug/pulp-daw-public
@@ -124,31 +109,38 @@ jobs:
         working-directory: pulp
         run: call build.bat app
       - uses: actions/download-artifact@v4
-        with: { name: NoDAW-Screw-windows, path: screw }
-      - name: Bundle NoDAW Screw into dist/PULP/Plugins
+        with: { name: NoDAW-plugins-windows, path: nodaw }
+      - name: Bundle every NoDAW plugin into dist/PULP/Plugins
         shell: bash
         run: |
           mkdir -p pulp/dist/PULP/Plugins
-          cp -r "$(find screw -type d -name 'NoDAW Screw.vst3' | head -1)" pulp/dist/PULP/Plugins/
+          find nodaw -maxdepth 5 -type d -name 'NoDAW *.vst3' -print0 | while IFS= read -r -d '' b; do cp -r "$b" pulp/dist/PULP/Plugins/; done
           find pulp/dist/PULP/Plugins -maxdepth 4
-          test -f "pulp/dist/PULP/Plugins/NoDAW Screw.vst3/Contents/x86_64-win/NoDAW Screw.vst3"
-      - name: First run finds, loads and opens NoDAW Screw
+          grep -v '^#' scripts/plugins.txt | tr -d '\r' | cut -d'|' -f2 | while IFS= read -r n; do
+            [ -n "$n" ] || continue
+            test -f "pulp/dist/PULP/Plugins/$n.vst3/Contents/x86_64-win/$n.vst3" || { echo "missing $n"; exit 1; }
+          done
+          cp scripts/pulp_suite_check.txt pulp/scripts/nodaw_suite_check.txt
+      - name: First run finds, loads and opens every NoDAW plugin
         shell: pwsh
         working-directory: pulp
         run: |
           New-Item -ItemType Directory -Force out/bundle | Out-Null
-          $p = Start-Process -FilePath dist/PULP/PULP.exe -ArgumentList '--no-audio','--size','1600x900','--script','scripts/nodaw_bundle_check.txt','--log','out/bundle/check.log','--data-dir','out/bundledata' -PassThru
-          if (-not $p.WaitForExit(300000)) { $p.Kill(); Write-Host "timed out" }
+          $p = Start-Process -FilePath dist/PULP/PULP.exe -ArgumentList '--no-audio','--size','1600x900','--script','scripts/nodaw_suite_check.txt','--log','out/bundle/check.log','--data-dir','out/bundledata' -PassThru
+          if (-not $p.WaitForExit(600000)) { $p.Kill(); Write-Host "timed out" }
           Get-ChildItem out/bundle
           Get-Content out/bundle/check.log
           $log = Get-Content out/bundle/check.log -Raw
-          if ($log -notmatch 'NoDAW Screw \| NoDAW \| effect') { throw "PULP did not find NoDAW Screw in its Plugins folder" }
-          if ($log -notmatch 'vst: NoDAW Screw') { throw "PULP did not load NoDAW Screw" }
+          $names = Get-Content ../scripts/plugins.txt | Where-Object { $_ -notmatch '^#' -and $_.Trim() } | ForEach-Object { $_.Split('|')[1] }
+          foreach ($n in $names) {
+            if ($log -notmatch [regex]::Escape("$n | NoDAW | effect")) { throw "PULP did not find $n in its Plugins folder" }
+            if ($log -notmatch [regex]::Escape("vst: $n")) { throw "PULP did not load $n" }
+          }
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: pulp-bundle-check, path: pulp/out/bundle }
       - uses: actions/upload-artifact@v4
         with:
-          name: PULP-with-NoDAW-Screw-windows
+          name: PULP-with-NoDAW-plugins-windows
           path: pulp/dist/PULP
           if-no-files-found: error

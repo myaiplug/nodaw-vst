@@ -1,0 +1,6 @@
+# crate | display name | cmake target | bundle/CLAP id | version | AU subtype | preset for the VST3 state check | PULP name match
+nodaw-screw|NoDAW Screw|nodaw_screw|com.nodaw.screw|0.2.0|NdSc|Trap Roll Chop|Screw
+nodaw-racks|NoDAW Racks|nodaw_racks|com.nodaw.racks|0.1.0|NdRk|Diode Crunch Drums|Racks
+nodaw-harmonic-space|NoDAW Harmonic Space|nodaw_harmonic_space|com.nodaw.harmonic-space|0.1.0|NdHs|Dark Hall|Harmonic
+nodaw-chronos-dynamic-eq|NoDAW Chronos Dynamic EQ|nodaw_chronos_dynamic_eq|com.nodaw.chronos-dynamic-eq|0.1.0|NdDq|Vocal De-Esser|Dynamic
+nodaw-temporal-pitch-portal|NoDAW Temporal Pitch Portal|nodaw_temporal_pitch_portal|com.nodaw.temporal-pitch-portal|0.1.0|NdTp|Houston Rift|Portal
