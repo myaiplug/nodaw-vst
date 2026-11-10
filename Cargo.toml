@@ -4,6 +4,7 @@ members = [
     "crates/nodaw-dsp",
     "crates/nodaw-kit",
     "plugins/nodaw-racks",
+    "plugins/nodaw-harmonic-space",
     "plugins/nodaw-screw",
 ]
 exclude = ["vendor/apf"]

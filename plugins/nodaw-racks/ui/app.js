@@ -171,7 +171,7 @@
       }
       ctx.ext = {
         get: () => ({ skin }),
-        set: (o) => { applySkin(o && o.skin); apf.plugin.post("skin", skin).catch((e) => apf.log("skin:", String(e))); },
+        set: (o) => { applySkin(o && o.skin); apf.plugin.post("skin", JSON.stringify(skin)).catch((e) => apf.log("skin:", String(e))); },
         refresh: async () => { try { applySkin(await apf.plugin.get("skin")); } catch (e) { applySkin("cobalt"); } },
       };
       $("#skins").addEventListener("click", (e) => {

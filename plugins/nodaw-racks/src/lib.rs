@@ -6,14 +6,12 @@
 
 pub mod engine;
 
-use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
 use std::sync::Arc;
 
-use apf::json::Value;
 use apf::prelude::*;
 use nodaw_dsp::eq::Shape;
 use nodaw_dsp::sat::Curve as SatCurve;
-use nodaw_kit::ctl::{Ext, Slots};
+use nodaw_kit::ctl::LookExt;
 use nodaw_kit::license::Product;
 use nodaw_kit::Core;
 
@@ -150,78 +148,12 @@ const UI: &[Asset] = assets![
 /// The hardware skins (page only; saved with the session).
 pub const SKINS: &[&str] = &["cobalt", "obsidian", "silver", "plastic"];
 
-/// Racks' part of the controller: module levels for the rack VUs, the correlation meter and
-/// the skin.
-pub struct RacksExt {
-    /// Peak after each module since the page last looked (by module index).
-    pub levels: Slots,
-    /// Output correlation.
-    pub corr: Slots,
-    skin: AtomicU8,
-    rev: AtomicU64,
-}
-
-impl Default for RacksExt {
-    fn default() -> Self {
-        Self { levels: Slots::new(4), corr: Slots::new(1), skin: AtomicU8::new(0), rev: AtomicU64::new(0) }
-    }
-}
-
-impl RacksExt {
-    pub fn skin(&self) -> &'static str {
-        SKINS[(self.skin.load(Ordering::Relaxed) as usize).min(SKINS.len() - 1)]
-    }
-    fn set_skin(&self, name: &str) -> Result<(), String> {
-        let i = SKINS.iter().position(|s| *s == name).ok_or_else(|| format!("unknown skin {name}"))?;
-        self.skin.store(i as u8, Ordering::Relaxed);
-        self.rev.fetch_add(1, Ordering::AcqRel);
-        Ok(())
-    }
-}
-
-impl Ext for RacksExt {
-    /// After the spectra: 4 module peaks (linear), then the correlation.
-    fn frame_extra(&self, out: &mut Vec<f32>) {
-        for i in 0..4 {
-            out.push(self.levels.take(i));
-        }
-        out.push(self.corr.get(0));
-    }
-    fn request(&self, r: &ControllerRequest) -> Option<ControllerResponse> {
-        if r.path != "skin" {
-            return None;
-        }
-        if r.is_post() {
-            let name = apf::json::parse(r.body_text().unwrap_or("")).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default();
-            if let Err(e) = self.set_skin(&name) {
-                return Some(ControllerResponse::new(400, "text/plain", e.into_bytes()));
-            }
-        }
-        Some(ControllerResponse::json(format!("\"{}\"", self.skin())))
-    }
-    fn save(&self) -> Option<String> {
-        Some(format!("{{\"skin\":\"{}\"}}", self.skin()))
-    }
-    fn load(&self, v: Option<&Value>) -> Result<(), String> {
-        if let Some(name) = v.and_then(|v| v.get("skin")).and_then(Value::as_str) {
-            self.set_skin(name)?;
-        }
-        Ok(())
-    }
-    fn reset(&self) {
-        self.skin.store(0, Ordering::Relaxed);
-        self.rev.fetch_add(1, Ordering::AcqRel);
-    }
-    fn revision(&self) -> u64 {
-        self.rev.load(Ordering::Acquire)
-    }
-}
-
 /// The plugin.
 pub struct NoDawRacks {
     engine: Engine,
     core: Core,
-    ext: Arc<RacksExt>,
+    /// Frame extras: the four module peaks (by module index), then the correlation.
+    ext: Arc<LookExt>,
 }
 
 /// The engine's settings from the parameters. No allocation.
@@ -296,7 +228,7 @@ impl Plugin for NoDawRacks {
     ];
 
     fn new() -> Self {
-        Self { engine: Engine::new(48_000.0), core: Core::new(&PRODUCT), ext: Arc::new(RacksExt::default()) }
+        Self { engine: Engine::new(48_000.0), core: Core::new(&PRODUCT), ext: Arc::new(LookExt::new(SKINS, 4, 1)) }
     }
 
     fn controller(&mut self, host: HostHandle) -> Option<Arc<dyn Controller>> {
@@ -331,9 +263,9 @@ impl Plugin for NoDawRacks {
         let info = self.engine.process(l, r, &s);
         self.core.end(l, r, s.bypass, ctx.transport.playing, info.min_gain);
         for (i, v) in info.module_peak.iter().enumerate() {
-            self.ext.levels.max(i, *v);
+            self.ext.peaks.max(i, *v);
         }
-        self.ext.corr.set(0, info.correlation);
+        self.ext.values.set(0, info.correlation);
         ProcessStatus::Continue
     }
 

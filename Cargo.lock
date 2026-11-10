@@ -1068,6 +1068,18 @@ name = "nodaw-dsp"
 version = "0.1.0"
 
 [[package]]
+name = "nodaw-harmonic-space"
+version = "0.1.0"
+dependencies = [
+ "apf",
+ "apf-test",
+ "apf-webview",
+ "clap-sys",
+ "nodaw-dsp",
+ "nodaw-kit",
+]
+
+[[package]]
 name = "nodaw-kit"
 version = "0.1.0"
 dependencies = [

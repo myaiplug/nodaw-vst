@@ -1,0 +1,28 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Ad-lib Throw",
+  "type": "Vocals",
+  "subtype": "Vocals",
+  "mood": [
+    "Wide",
+    "Wet"
+  ],
+  "description": "Brighter, thinner ad-lib thrown back with a long echo and hall wash.",
+  "author": "NoDAW",
+  "params": {
+    "hpf": 140.0,
+    "lpf": 20400,
+    "dly_mix": 38,
+    "dly_time": 442,
+    "rev_mix": 26.7,
+    "out_gain": -1.45,
+    "b1_gain": -1.44,
+    "b2_gain": -1.44,
+    "b3_gain": -0.48,
+    "b4_gain": 1.44,
+    "b5_gain": 1.92,
+    "b6_gain": 2.4,
+    "b7_gain": 2.4
+  }
+}

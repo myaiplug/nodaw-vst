@@ -1,0 +1,24 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Harsh Sample Tamer",
+  "type": "Fix-it",
+  "subtype": "Fix-it",
+  "mood": [
+    "Smooth"
+  ],
+  "description": "Broad cuts across 2-8 kHz plus a mild 13 kHz LPF to calm brittle samples.",
+  "author": "NoDAW",
+  "params": {
+    "hpf": 48.8,
+    "lpf": 13000,
+    "out_gain": 0.68,
+    "b4_gain": -1.44,
+    "b4_q": 1.17,
+    "b5_gain": -2.4,
+    "b5_q": 1.27,
+    "b6_gain": -1.92,
+    "b6_q": 1.17,
+    "b7_gain": -0.96
+  }
+}

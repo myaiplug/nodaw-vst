@@ -38,6 +38,8 @@ def biquad_db(shape, fc, q, g, f, sr=48000.0):
         b = (A * (A + 1 + (A - 1) * c + sq), -2 * A * (A - 1 + (A + 1) * c), A * (A + 1 + (A - 1) * c - sq)); a = (A + 1 - (A - 1) * c + sq, 2 * (A - 1 - (A + 1) * c), A + 1 - (A - 1) * c - sq)
     elif shape == "highpass": b = ((1 + c) / 2, -(1 + c), (1 + c) / 2); a = (1 + al, -2 * c, 1 - al)
     elif shape == "lowpass": b = ((1 - c) / 2, 1 - c, (1 - c) / 2); a = (1 + al, -2 * c, 1 - al)
+    elif shape == "bandpass": b = (al, 0.0, -al); a = (1 + al, -2 * c, 1 - al)
+    elif shape == "notch": b = (1, -2 * c, 1); a = (1 + al, -2 * c, 1 - al)
     else: return 0.0
     ww = 2 * math.pi * f / sr
     def mag(co):
@@ -222,7 +224,33 @@ class Racks(Model):
         return [lv * 0.9, lv * 1.05, lv * 0.95, min(lv, 10 ** (self.plain("lim_ceiling") / 20)), 0.55 + 0.2 * math.sin(t * 0.7)]
 
 
-PLUGINS = {"racks": Racks}
+class HarmonicSpace(Model):
+    def resp_harmonic_space(self, f):
+        P = self.plain
+        r = P("amp", 0.0)
+        solo = [n for n in range(1, 8) if P(f"b{n}_solo")]
+        if solo:
+            pw = 0.0
+            for n in solo:
+                shape = "lowpass" if n == 1 else "highpass" if n == 7 else "bandpass"
+                pw += 10 ** (biquad_db(shape, P(f"b{n}_freq"), max(0.5, P(f"b{n}_q")), 0, f) / 10)
+            r += 10 * math.log10(pw + 1e-9)
+        for n in range(1, 8):
+            shape = "lowShelf" if n == 1 else "highShelf" if n == 7 else "peak"
+            g = -36.0 if P(f"b{n}_mute") else P(f"b{n}_gain")
+            r += biquad_db(shape, P(f"b{n}_freq"), P(f"b{n}_q"), g, f)
+        r += biquad_db("lowShelf", P("sub_freq"), 0.8, P("sub"), f)
+        if P("hpf") > 20.5: r += biquad_db("highpass", P("hpf"), 0.707, 0, f)
+        if P("lpf") < 21900: r += biquad_db("lowpass", P("lpf"), 0.707, 0, f)
+        return r + P("out_gain", 0.0)
+
+    def extras(self, t, beat, kick):
+        lv = (0.3 + 0.35 * kick) * self.level
+        tail = 0.45 + 0.1 * math.sin(t * 1.3)
+        return [lv * self.plain("dly_mix") / 100, tail * self.plain("rev_mix") / 100, lv * self.plain("fl_mix") / 100, 0.62 + 0.15 * math.sin(t * 0.5)]
+
+
+PLUGINS = {"racks": Racks, "harmonic-space": HarmonicSpace}
 
 
 def load_plugin_model(name, fixture):

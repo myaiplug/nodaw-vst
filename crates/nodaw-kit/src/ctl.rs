@@ -160,6 +160,79 @@ pub trait Ext: Send + Sync + 'static {
 
 impl Ext for () {}
 
+/// A ready-made [`Ext`]: a page look (skin or theme, saved with the session, endpoint
+/// `"skin"`) plus meter slots. Frame extras: `peaks` (peak since the page last looked, reset
+/// on read), then `values` (latest value).
+pub struct LookExt {
+    looks: &'static [&'static str],
+    look: AtomicU8,
+    rev: AtomicU64,
+    /// Peak-hold slots, `max` from the audio thread.
+    pub peaks: Slots,
+    /// Latest-value slots, `set` from the audio thread.
+    pub values: Slots,
+}
+
+impl LookExt {
+    /// `looks[0]` is the default.
+    pub fn new(looks: &'static [&'static str], peaks: usize, values: usize) -> Self {
+        assert!(!looks.is_empty());
+        Self { looks, look: AtomicU8::new(0), rev: AtomicU64::new(0), peaks: Slots::new(peaks), values: Slots::new(values) }
+    }
+    /// The current look.
+    pub fn look(&self) -> &'static str {
+        self.looks[(self.look.load(Ordering::Relaxed) as usize).min(self.looks.len() - 1)]
+    }
+    /// Change the look; unknown names are refused.
+    pub fn set_look(&self, name: &str) -> Result<(), String> {
+        let i = self.looks.iter().position(|s| *s == name).ok_or_else(|| format!("unknown look {name}"))?;
+        self.look.store(i as u8, Ordering::Relaxed);
+        self.rev.fetch_add(1, Ordering::AcqRel);
+        Ok(())
+    }
+}
+
+impl Ext for LookExt {
+    fn frame_extra(&self, out: &mut Vec<f32>) {
+        for i in 0..self.peaks.len() {
+            out.push(self.peaks.take(i));
+        }
+        for i in 0..self.values.len() {
+            out.push(self.values.get(i));
+        }
+    }
+    fn request(&self, r: &ControllerRequest) -> Option<ControllerResponse> {
+        if r.path != "skin" {
+            return None;
+        }
+        if r.is_post() {
+            // a JSON string, or the bare name (apf.plugin.post sends a string as is)
+            let text = r.body_text().unwrap_or("").trim();
+            let name = json::parse(text).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_else(|| text.to_string());
+            if let Err(e) = self.set_look(&name) {
+                return Some(ControllerResponse::new(400, "text/plain", e.into_bytes()));
+            }
+        }
+        Some(ControllerResponse::json(format!("\"{}\"", self.look())))
+    }
+    fn save(&self) -> Option<String> {
+        Some(format!("{{\"skin\":\"{}\"}}", self.look()))
+    }
+    fn load(&self, v: Option<&Value>) -> Result<(), String> {
+        if let Some(name) = v.and_then(|v| v.get("skin")).and_then(Value::as_str) {
+            self.set_look(name)?;
+        }
+        Ok(())
+    }
+    fn reset(&self) {
+        self.look.store(0, Ordering::Relaxed);
+        self.rev.fetch_add(1, Ordering::AcqRel);
+    }
+    fn revision(&self) -> u64 {
+        self.rev.load(Ordering::Acquire)
+    }
+}
+
 struct Analysis {
     fft_in: SpectrumAnalyzer,
     fft_out: SpectrumAnalyzer,
@@ -529,5 +602,28 @@ mod tests {
         parse_floats(&json::parse(&s).unwrap(), &mut out).unwrap();
         assert_eq!(out, [1.0, -2.5, 0.0]);
         assert!(parse_floats(&json::parse("[1]").unwrap(), &mut out).is_err());
+    }
+
+    #[test]
+    fn the_look_takes_json_or_a_bare_name_and_saves_with_the_session() {
+        static LOOKS: &[&str] = &["dark", "light"];
+        let lic = Manager::load(&TEST_PRODUCT, Store::default(), license::now_secs(), |_, _| Verdict::Unreachable("test".into()));
+        let c = KitController::new(P, Arc::new(Meters::default()), lic, Arc::new(LookExt::new(LOOKS, 2, 1)), None);
+        assert_eq!(call(&c, "POST", "skin", "light").status, 200);
+        assert_eq!(c.ext.look(), "light");
+        assert_eq!(call(&c, "POST", "skin", "\"dark\"").status, 200);
+        assert_eq!(c.ext.look(), "dark");
+        assert_eq!(call(&c, "POST", "skin", "chrome").status, 400);
+        call(&c, "POST", "skin", "light");
+        let saved = c.save();
+        let lic = Manager::load(&TEST_PRODUCT, Store::default(), license::now_secs(), |_, _| Verdict::Unreachable("test".into()));
+        let d = KitController::new(P, Arc::new(Meters::default()), lic, Arc::new(LookExt::new(LOOKS, 2, 1)), None);
+        d.load(&saved).unwrap();
+        assert_eq!(d.ext.look(), "light");
+        c.ext.peaks.max(1, 0.5);
+        c.ext.values.set(0, -0.25);
+        let mut v = Vec::new();
+        c.ext.frame_extra(&mut v);
+        assert_eq!(v, vec![0.0, 0.5, -0.25]);
     }
 }

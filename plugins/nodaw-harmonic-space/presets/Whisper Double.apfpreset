@@ -1,0 +1,32 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Whisper Double",
+  "type": "Vocals",
+  "subtype": "Vocals",
+  "mood": [
+    "Soft",
+    "Airy"
+  ],
+  "description": "Soft, airy double: lower level, presence lift, light echo and room.",
+  "author": "NoDAW",
+  "params": {
+    "amp": -1.98,
+    "hpf": 164.0,
+    "lpf": 19000,
+    "dly_mix": 12,
+    "dly_time": 208,
+    "rev_mix": 12.0,
+    "fl_mix": 6,
+    "fl_rate": 0.32,
+    "out_gain": -0.71,
+    "b1_gain": -1.44,
+    "b2_gain": -0.96,
+    "b3_gain": -0.48,
+    "b4_gain": 0.96,
+    "b5_gain": 2.4,
+    "b5_q": 1.08,
+    "b6_gain": 1.92,
+    "b7_gain": 1.44
+  }
+}

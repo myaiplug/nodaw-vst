@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NoDAW Harmonic Space</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- apf.js is served by the framework: window.apf, and it binds every data-param* element. -->
+<script src="/__apf/apf.js"></script>
+<link rel="stylesheet" href="kit.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app" class="app look-dark">
+  <nav class="recipes" id="recipes" aria-label="Space recipes">
+    <span class="rc-title">Space recipes</span>
+    <div class="rc-fams" id="rc-fams" role="tablist"></div>
+    <div class="rc-list" id="rc-list"></div>
+    <div class="looks" id="looks" role="group" aria-label="Faceplate">
+      <button type="button" data-look="dark" title="Dark faceplate">Dark</button>
+      <button type="button" data-look="light" title="Brushed aluminium faceplate">Light</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <section class="display" id="display">
+      <canvas id="spec" aria-label="Spectrum analyzer with the EQ curve: drag a band's node to move it, scroll for Q"></canvas>
+      <div class="legend">
+        <span class="lg lg-in"><i></i>Input</span>
+        <span class="lg lg-out"><i></i>Output</span>
+        <span class="lg lg-eq"><i></i>Shape</span>
+        <button type="button" id="tilt" class="lg-btn" title="Spectrum slope (compensates the natural roll-off)">3 dB/oct</button>
+      </div>
+      <div class="solo-note" id="solo-note" hidden>SOLO · auditioning</div>
+    </section>
+    <aside class="side panel">
+      <div class="side-meters"><canvas id="meters"></canvas></div>
+      <div class="side-knobs" id="g-master"></div>
+      <div class="corr" title="Stereo correlation: +1 mono, 0 wide, −1 out of phase"><span>−1</span><i id="corr"><b></b></i><span>+1</span></div>
+    </aside>
+  </main>
+
+  <section class="fx" id="fx">
+    <div class="panel fxc" data-fx="amp"><h3>Amp</h3><div class="grid" id="g-amp"></div></div>
+    <div class="panel fxc" data-fx="filters"><h3>Filters</h3><div class="grid g2" id="g-filt"></div></div>
+    <div class="panel fxc" data-fx="sub"><h3>Sub</h3><div class="grid g2" id="g-sub"></div></div>
+    <div class="panel fxc wide" data-fx="delay"><h3>Delay <i class="led" data-led="0"></i></h3><div class="fx-body"><div id="g-dly-main"></div><div class="grid g2x2" id="g-dly"></div></div></div>
+    <div class="panel fxc wide" data-fx="reverb"><h3>Reverb <i class="led" data-led="1"></i></h3><div class="fx-body"><div id="g-rev-main"></div><div class="grid g2x2" id="g-rev"></div></div></div>
+    <div class="panel fxc wide" data-fx="flanger"><h3>Flanger <i class="led" data-led="2"></i></h3><div class="fx-body"><div id="g-fl-main"></div><div class="grid g3x1" id="g-fl"></div></div></div>
+  </section>
+
+  <section class="eq" id="eq" aria-label="7-band EQ"></section>
+</div>
+<script src="kit.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

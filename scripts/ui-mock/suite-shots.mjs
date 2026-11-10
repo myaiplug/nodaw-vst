@@ -3,6 +3,7 @@
 import puppeteer from "puppeteer-core";
 import fs from "node:fs";
 const [PLUGIN, OUT, PRESET = "Init", PRESET2 = ""] = process.argv.slice(2);
+const [VW, VH] = (process.env.VIEW || "960x600").split("x").map(Number);
 const BASE = process.env.MOCK || "http://127.0.0.1:8777";
 const CHROME = process.env.CHROME || "/usr/bin/google-chrome";
 fs.mkdirSync(OUT, { recursive: true });
@@ -25,8 +26,8 @@ const shot = async (page, name) => { await page.screenshot({ path: `${OUT}/${PLU
 const center = async (page, sel) => { const el = await page.$(sel); if (!el) return null; const b = await el.boundingBox(); return b && [b.x + b.width / 2, b.y + b.height / 2]; };
 
 await state({ preset: PRESET, playing: "1", level: "1", license: "trial", days: "11" });
-let page = await open(960, 600);
-await shot(page, "01-default-960x600");
+let page = await open(VW, VH);
+await shot(page, `01-default-${VW}x${VH}`);
 {
   const c = await center(page, ".knob .k-face");
   if (c) { const [x, y] = c; await page.mouse.move(x, y); await page.mouse.down(); await page.mouse.move(x + 8, y - 35, { steps: 6 }); await sleep(250); await shot(page, "02-knob-drag"); await page.mouse.up(); }
@@ -48,22 +49,32 @@ const hooks = {
     await p.click('#skins [data-skin="obsidian"]'); await sleep(400); await shot(p, "06-skin-obsidian");
     await p.click('#skins [data-skin="cobalt"]'); await sleep(300);
   },
+  "harmonic-space": async (p) => {
+    await p.click('#rc-fams [data-fam="Space"]'); await sleep(250);
+    await state({ b2_solo: "1" }); await sleep(900);
+    await p.evaluate(() => document.querySelector('#eq .band[data-i="1"]').dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })));
+    await sleep(300); await shot(p, "04-band-solo");
+    await state({ b2_solo: "0" }); await sleep(300);
+    await p.click('#looks [data-look="light"]'); await sleep(500); await shot(p, "05-light-faceplate");
+    await p.click('#looks [data-look="dark"]'); await sleep(300);
+  },
 };
 if (hooks[PLUGIN]) await hooks[PLUGIN](page);
 await page.close();
 
 if (PRESET2) {
   await state({ preset: PRESET2, level: "1.8" });
-  page = await open(960, 600);
+  page = await open(VW, VH);
   await sleep(500);
   await shot(page, "07-preset-" + PRESET2.replace(/[^A-Za-z0-9]+/g, "-").toLowerCase());
   await state({ bypass: "1", level: "1" }); await sleep(900); await shot(page, "08-bypassed"); await state({ bypass: "0" });
   await page.close();
 }
 await state({ license: "expired", days: "0" });
-page = await open(960, 600); await sleep(400); await shot(page, "09-trial-ended-dialog"); await page.close();
+page = await open(VW, VH); await sleep(400); await shot(page, "09-trial-ended-dialog"); await page.close();
 await state({ license: "trial", days: "11", preset: PRESET });
-for (const [w, h, d, n] of [[760, 480, 1, "10-min-760x480"], [1440, 900, 1, "11-1440x900"], [1200, 750, 2, "12-hidpi-1200x750@2x"]]) {
+const [MW, MH] = (process.env.MIN || "760x480").split("x").map(Number);
+for (const [w, h, d, n] of [[MW, MH, 1, `10-min-${MW}x${MH}`], [1440, 900, 1, "11-1440x900"], [1200, 750, 2, "12-hidpi-1200x750@2x"]]) {
   page = await open(w, h, d); await shot(page, n); await page.close();
 }
 fs.writeFileSync(`${OUT}/${PLUGIN}-console-log.txt`, errors.join("\n") + (errors.length ? "\n" : "(no console errors or warnings)\n"));

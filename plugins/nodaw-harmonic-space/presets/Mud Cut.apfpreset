@@ -1,0 +1,23 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Mud Cut",
+  "type": "Fix-it",
+  "subtype": "Fix-it",
+  "mood": [
+    "Clear"
+  ],
+  "description": "Clears 200-800 Hz mud with a slight ~87 Hz HPF. Top stays open.",
+  "author": "NoDAW",
+  "params": {
+    "amp": 0.48,
+    "hpf": 87.2,
+    "b2_gain": -2.4,
+    "b2_q": 1.27,
+    "b3_gain": -1.92,
+    "b3_q": 1.17,
+    "b4_gain": 0.24,
+    "b6_gain": 0.24,
+    "b7_gain": 0.24
+  }
+}
