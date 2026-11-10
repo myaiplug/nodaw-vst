@@ -1,0 +1,21 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-dynamic-eq",
+  "name": "Bass Control",
+  "type": "Bass",
+  "subtype": "Shelf",
+  "mood": [
+    "Solid"
+  ],
+  "description": "A low shelf that compresses the lows so the bass sits steady",
+  "author": "NoDAW",
+  "params": {
+    "b1_freq": 120,
+    "b1_mode": "Compress",
+    "b1_thresh": -20,
+    "b1_ratio": 3,
+    "b1_range": 6,
+    "b1_attack": 20,
+    "b1_release": 200
+  }
+}

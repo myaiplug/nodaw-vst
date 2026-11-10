@@ -23,7 +23,8 @@ async function open(w, h, dpr = 1) {
   return page;
 }
 const shot = async (page, name) => { await page.screenshot({ path: `${OUT}/${PLUGIN}-${name}.png` }); console.log("wrote", `${PLUGIN}-${name}`); };
-const center = async (page, sel) => { const el = await page.$(sel); if (!el) return null; const b = await el.boundingBox(); return b && [b.x + b.width / 2, b.y + b.height / 2]; };
+// the first visible match (tabbed panels keep hidden knobs in the DOM)
+const center = async (page, sel) => { for (const el of await page.$$(sel)) { const b = await el.boundingBox(); if (b && b.width > 0) return [b.x + b.width / 2, b.y + b.height / 2]; } return null; };
 
 await state({ preset: PRESET, playing: "1", level: "1", license: "trial", days: "11" });
 let page = await open(VW, VH);
@@ -57,6 +58,13 @@ const hooks = {
     await state({ b2_solo: "0" }); await sleep(300);
     await p.click('#looks [data-look="light"]'); await sleep(500); await shot(p, "05-light-faceplate");
     await p.click('#looks [data-look="dark"]'); await sleep(300);
+  },
+  "chronos-dynamic-eq": async (p) => {
+    await p.click('.chip[data-i="5"]'); await sleep(500); await shot(p, "04-band-6-dynamics");
+    await p.click('#looks [data-look="amber"]'); await sleep(500); await shot(p, "05-amber");
+    await p.click('#looks [data-look="violet"]'); await sleep(300);
+    await p.click('.chip[data-i="0"]'); await sleep(300);
+    await p.click('.pill[data-key="b1_solo"]').catch(() => {}); await sleep(500); await shot(p, "06-band-1-solo");
   },
 };
 if (hooks[PLUGIN]) await hooks[PLUGIN](page);

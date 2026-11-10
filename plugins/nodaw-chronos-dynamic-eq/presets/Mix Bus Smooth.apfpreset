@@ -1,0 +1,33 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-dynamic-eq",
+  "name": "Mix Bus Smooth",
+  "type": "Mix Bus",
+  "subtype": "Glue",
+  "mood": [
+    "Smooth",
+    "Gentle"
+  ],
+  "description": "Gentle low-mid and upper-mid control, a little static air",
+  "author": "NoDAW",
+  "params": {
+    "b3_freq": 300,
+    "b3_q": 0.9,
+    "b3_mode": "Compress",
+    "b3_thresh": -20,
+    "b3_ratio": 2,
+    "b3_range": 3,
+    "b3_attack": 15,
+    "b3_release": 250,
+    "b5_freq": 3000,
+    "b5_q": 0.9,
+    "b5_mode": "Compress",
+    "b5_thresh": -24,
+    "b5_ratio": 2,
+    "b5_range": 3,
+    "b5_attack": 10,
+    "b5_release": 200,
+    "b7_gain": 1.5,
+    "b7_freq": 12000
+  }
+}

@@ -1064,6 +1064,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 
 [[package]]
+name = "nodaw-chronos-dynamic-eq"
+version = "0.1.0"
+dependencies = [
+ "apf",
+ "apf-test",
+ "apf-webview",
+ "clap-sys",
+ "nodaw-dsp",
+ "nodaw-kit",
+]
+
+[[package]]
 name = "nodaw-dsp"
 version = "0.1.0"
 

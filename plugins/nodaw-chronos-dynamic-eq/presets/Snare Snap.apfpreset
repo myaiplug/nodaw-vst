@@ -1,0 +1,30 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-dynamic-eq",
+  "name": "Snare Snap",
+  "type": "Drums",
+  "subtype": "Snare",
+  "mood": [
+    "Crisp"
+  ],
+  "description": "Upward expansion of the 5 kHz crack, control of the 900 Hz ring",
+  "author": "NoDAW",
+  "params": {
+    "b4_freq": 900,
+    "b4_q": 3,
+    "b4_mode": "Compress",
+    "b4_thresh": -24,
+    "b4_ratio": 4,
+    "b4_range": 6,
+    "b4_attack": 1,
+    "b4_release": 80,
+    "b6_freq": 5000,
+    "b6_q": 1.2,
+    "b6_mode": "Expand",
+    "b6_thresh": -30,
+    "b6_ratio": 3,
+    "b6_range": 6,
+    "b6_attack": 0.5,
+    "b6_release": 70
+  }
+}

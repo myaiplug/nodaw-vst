@@ -197,6 +197,7 @@ class Model:
         ceil = 10 ** (self.plain("lim_ceiling", self.plain("ceiling", 0.0)) / 20)
         push = 10 ** (self.plain("lim_gain", 0.0) / 20)
         if self.plain("lim_on", True) and pk_out * push > ceil: gr = ceil / (pk_out * push); pk_out = ceil
+        if hasattr(self, "gr_now"): gr = self.gr_now(t)
         if self.plain("bypass", False): pk_out, gr, out_db = pk_in, 1.0, in_db
         rin, rout = pk_in * 0.42, pk_out * 0.40
         custom = self.custom(t, beat) if hasattr(self, "custom") else [0, 0, 0, 0]
@@ -250,7 +251,39 @@ class HarmonicSpace(Model):
         return [lv * self.plain("dly_mix") / 100, tail * self.plain("rev_mix") / 100, lv * self.plain("fl_mix") / 100, 0.62 + 0.15 * math.sin(t * 0.5)]
 
 
-PLUGINS = {"racks": Racks, "harmonic-space": HarmonicSpace}
+class ChronosDynamicEq(Model):
+    def dyn(self, n, t):
+        P = self.plain
+        mode = P(f"b{n}_mode")
+        if not P(f"b{n}_on") or mode == 0: return 0.0
+        rg = min(24.0, P(f"b{n}_range") * P("dyn_amount", 100.0) / 100)
+        k = math.exp(-(((t * 2.0) + n * 0.13) % 1.0) * 4.0)
+        amt = rg * (0.35 + 0.6 * k) * self.level
+        return -amt if mode == 1 else amt
+
+    def band_db(self, n, f, g):
+        P = self.plain
+        kind = P(f"b{n}_type"); fc = P(f"b{n}_freq"); q = P(f"b{n}_q")
+        shape = "lowShelf" if kind == 1 else "highShelf" if kind == 2 else "peak"
+        return biquad_db(shape, fc, 0.7 if kind else q, g, f)
+
+    def resp_chronos_dynamic_eq(self, f):
+        t = time.time() - self.t0
+        r = 0.0
+        for n in range(1, 8):
+            if not self.plain(f"b{n}_on"): continue
+            r += self.band_db(n, f, self.plain(f"b{n}_gain") + self.dyn(n, t))
+        return r + self.plain("out_gain", 0.0)
+
+    def extras(self, t, beat, kick):
+        return [self.dyn(n, t) for n in range(1, 8)]
+
+    def gr_now(self, t):
+        cut = min([0.0] + [self.dyn(n, t) for n in range(1, 8)])
+        return 10 ** (cut / 20)
+
+
+PLUGINS = {"racks": Racks, "harmonic-space": HarmonicSpace, "chronos-dynamic-eq": ChronosDynamicEq}
 
 
 def load_plugin_model(name, fixture):
