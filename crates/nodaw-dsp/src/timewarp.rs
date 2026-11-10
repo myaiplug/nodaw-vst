@@ -47,7 +47,9 @@ impl TimeWarp {
         let g = (((0.043 * sample_rate) as usize) / 2 * 2).max(64);
         let max_period = (Self::MAX_PERIOD_SECONDS * sample_rate) as usize;
         let size = next_pow2(2 * max_period + 4 * g + 64);
-        let win = (0..g).map(|i| (0.5 - 0.5 * (2.0 * std::f64::consts::PI * i as f64 / g as f64).cos()) as f32).collect();
+        let win = (0..g)
+            .map(|i| (0.5 - 0.5 * (2.0 * std::f64::consts::PI * i as f64 / g as f64).cos()) as f32)
+            .collect();
         let mut s = Self {
             buf: [vec![0.0; size], vec![0.0; size]],
             mask: size - 1,
@@ -104,17 +106,69 @@ impl TimeWarp {
         if f == 0.0 {
             return self.at(ch, i);
         }
-        let (ym1, y0, y1, y2) = (self.at(ch, i - 1), self.at(ch, i), self.at(ch, i + 1), self.at(ch, i + 2));
+        let (ym1, y0, y1, y2) = (
+            self.at(ch, i - 1),
+            self.at(ch, i),
+            self.at(ch, i + 1),
+            self.at(ch, i + 2),
+        );
         let c1 = 0.5 * (y1 - ym1);
         let c2 = ym1 - 2.5 * y0 + 2.0 * y1 - 0.5 * y2;
         let c3 = 0.5 * (y2 - ym1) + 1.5 * (y0 - y1);
         ((c3 * f + c2) * f + c1) * f + y0
     }
 
+    /// The grain start near `nominal` whose next samples best match what the playing grain
+    /// would read next (`cont`). Never later than the newest sample allows for a whole grain.
+    fn align(&self, nominal: f64, cont: f64) -> f64 {
+        if (cont - nominal).abs() < 0.5 {
+            return nominal;
+        }
+        let latest = self.w as f64 - 1.0 - self.g as f64;
+        let search = (self.g / 4) as i64;
+        let len = (self.g / 4) as i64;
+        let c0 = cont.round() as i64;
+        let n0 = nominal.round() as i64;
+        let mono = |i: i64| self.at(0, i) + self.at(1, i);
+        let score = |start: i64| {
+            let (mut dot, mut en) = (0.0f32, 1.0e-9f32);
+            let mut k = 0;
+            while k < len {
+                let b = mono(start + k);
+                dot += mono(c0 + k) * b;
+                en += b * b;
+                k += 2;
+            }
+            dot / en.sqrt()
+        };
+        let mut best = 0i64;
+        let mut best_s = score(n0);
+        let mut d = -search;
+        while d <= search {
+            if d != 0 && ((n0 + d) as f64) <= latest {
+                let sc = score(n0 + d);
+                if sc > best_s {
+                    best_s = sc;
+                    best = d;
+                }
+            }
+            d += 1;
+        }
+        nominal + best as f64
+    }
+
     /// One stereo frame. `rate` 0.5 ..= 2; `new_period`: this sample starts a sync period of
     /// `period` samples; `stretch`: keep the pitch.
     #[inline]
-    pub fn tick(&mut self, l: f32, r: f32, rate: f32, stretch: bool, new_period: bool, period: usize) -> (f32, f32) {
+    pub fn tick(
+        &mut self,
+        l: f32,
+        r: f32,
+        rate: f32,
+        stretch: bool,
+        new_period: bool,
+        period: usize,
+    ) -> (f32, f32) {
         let wi = (self.w as usize) & self.mask;
         self.buf[0][wi] = if l.is_finite() { l } else { 0.0 };
         self.buf[1][wi] = if r.is_finite() { r } else { 0.0 };
@@ -154,8 +208,26 @@ impl TimeWarp {
         // Stretch: a grain every half grain, each read at normal speed from where the warp
         // pointer was when it started. Hann at 50 % overlap sums to exactly 1.
         if self.hop_pos == 0 {
-            let slot = if self.grains[0].on && self.grains[0].t < self.g / 2 { 1 } else if !self.grains[0].on || self.grains[0].t >= self.g { 0 } else { 1 };
-            self.grains[slot] = Grain { start: pos, t: 0, on: true };
+            let slot = if self.grains[0].on && self.grains[0].t < self.g / 2 {
+                1
+            } else if !self.grains[0].on || self.grains[0].t >= self.g {
+                0
+            } else {
+                1
+            };
+            // WSOLA: start the new grain where the waveform best continues the one already
+            // playing (searched around the warp pointer), so the overlap adds in phase.
+            let other = self.grains[1 - slot];
+            let start = if other.on {
+                self.align(pos, other.start + other.t as f64)
+            } else {
+                pos
+            };
+            self.grains[slot] = Grain {
+                start,
+                t: 0,
+                on: true,
+            };
         }
         self.hop_pos = (self.hop_pos + 1) % (self.g / 2);
         let (mut a, mut b) = (0.0f32, 0.0f32);
@@ -192,8 +264,12 @@ mod tests {
             let mut t = TimeWarp::new(48_000.0);
             let lat = t.latency();
             let n = 30_000;
-            let y: Vec<f32> = (0..n).map(|i| t.tick(sig(i), sig(i), 1.0, stretch, i % 6000 == 0, 6000).0).collect();
-            let worst = (lat + t.g + 10..n).map(|i| (y[i] - sig(i - lat)).abs()).fold(0.0f32, f32::max);
+            let y: Vec<f32> = (0..n)
+                .map(|i| t.tick(sig(i), sig(i), 1.0, stretch, i % 6000 == 0, 6000).0)
+                .collect();
+            let worst = (lat + t.g + 10..n)
+                .map(|i| (y[i] - sig(i - lat)).abs())
+                .fold(0.0f32, f32::max);
             assert!(worst < 1e-4, "stretch {stretch}: {worst}");
         }
     }
@@ -206,13 +282,19 @@ mod tests {
         let lat = t.latency();
         let p = 4800;
         let n = 6 * p;
-        let y: Vec<f32> = (0..n).map(|i| t.tick(i as f32, i as f32, 0.5, false, i % p == 0, p).0).collect();
+        let y: Vec<f32> = (0..n)
+            .map(|i| t.tick(i as f32, i as f32, 0.5, false, i % p == 0, p).0)
+            .collect();
         // inside the 4th period, away from the crossfade
         let a = y[3 * p + 1000];
         let b = y[3 * p + 3000];
         assert!(((b - a) - 1000.0).abs() < 2.0, "slope {}", (b - a) / 2000.0);
         // it starts where the (delayed) period started
-        assert!((y[3 * p + 1000] - ((3 * p) as f32 - lat as f32 - 1.0 + 500.0)).abs() < 3.0, "{}", y[3 * p + 1000]);
+        assert!(
+            (y[3 * p + 1000] - ((3 * p) as f32 - lat as f32 - 1.0 + 500.0)).abs() < 3.0,
+            "{}",
+            y[3 * p + 1000]
+        );
     }
 
     #[test]
@@ -223,7 +305,10 @@ mod tests {
                 let p = 5000;
                 for i in 0..40_000 {
                     let (a, b) = t.tick(sig(i), -sig(i), rate, stretch, i % p == 0, p);
-                    assert!(a.is_finite() && b.is_finite() && a.abs() < 1.5, "{stretch} {rate} {i}");
+                    assert!(
+                        a.is_finite() && b.is_finite() && a.abs() < 1.5,
+                        "{stretch} {rate} {i}"
+                    );
                 }
             }
         }

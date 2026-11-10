@@ -5,7 +5,13 @@
 use crate::filter::{Biquad, Coeffs};
 
 fn norm(b0: f64, b1: f64, b2: f64, a0: f64, a1: f64, a2: f64) -> Coeffs {
-    Coeffs { b0: (b0 / a0) as f32, b1: (b1 / a0) as f32, b2: (b2 / a0) as f32, a1: (a1 / a0) as f32, a2: (a2 / a0) as f32 }
+    Coeffs {
+        b0: (b0 / a0) as f32,
+        b1: (b1 / a0) as f32,
+        b2: (b2 / a0) as f32,
+        a1: (a1 / a0) as f32,
+        a2: (a2 / a0) as f32,
+    }
 }
 
 fn omega(fc: f32, sr: f64) -> (f64, f64) {
@@ -34,7 +40,15 @@ pub enum Shape {
 
 impl Shape {
     /// The shapes in the order the plugins list them.
-    pub const ALL: [Shape; 7] = [Shape::Peak, Shape::LowShelf, Shape::HighShelf, Shape::HighPass, Shape::LowPass, Shape::Notch, Shape::BandPass];
+    pub const ALL: [Shape; 7] = [
+        Shape::Peak,
+        Shape::LowShelf,
+        Shape::HighShelf,
+        Shape::HighPass,
+        Shape::LowPass,
+        Shape::Notch,
+        Shape::BandPass,
+    ];
 
     /// From a choice index.
     pub fn from_index(i: usize) -> Self {
@@ -47,7 +61,14 @@ pub fn peak(fc: f32, q: f32, gain_db: f32, sr: f64) -> Coeffs {
     let a = 10f64.powf(gain_db as f64 / 40.0);
     let (s, c) = omega(fc, sr);
     let alpha = s / (2.0 * (q as f64).max(0.05));
-    norm(1.0 + alpha * a, -2.0 * c, 1.0 - alpha * a, 1.0 + alpha / a, -2.0 * c, 1.0 - alpha / a)
+    norm(
+        1.0 + alpha * a,
+        -2.0 * c,
+        1.0 - alpha * a,
+        1.0 + alpha / a,
+        -2.0 * c,
+        1.0 - alpha / a,
+    )
 }
 
 /// Low shelf with a shelf slope set by `q` (0.707 = Butterworth-like).
@@ -86,14 +107,28 @@ pub fn high_shelf(fc: f32, q: f32, gain_db: f32, sr: f64) -> Coeffs {
 pub fn highpass(fc: f32, q: f32, sr: f64) -> Coeffs {
     let (s, c) = omega(fc, sr);
     let alpha = s / (2.0 * (q as f64).max(0.05));
-    norm((1.0 + c) / 2.0, -(1.0 + c), (1.0 + c) / 2.0, 1.0 + alpha, -2.0 * c, 1.0 - alpha)
+    norm(
+        (1.0 + c) / 2.0,
+        -(1.0 + c),
+        (1.0 + c) / 2.0,
+        1.0 + alpha,
+        -2.0 * c,
+        1.0 - alpha,
+    )
 }
 
 /// 2nd-order low-pass with resonance `q`.
 pub fn lowpass(fc: f32, q: f32, sr: f64) -> Coeffs {
     let (s, c) = omega(fc, sr);
     let alpha = s / (2.0 * (q as f64).max(0.05));
-    norm((1.0 - c) / 2.0, 1.0 - c, (1.0 - c) / 2.0, 1.0 + alpha, -2.0 * c, 1.0 - alpha)
+    norm(
+        (1.0 - c) / 2.0,
+        1.0 - c,
+        (1.0 - c) / 2.0,
+        1.0 + alpha,
+        -2.0 * c,
+        1.0 - alpha,
+    )
 }
 
 /// Notch.
@@ -144,7 +179,13 @@ pub fn design(shape: Shape, fc: f32, q: f32, gain_db: f32, sr: f64) -> Coeffs {
 /// Linear interpolation between two coefficient sets.
 #[inline]
 pub fn lerp(a: &Coeffs, b: &Coeffs, t: f32) -> Coeffs {
-    Coeffs { b0: a.b0 + (b.b0 - a.b0) * t, b1: a.b1 + (b.b1 - a.b1) * t, b2: a.b2 + (b.b2 - a.b2) * t, a1: a.a1 + (b.a1 - a.a1) * t, a2: a.a2 + (b.a2 - a.a2) * t }
+    Coeffs {
+        b0: a.b0 + (b.b0 - a.b0) * t,
+        b1: a.b1 + (b.b1 - a.b1) * t,
+        b2: a.b2 + (b.b2 - a.b2) * t,
+        a1: a.a1 + (b.a1 - a.a1) * t,
+        a2: a.a2 + (b.a2 - a.a2) * t,
+    }
 }
 
 /// One stereo EQ band whose coefficients glide to their target over a short ramp each time
@@ -163,7 +204,15 @@ pub struct EqBand {
 impl EqBand {
     /// A band that is flat, with `ramp` samples of glide per change.
     pub fn new(ramp: u32) -> Self {
-        Self { st: [Biquad::default(); 2], cur: Coeffs::IDENTITY, from: Coeffs::IDENTITY, to: Coeffs::IDENTITY, ramp: ramp.max(1), pos: 0, key: [f32::NAN; 4] }
+        Self {
+            st: [Biquad::default(); 2],
+            cur: Coeffs::IDENTITY,
+            from: Coeffs::IDENTITY,
+            to: Coeffs::IDENTITY,
+            ramp: ramp.max(1),
+            pos: 0,
+            key: [f32::NAN; 4],
+        }
     }
     /// Set the target. Cheap when nothing changed.
     pub fn set(&mut self, shape: Shape, fc: f32, q: f32, gain_db: f32, sr: f64) {

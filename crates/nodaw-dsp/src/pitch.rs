@@ -107,7 +107,12 @@ impl PitchShifter {
     fn read(&self, buf: &[f32], pos: f64) -> f32 {
         let i = pos.floor() as i64;
         let f = (pos - i as f64) as f32;
-        let (ym1, y0, y1, y2) = (self.at(buf, i - 1), self.at(buf, i), self.at(buf, i + 1), self.at(buf, i + 2));
+        let (ym1, y0, y1, y2) = (
+            self.at(buf, i - 1),
+            self.at(buf, i),
+            self.at(buf, i + 1),
+            self.at(buf, i + 2),
+        );
         let c1 = 0.5 * (y1 - ym1);
         let c2 = ym1 - 2.5 * y0 + 2.0 * y1 - 0.5 * y2;
         let c3 = 0.5 * (y2 - ym1) + 1.5 * (y0 - y1);
@@ -161,7 +166,11 @@ impl PitchShifter {
             let down = lag > self.lag_max as f64;
             let up = lag < self.lag_floor as f64;
             if down || up {
-                let nominal = if down { self.lag_floor + self.search } else { self.lag_max - self.search };
+                let nominal = if down {
+                    self.lag_floor + self.search
+                } else {
+                    self.lag_max - self.search
+                };
                 let best = self.best_jump(nominal);
                 self.rp2 = (self.n as f64 - 1.0) - best as f64 + (self.rp - self.rp.floor());
                 self.xf = 1;
@@ -233,7 +242,10 @@ mod tests {
                     let y = run(sr, hz, st, 1.6);
                     let want = hz * semitones_to_ratio(st);
                     let got = analyze(&y).peak_frequency(sr);
-                    assert!((got / want - 1.0).abs() < 0.01, "sr {sr} {hz} Hz {st} st: got {got} want {want}");
+                    assert!(
+                        (got / want - 1.0).abs() < 0.01,
+                        "sr {sr} {hz} Hz {st} st: got {got} want {want}"
+                    );
                 }
             }
         }
@@ -246,7 +258,11 @@ mod tests {
         for st in [-7.0f32, -3.0, 4.0] {
             let y = run(48_000.0, 440.0, st, 1.6);
             let an = analyze(&y);
-            let (k, _) = an.db.iter().enumerate().fold((0, f32::MIN), |a, (i, v)| if *v > a.1 { (i, *v) } else { a });
+            let (k, _) =
+                an.db.iter().enumerate().fold(
+                    (0, f32::MIN),
+                    |a, (i, v)| if *v > a.1 { (i, *v) } else { a },
+                );
             let p = |db: f32| 10f64.powf(db as f64 / 10.0);
             let total: f64 = an.db.iter().map(|d| p(*d)).sum();
             let near: f64 = an.db[k - 4..=k + 4].iter().map(|d| p(*d)).sum();
@@ -258,7 +274,9 @@ mod tests {
     fn unity_is_a_pure_delay_of_exactly_the_reported_latency() {
         let mut p = PitchShifter::new(48_000.0);
         let lat = p.latency();
-        let x: Vec<f32> = (0..8000).map(|i| ((i * 37 % 101) as f32 - 50.0) / 60.0).collect();
+        let x: Vec<f32> = (0..8000)
+            .map(|i| ((i * 37 % 101) as f32 - 50.0) / 60.0)
+            .collect();
         let y: Vec<f32> = x.iter().map(|&v| p.tick(v, v, 1.0).0).collect();
         for i in lat..x.len() {
             assert_eq!(y[i], x[i - lat], "sample {i}");
@@ -269,7 +287,8 @@ mod tests {
     fn level_is_kept() {
         for st in [-12.0f32, -5.0, 7.0] {
             let y = run(48_000.0, 220.0, st, 2.0);
-            let rms = |s: &[f32]| (s.iter().map(|v| (v * v) as f64).sum::<f64>() / s.len() as f64).sqrt();
+            let rms =
+                |s: &[f32]| (s.iter().map(|v| (v * v) as f64).sum::<f64>() / s.len() as f64).sqrt();
             let r = rms(&y[48_000..]) / (0.5 / 2f64.sqrt());
             assert!((0.9..1.1).contains(&r), "{st} st: {r}");
         }
@@ -287,9 +306,15 @@ mod tests {
             }
             let x = 0.6 * ((i as f32) * 0.05).sin() + 0.2 * noise.sample();
             let (a, b) = p.tick(x, -x, ratio);
-            assert!(a.is_finite() && b.is_finite() && a.abs() < 2.0, "sample {i}");
+            assert!(
+                a.is_finite() && b.is_finite() && a.abs() < 2.0,
+                "sample {i}"
+            );
             let lag = p.lag();
-            assert!(lag > lo as f64 - 400.0 && lag < hi as f64 + 400.0, "lag {lag} left [{lo},{hi}] at {i}");
+            assert!(
+                lag > lo as f64 - 400.0 && lag < hi as f64 + 400.0,
+                "lag {lag} left [{lo},{hi}] at {i}"
+            );
         }
     }
 

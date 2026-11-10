@@ -19,7 +19,12 @@ pub struct Envelope {
 impl Envelope {
     /// A follower with times in milliseconds.
     pub fn new(sample_rate: f64, attack_ms: f32, release_ms: f32) -> Self {
-        let mut e = Self { att: 0.0, rel: 0.0, env: 0.0, sr: sample_rate };
+        let mut e = Self {
+            att: 0.0,
+            rel: 0.0,
+            env: 0.0,
+            sr: sample_rate,
+        };
         e.set_times(attack_ms, release_ms);
         e
     }
@@ -71,7 +76,14 @@ impl DynMode {
 
 /// The gain change in dB for a detector level `level_db`. Soft knee of `knee_db`.
 #[inline]
-pub fn gain_computer(mode: DynMode, level_db: f32, threshold_db: f32, ratio: f32, knee_db: f32, range_db: f32) -> f32 {
+pub fn gain_computer(
+    mode: DynMode,
+    level_db: f32,
+    threshold_db: f32,
+    ratio: f32,
+    knee_db: f32,
+    range_db: f32,
+) -> f32 {
     if mode == DynMode::Off {
         return 0.0;
     }
@@ -128,7 +140,13 @@ impl BandKind {
         // |1 + (g - 1) H| needs the complex response.
         let w = 2.0 * std::f64::consts::PI * f as f64 / sr;
         let (c1, s1, c2, s2) = (w.cos(), w.sin(), (2.0 * w).cos(), (2.0 * w).sin());
-        let (b0, b1, b2, a1, a2) = (c.b0 as f64, c.b1 as f64, c.b2 as f64, c.a1 as f64, c.a2 as f64);
+        let (b0, b1, b2, a1, a2) = (
+            c.b0 as f64,
+            c.b1 as f64,
+            c.b2 as f64,
+            c.a1 as f64,
+            c.a2 as f64,
+        );
         let (nr, ni) = (b0 + b1 * c1 + b2 * c2, -(b1 * s1 + b2 * s2));
         let (dr, di) = (1.0 + a1 * c1 + a2 * c2, -(a1 * s1 + a2 * s2));
         let den = dr * dr + di * di;
@@ -182,14 +200,36 @@ pub struct DynSettings {
 
 impl Default for DynSettings {
     fn default() -> Self {
-        Self { on: false, kind: BandKind::Bell, freq: 1000.0, q: 1.0, gain_db: 0.0, mode: DynMode::Off, threshold_db: -24.0, ratio: 3.0, range_db: 9.0, attack_ms: 5.0, release_ms: 120.0, solo: false }
+        Self {
+            on: false,
+            kind: BandKind::Bell,
+            freq: 1000.0,
+            q: 1.0,
+            gain_db: 0.0,
+            mode: DynMode::Off,
+            threshold_db: -24.0,
+            ratio: 3.0,
+            range_db: 9.0,
+            attack_ms: 5.0,
+            release_ms: 120.0,
+            solo: false,
+        }
     }
 }
 
 impl DynBand {
     /// A band for `sample_rate`.
     pub fn new(sample_rate: f64) -> Self {
-        Self { sel: [Biquad::default(); 2], det: [Biquad::default(); 2], c: Coeffs::IDENTITY, key: (255, 0.0, 0.0), env: Envelope::new(sample_rate, 5.0, 120.0), gain_db: 0.0, smooth: 0.0, sr: sample_rate }
+        Self {
+            sel: [Biquad::default(); 2],
+            det: [Biquad::default(); 2],
+            c: Coeffs::IDENTITY,
+            key: (255, 0.0, 0.0),
+            env: Envelope::new(sample_rate, 5.0, 120.0),
+            gain_db: 0.0,
+            smooth: 0.0,
+            sr: sample_rate,
+        }
     }
     /// Clear the state.
     pub fn reset(&mut self) {
@@ -248,10 +288,16 @@ mod tests {
 
     #[test]
     fn the_gain_computer_has_a_knee_ratio_and_range() {
-        assert_eq!(gain_computer(DynMode::Compress, -40.0, -20.0, 4.0, 6.0, 12.0), 0.0);
+        assert_eq!(
+            gain_computer(DynMode::Compress, -40.0, -20.0, 4.0, 6.0, 12.0),
+            0.0
+        );
         let g = gain_computer(DynMode::Compress, 0.0, -20.0, 4.0, 6.0, 30.0);
         assert!((g + 15.0).abs() < 1e-4, "{g}");
-        assert_eq!(gain_computer(DynMode::Compress, 0.0, -20.0, 20.0, 6.0, 6.0), -6.0);
+        assert_eq!(
+            gain_computer(DynMode::Compress, 0.0, -20.0, 20.0, 6.0, 6.0),
+            -6.0
+        );
         assert!(gain_computer(DynMode::Expand, 0.0, -20.0, 2.0, 0.0, 30.0) > 9.9);
         let k = gain_computer(DynMode::Compress, -20.0, -20.0, 4.0, 6.0, 30.0);
         assert!(k < 0.0 && k > -1.0, "inside the knee: {k}");
@@ -262,7 +308,11 @@ mod tests {
         let sr = 48_000.0;
         for g in [-12.0f32, -3.0, 6.0, 12.0] {
             let m = BandKind::Bell.magnitude(1000.0, 1.5, db_to_gain(g), 1000.0, sr);
-            assert!((20.0 * m.log10() - g).abs() < 0.05, "{g}: {}", 20.0 * m.log10());
+            assert!(
+                (20.0 * m.log10() - g).abs() < 0.05,
+                "{g}: {}",
+                20.0 * m.log10()
+            );
             let far = BandKind::Bell.magnitude(1000.0, 1.5, db_to_gain(g), 20.0, sr);
             assert!((20.0 * far.log10()).abs() < 0.5);
         }
@@ -271,7 +321,16 @@ mod tests {
     #[test]
     fn a_loud_band_is_compressed_and_a_quiet_one_is_left_alone() {
         let sr = 48_000.0;
-        let s = DynSettings { on: true, freq: 1000.0, q: 1.0, mode: DynMode::Compress, threshold_db: -30.0, ratio: 8.0, range_db: 12.0, ..Default::default() };
+        let s = DynSettings {
+            on: true,
+            freq: 1000.0,
+            q: 1.0,
+            mode: DynMode::Compress,
+            threshold_db: -30.0,
+            ratio: 8.0,
+            range_db: 12.0,
+            ..Default::default()
+        };
         let run = |amp: f32| {
             let mut b = DynBand::new(sr);
             b.prepare(&s);
@@ -289,7 +348,10 @@ mod tests {
         assert!(g < -8.0, "{g}");
         assert!(loud < 0.25, "{loud}");
         let (quiet, g2) = run(0.005);
-        assert!(g2.abs() < 0.1 && (quiet - 0.005).abs() < 5e-4, "{quiet} {g2}");
+        assert!(
+            g2.abs() < 0.1 && (quiet - 0.005).abs() < 5e-4,
+            "{quiet} {g2}"
+        );
     }
 
     #[test]

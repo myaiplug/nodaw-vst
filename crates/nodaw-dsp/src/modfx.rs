@@ -22,7 +22,12 @@ impl Flanger {
     /// A flanger for `sample_rate`.
     pub fn new(sample_rate: f64) -> Self {
         let n = (Self::MAX_SECONDS * sample_rate) as usize + 8;
-        Self { sr: sample_rate, lines: [DelayLine::new(n), DelayLine::new(n)], phase: 0.0, fb: [0.0; 2] }
+        Self {
+            sr: sample_rate,
+            lines: [DelayLine::new(n), DelayLine::new(n)],
+            phase: 0.0,
+            fb: [0.0; 2],
+        }
     }
     /// Clear the state.
     pub fn reset(&mut self) {
@@ -108,8 +113,17 @@ impl FeedbackDelay {
     }
     /// The wet signal for one frame. `seconds` glides (tape-style) when it changes.
     #[inline]
-    pub fn tick(&mut self, l: f32, r: f32, seconds: f32, feedback: f32, ping_pong: bool) -> (f32, f32) {
-        let t = self.time.tick(seconds.clamp(0.001, Self::MAX_SECONDS as f32 - 0.001));
+    pub fn tick(
+        &mut self,
+        l: f32,
+        r: f32,
+        seconds: f32,
+        feedback: f32,
+        ping_pong: bool,
+    ) -> (f32, f32) {
+        let t = self
+            .time
+            .tick(seconds.clamp(0.001, Self::MAX_SECONDS as f32 - 0.001));
         let d = (t as f64 * self.sr) as f32;
         let wl = self.lines[0].tap_hermite(d);
         let wr = self.lines[1].tap_hermite(d);
@@ -141,7 +155,10 @@ pub fn width(l: f32, r: f32, w: f32) -> (f32, f32) {
 pub fn balance(l: f32, r: f32, p: f32) -> (f32, f32) {
     let p = p.clamp(-1.0, 1.0);
     let a = (p + 1.0) * std::f32::consts::FRAC_PI_4;
-    let (gl, gr) = (a.cos() * std::f32::consts::SQRT_2, a.sin() * std::f32::consts::SQRT_2);
+    let (gl, gr) = (
+        a.cos() * std::f32::consts::SQRT_2,
+        a.sin() * std::f32::consts::SQRT_2,
+    );
     (l * gl.min(1.0), r * gr.min(1.0))
 }
 
@@ -157,7 +174,12 @@ pub struct Correlation {
 impl Correlation {
     /// A meter for `sample_rate`.
     pub fn new(sample_rate: f64) -> Self {
-        Self { a: (1.0 - (-1.0 / (0.3 * sample_rate)).exp()) as f32, lr: 0.0, ll: 0.0, rr: 0.0 }
+        Self {
+            a: (1.0 - (-1.0 / (0.3 * sample_rate)).exp()) as f32,
+            lr: 0.0,
+            ll: 0.0,
+            rr: 0.0,
+        }
     }
     /// Feed a frame.
     #[inline]
@@ -192,7 +214,11 @@ mod tests {
             let x = if i == 0 { 1.0 } else { 0.0 };
             out.push(d.tick(x, x, 0.1, 0.5, false).0);
         }
-        let (idx, _) = out.iter().enumerate().fold((0, 0.0f32), |m, (i, v)| if v.abs() > m.1 { (i, v.abs()) } else { m });
+        let (idx, _) =
+            out.iter().enumerate().fold(
+                (0, 0.0f32),
+                |m, (i, v)| if v.abs() > m.1 { (i, v.abs()) } else { m },
+            );
         assert!((idx as i64 - 4800).abs() <= 2, "{idx}");
         let second = out[9590..9610].iter().fold(0.0f32, |m, v| m.max(v.abs()));
         assert!(second > 0.3 && second < 0.6, "{second}");

@@ -6,6 +6,7 @@ members = [
     "plugins/nodaw-racks",
     "plugins/nodaw-harmonic-space",
     "plugins/nodaw-chronos-dynamic-eq",
+    "plugins/nodaw-temporal-pitch-portal",
     "plugins/nodaw-screw",
 ]
 exclude = ["vendor/apf"]

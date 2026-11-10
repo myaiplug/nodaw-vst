@@ -50,12 +50,29 @@ impl Stft {
     pub fn new(size: usize) -> Self {
         assert!(size.is_power_of_two() && size >= 64);
         let hop = size / 4;
-        let win: Vec<f32> = (0..size).map(|i| 0.5 - 0.5 * (2.0 * PI * i as f32 / size as f32).cos()).collect();
+        let win: Vec<f32> = (0..size)
+            .map(|i| 0.5 - 0.5 * (2.0 * PI * i as f32 / size as f32).cos())
+            .collect();
         // Hann analysis x Hann synthesis at 75 % overlap sums to 1.5.
         let scale = 1.0 / (1.5 * size as f32);
         let bins = size / 2 + 1;
-        let chan = || Chan { inp: vec![0.0; size], out: vec![0.0; size] };
-        Self { n: size, hop, fft: Fft::new(size), win, scale, ch: [chan(), chan()], pos: 0, re: vec![0.0; size], im: vec![0.0; size], mag: [vec![0.0; bins], vec![0.0; bins]], phase: [vec![0.0; bins], vec![0.0; bins]] }
+        let chan = || Chan {
+            inp: vec![0.0; size],
+            out: vec![0.0; size],
+        };
+        Self {
+            n: size,
+            hop,
+            fft: Fft::new(size),
+            win,
+            scale,
+            ch: [chan(), chan()],
+            pos: 0,
+            re: vec![0.0; size],
+            im: vec![0.0; size],
+            mag: [vec![0.0; bins], vec![0.0; bins]],
+            phase: [vec![0.0; bins], vec![0.0; bins]],
+        }
     }
     /// FFT size.
     pub fn size(&self) -> usize {
@@ -126,7 +143,11 @@ impl Stft {
         }
         // Back to a Hermitian spectrum; the inverse is conj(FFT(conj(X))) / n.
         for k in 0..bins {
-            let m = if self.mag[c][k].is_finite() { self.mag[c][k] } else { 0.0 };
+            let m = if self.mag[c][k].is_finite() {
+                self.mag[c][k]
+            } else {
+                0.0
+            };
             let ph = self.phase[c][k];
             let (s, co) = ph.sin_cos();
             self.re[k] = m * co;
@@ -164,13 +185,17 @@ mod tests {
     fn identity_reconstructs_the_input_delayed_by_the_latency() {
         let mut s = Stft::new(1024);
         let n = 20_000;
-        let x: Vec<f32> = (0..n).map(|i| 0.5 * (i as f32 * 0.013).sin() + 0.2 * (i as f32 * 0.31).cos()).collect();
+        let x: Vec<f32> = (0..n)
+            .map(|i| 0.5 * (i as f32 * 0.013).sin() + 0.2 * (i as f32 * 0.31).cos())
+            .collect();
         let mut y = Vec::with_capacity(n);
         for &v in &x {
             y.push(s.tick(v, -v, &mut Passthrough));
         }
         let lat = s.latency();
-        let worst = (lat + 10..n).map(|i| (y[i].0 - x[i - lat]).abs().max((y[i].1 + x[i - lat]).abs())).fold(0.0f32, f32::max);
+        let worst = (lat + 10..n)
+            .map(|i| (y[i].0 - x[i - lat]).abs().max((y[i].1 + x[i - lat]).abs()))
+            .fold(0.0f32, f32::max);
         assert!(worst < 1e-4, "{worst}");
     }
 

@@ -17,9 +17,15 @@ impl Fft {
     pub fn new(n: usize) -> Self {
         assert!(n.is_power_of_two() && n >= 4);
         let bits = n.trailing_zeros();
-        let rev = (0..n as u32).map(|i| i.reverse_bits() >> (32 - bits)).collect();
-        let cos = (0..n / 2).map(|k| (2.0 * PI * k as f32 / n as f32).cos()).collect();
-        let sin = (0..n / 2).map(|k| -(2.0 * PI * k as f32 / n as f32).sin()).collect();
+        let rev = (0..n as u32)
+            .map(|i| i.reverse_bits() >> (32 - bits))
+            .collect();
+        let cos = (0..n / 2)
+            .map(|k| (2.0 * PI * k as f32 / n as f32).cos())
+            .collect();
+        let sin = (0..n / 2)
+            .map(|k| -(2.0 * PI * k as f32 / n as f32).sin())
+            .collect();
         Self { n, cos, sin, rev }
     }
     /// In-place forward transform.
@@ -70,9 +76,18 @@ pub struct SpectrumAnalyzer {
 impl SpectrumAnalyzer {
     /// An analyser of `n` samples.
     pub fn new(n: usize) -> Self {
-        let window: Vec<f32> = (0..n).map(|i| 0.5 - 0.5 * (2.0 * PI * i as f32 / n as f32).cos()).collect();
+        let window: Vec<f32> = (0..n)
+            .map(|i| 0.5 - 0.5 * (2.0 * PI * i as f32 / n as f32).cos())
+            .collect();
         let norm = 2.0 / window.iter().sum::<f32>();
-        Self { fft: Fft::new(n), window, norm, re: vec![0.0; n], im: vec![0.0; n], db: vec![-120.0; n / 2] }
+        Self {
+            fft: Fft::new(n),
+            window,
+            norm,
+            re: vec![0.0; n],
+            im: vec![0.0; n],
+            db: vec![-120.0; n / 2],
+        }
     }
     /// Block length.
     pub fn len(&self) -> usize {
@@ -111,7 +126,11 @@ impl SpectrumAnalyzer {
         }
         let (a, b, c) = (self.db[k - 1], self.db[k], self.db[k + 1]);
         let denom = a - 2.0 * b + c;
-        let off = if denom.abs() > 1e-9 { 0.5 * (a - c) / denom } else { 0.0 };
+        let off = if denom.abs() > 1e-9 {
+            0.5 * (a - c) / denom
+        } else {
+            0.0
+        };
         ((k as f32 + off) as f64 * sr / n as f64) as f32
     }
     /// Map the last analysis onto `out.len()` bands, log-spaced from `f_lo` to `f_hi` Hz.
@@ -146,7 +165,9 @@ mod tests {
     use super::*;
 
     fn sine(hz: f32, amp: f32, sr: f32, n: usize) -> Vec<f32> {
-        (0..n).map(|i| amp * (2.0 * PI * hz * i as f32 / sr).sin()).collect()
+        (0..n)
+            .map(|i| amp * (2.0 * PI * hz * i as f32 / sr).sin())
+            .collect()
     }
 
     #[test]
@@ -173,7 +194,10 @@ mod tests {
                 sr += *v as f64 * a.cos();
                 si += *v as f64 * a.sin();
             }
-            assert!((re[k] as f64 - sr).abs() < 1e-4 && (im[k] as f64 - si).abs() < 1e-4, "bin {k}");
+            assert!(
+                (re[k] as f64 - sr).abs() < 1e-4 && (im[k] as f64 - si).abs() < 1e-4,
+                "bin {k}"
+            );
         }
     }
 
@@ -192,7 +216,11 @@ mod tests {
         an.analyze(&sine(1000.0, 0.5, 48_000.0, 4096));
         let mut bands = vec![0.0; 256];
         an.log_bands(48_000.0, 20.0, 20_000.0, &mut bands);
-        let (idx, v) = bands.iter().cloned().enumerate().fold((0, f32::MIN), |a, (i, v)| if v > a.1 { (i, v) } else { a });
+        let (idx, v) = bands
+            .iter()
+            .cloned()
+            .enumerate()
+            .fold((0, f32::MIN), |a, (i, v)| if v > a.1 { (i, v) } else { a });
         let centre = 20.0 * 1000f32.powf((idx as f32 + 0.5) / 256.0);
         assert!((centre / 1000.0 - 1.0).abs() < 0.05, "{centre}");
         assert!((v + 6.0).abs() < 1.5, "{v}");

@@ -1,0 +1,23 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Glass Phase Portal",
+  "type": "Warp Zones",
+  "subtype": "Up",
+  "mood": [
+    "Bright",
+    "Airy"
+  ],
+  "description": "Slightly sped up with a high, glassy pitch: 120 % time, +3 st",
+  "author": "NoDAW",
+  "params": {
+    "time": 120,
+    "pitch": 3.0,
+    "tone": 35,
+    "drift": 8.0,
+    "drift_rate": 3.5,
+    "echo_mix": 18,
+    "echo_time": 250,
+    "echo_fb": 30
+  }
+}

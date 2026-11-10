@@ -23,7 +23,11 @@ fn kaiser_sinc_halfband() -> [f32; TAPS] {
     let mut sum = 0.0f64;
     for (i, c) in h.iter_mut().enumerate() {
         let d = i as f64 - mid;
-        let sinc = if d == 0.0 { 1.0 } else { (std::f64::consts::PI * d * 0.5).sin() / (std::f64::consts::PI * d * 0.5) };
+        let sinc = if d == 0.0 {
+            1.0
+        } else {
+            (std::f64::consts::PI * d * 0.5).sin() / (std::f64::consts::PI * d * 0.5)
+        };
         let r = d / mid;
         let w = i0(beta * (1.0 - r * r).max(0.0).sqrt()) / i0(beta);
         let v = 0.5 * sinc * w;
@@ -58,7 +62,13 @@ impl Oversampler2x {
 
     /// A new, silent oversampler.
     pub fn new() -> Self {
-        Self { h: kaiser_sinc_halfband(), up: [0.0; TAPS], up_pos: 0, dn: [0.0; TAPS], dn_pos: 0 }
+        Self {
+            h: kaiser_sinc_halfband(),
+            up: [0.0; TAPS],
+            up_pos: 0,
+            dn: [0.0; TAPS],
+            dn_pos: 0,
+        }
     }
     /// Clear the history.
     pub fn reset(&mut self) {
@@ -131,12 +141,20 @@ impl Curve {
             }
             Curve::Tube => {
                 // Asymmetric: the positive half compresses later than the negative one.
-                let y = if x >= 0.0 { 1.0 - (-x * 1.15).exp() } else { -(1.0 - (x * 0.85).exp()) / 0.85 * 0.85 };
+                let y = if x >= 0.0 {
+                    1.0 - (-x * 1.15).exp()
+                } else {
+                    -(1.0 - (x * 0.85).exp()) / 0.85 * 0.85
+                };
                 y.clamp(-1.25, 1.0)
             }
             Curve::Diode => {
                 let a = x.abs();
-                let y = if a < 0.6 { a } else { 0.6 + 0.4 * (1.0 - (-(a - 0.6) * 2.5).exp()) };
+                let y = if a < 0.6 {
+                    a
+                } else {
+                    0.6 + 0.4 * (1.0 - (-(a - 0.6) * 2.5).exp())
+                };
                 y.copysign(x)
             }
         }
@@ -169,7 +187,15 @@ impl Saturator {
     /// A new saturator.
     pub fn new() -> Self {
         let lat = Oversampler2x::LATENCY;
-        Self { os: [Oversampler2x::new(), Oversampler2x::new()], dry: [crate::delay::DelayLine::new(lat + 4), crate::delay::DelayLine::new(lat + 4)], dc: [0.0; 2], dc_x: [0.0; 2] }
+        Self {
+            os: [Oversampler2x::new(), Oversampler2x::new()],
+            dry: [
+                crate::delay::DelayLine::new(lat + 4),
+                crate::delay::DelayLine::new(lat + 4),
+            ],
+            dc: [0.0; 2],
+            dc_x: [0.0; 2],
+        }
     }
     /// Latency in samples (constant).
     pub fn latency(&self) -> usize {
@@ -188,7 +214,15 @@ impl Saturator {
     }
     /// One stereo frame. `drive` is linear (1 = 0 dB), `makeup` linear, `mix` 0..1.
     #[inline]
-    pub fn tick(&mut self, l: f32, r: f32, curve: Curve, drive: f32, makeup: f32, mix: f32) -> (f32, f32) {
+    pub fn tick(
+        &mut self,
+        l: f32,
+        r: f32,
+        curve: Curve,
+        drive: f32,
+        makeup: f32,
+        mix: f32,
+    ) -> (f32, f32) {
         let mut out = [0.0f32; 2];
         for (ch, x) in [l, r].into_iter().enumerate() {
             self.dry[ch].push(x);
@@ -215,9 +249,17 @@ mod tests {
         let mut o = Oversampler2x::new();
         let n = 400;
         let x: Vec<f32> = (0..n).map(|i| (i as f32 * 0.05).sin() * 0.5).collect();
-        let y: Vec<f32> = x.iter().map(|&v| { let u = o.up(v); o.down(u) }).collect();
+        let y: Vec<f32> = x
+            .iter()
+            .map(|&v| {
+                let u = o.up(v);
+                o.down(u)
+            })
+            .collect();
         let lat = Oversampler2x::LATENCY;
-        let worst = (lat + 50..n).map(|i| (y[i] - x[i - lat]).abs()).fold(0.0f32, f32::max);
+        let worst = (lat + 50..n)
+            .map(|i| (y[i] - x[i - lat]).abs())
+            .fold(0.0f32, f32::max);
         assert!(worst < 2e-3, "{worst}");
     }
 
@@ -232,7 +274,10 @@ mod tests {
                 assert!(y >= prev - 1e-6, "{c:?} not monotonic at {x}");
                 prev = y;
             }
-            assert!((c.shape(0.01) / 0.01 - 1.0).abs() < 0.2, "{c:?} small-signal gain");
+            assert!(
+                (c.shape(0.01) / 0.01 - 1.0).abs() < 0.2,
+                "{c:?} small-signal gain"
+            );
             assert!(c.makeup(8.0) < 1.0);
         }
     }
@@ -242,14 +287,25 @@ mod tests {
         let sr = 48_000.0;
         let mut s = Saturator::new();
         let n = 4800;
-        let x: Vec<f32> = (0..n).map(|i| (2.0 * std::f32::consts::PI * 440.0 * i as f32 / sr).sin() * 0.5).collect();
-        let y: Vec<f32> = x.iter().map(|&v| s.tick(v, v, Curve::Tape, 4.0, 1.0, 0.0).0).collect();
+        let x: Vec<f32> = (0..n)
+            .map(|i| (2.0 * std::f32::consts::PI * 440.0 * i as f32 / sr).sin() * 0.5)
+            .collect();
+        let y: Vec<f32> = x
+            .iter()
+            .map(|&v| s.tick(v, v, Curve::Tape, 4.0, 1.0, 0.0).0)
+            .collect();
         let lat = s.latency();
         for i in lat..n {
             assert!((y[i] - x[i - lat]).abs() < 1e-6);
         }
         let mut s2 = Saturator::new();
-        let y2: Vec<f32> = x.iter().map(|&v| s2.tick(v, v, Curve::Diode, 8.0, Curve::Diode.makeup(8.0), 1.0).0).collect();
+        let y2: Vec<f32> = x
+            .iter()
+            .map(|&v| {
+                s2.tick(v, v, Curve::Diode, 8.0, Curve::Diode.makeup(8.0), 1.0)
+                    .0
+            })
+            .collect();
         assert!(y2.iter().all(|v| v.is_finite() && v.abs() < 2.0));
         let peak = y2[2000..].iter().fold(0.0f32, |m, v| m.max(v.abs()));
         assert!(peak > 0.2, "{peak}");

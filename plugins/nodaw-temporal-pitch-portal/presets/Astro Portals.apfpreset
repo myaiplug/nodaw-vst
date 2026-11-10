@@ -1,0 +1,22 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Astro Portals",
+  "type": "ScrewAI Flavors",
+  "subtype": "Sped up",
+  "mood": [
+    "Bright",
+    "Fast"
+  ],
+  "description": "Sped up and bright: 130 % time, +5 st",
+  "author": "NoDAW",
+  "params": {
+    "time": 130,
+    "pitch": 5.0,
+    "tone": 30,
+    "echo_mix": 20,
+    "echo_time": 187,
+    "echo_fb": 35,
+    "warp_sync": "1/2 Bar"
+  }
+}

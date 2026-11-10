@@ -40,7 +40,12 @@ pub struct ReverbParams {
 
 impl Default for ReverbParams {
     fn default() -> Self {
-        Self { decay: 3.0, size: 1.0, damp_hz: 6000.0, predelay_ms: 20.0 }
+        Self {
+            decay: 3.0,
+            size: 1.0,
+            damp_hz: 6000.0,
+            predelay_ms: 20.0,
+        }
     }
 }
 
@@ -83,7 +88,10 @@ impl Reverb {
             gain: [0.0; N],
             damp: 0.0,
             diff: [[ap(142.0), ap(107.0)], [ap(151.0), ap(113.0)]],
-            pre: [DelayLine::new((MAX_PREDELAY_SECONDS * sr) as usize + 4), DelayLine::new((MAX_PREDELAY_SECONDS * sr) as usize + 4)],
+            pre: [
+                DelayLine::new((MAX_PREDELAY_SECONDS * sr) as usize + 4),
+                DelayLine::new((MAX_PREDELAY_SECONDS * sr) as usize + 4),
+            ],
             pre_len: 0.0,
             pre_target: 0.0,
             tail_seconds: 0.0,
@@ -106,8 +114,10 @@ impl Reverb {
             // -60 dB after `decay` seconds: gain per pass = 10^(-3 * (len/sr) / decay)
             self.gain[i] = 10f32.powf(-3.0 * (len / self.sr) / decay);
         }
-        self.damp = (-2.0 * std::f32::consts::PI * p.damp_hz.clamp(500.0, 20_000.0) / self.sr).exp();
-        self.pre_target = (p.predelay_ms.clamp(0.0, MAX_PREDELAY_SECONDS * 1000.0) * 0.001 * self.sr).max(0.0);
+        self.damp =
+            (-2.0 * std::f32::consts::PI * p.damp_hz.clamp(500.0, 20_000.0) / self.sr).exp();
+        self.pre_target =
+            (p.predelay_ms.clamp(0.0, MAX_PREDELAY_SECONDS * 1000.0) * 0.001 * self.sr).max(0.0);
         self.tail_seconds = decay + p.predelay_ms * 0.001;
     }
 
@@ -139,7 +149,14 @@ impl Reverb {
         self.pre_len += (self.pre_target - self.pre_len) * 0.0008;
         self.pre[0].push(in_l);
         self.pre[1].push(in_r);
-        let (pl, pr) = if self.pre_len < 1.0 { (in_l, in_r) } else { (self.pre[0].tap_linear(self.pre_len), self.pre[1].tap_linear(self.pre_len)) };
+        let (pl, pr) = if self.pre_len < 1.0 {
+            (in_l, in_r)
+        } else {
+            (
+                self.pre[0].tap_linear(self.pre_len),
+                self.pre[1].tap_linear(self.pre_len),
+            )
+        };
         let mut dl = pl;
         let mut dr = pr;
         for a in &mut self.diff[0] {
@@ -186,7 +203,9 @@ impl Reverb {
 
     /// True if any internal buffer holds a subnormal number (a test hook).
     pub fn holds_subnormals(&self) -> bool {
-        self.lines.iter().any(|l| l.lp.is_subnormal() || l.buf.iter().any(|v| v.is_subnormal()))
+        self.lines
+            .iter()
+            .any(|l| l.lp.is_subnormal() || l.buf.iter().any(|v| v.is_subnormal()))
     }
 }
 
@@ -203,7 +222,15 @@ mod tests {
         }
         r.reset();
         let n = (sr as f32 * secs) as usize;
-        (0..n).map(|i| r.tick(if i == 0 { 1.0 } else { 0.0 }, if i == 0 { 1.0 } else { 0.0 }).0).collect()
+        (0..n)
+            .map(|i| {
+                r.tick(
+                    if i == 0 { 1.0 } else { 0.0 },
+                    if i == 0 { 1.0 } else { 0.0 },
+                )
+                .0
+            })
+            .collect()
     }
 
     fn energy_db(x: &[f32]) -> f32 {
@@ -215,21 +242,39 @@ mod tests {
     fn decay_time_is_close_to_the_requested_rt60() {
         let sr = 48_000.0;
         for rt in [1.0f32, 3.0, 6.0] {
-            let ir = impulse_response(sr, ReverbParams { decay: rt, size: 1.0, damp_hz: 20_000.0, predelay_ms: 0.0 }, rt * 1.6);
+            let ir = impulse_response(
+                sr,
+                ReverbParams {
+                    decay: rt,
+                    size: 1.0,
+                    damp_hz: 20_000.0,
+                    predelay_ms: 0.0,
+                },
+                rt * 1.6,
+            );
             // energy in 100 ms windows; the slope between 0.15 s and rt*0.75 s extrapolated to -60 dB
             let w = (sr * 0.1) as usize;
-            let level = |t: f32| energy_db(&ir[(t * sr as f32) as usize..(t * sr as f32) as usize + w]);
+            let level =
+                |t: f32| energy_db(&ir[(t * sr as f32) as usize..(t * sr as f32) as usize + w]);
             let (t0, t1) = (0.15, rt * 0.7);
             let slope = (level(t1) - level(t0)) / (t1 - t0); // dB per second, negative
             let measured = -60.0 / slope;
-            assert!((measured / rt - 1.0).abs() < 0.3, "rt {rt}: measured {measured}");
+            assert!(
+                (measured / rt - 1.0).abs() < 0.3,
+                "rt {rt}: measured {measured}"
+            );
         }
     }
 
     #[test]
     fn it_is_stable_and_bounded_under_loud_noise() {
         let mut r = Reverb::new(44_100.0);
-        r.set(ReverbParams { decay: 20.0, size: 2.0, damp_hz: 20_000.0, predelay_ms: 250.0 });
+        r.set(ReverbParams {
+            decay: 20.0,
+            size: 2.0,
+            damp_hz: 20_000.0,
+            predelay_ms: 250.0,
+        });
         let mut n = crate::util::Noise::new(7);
         let mut peak = 0.0f32;
         for _ in 0..44_100 * 20 {
@@ -243,7 +288,12 @@ mod tests {
     #[test]
     fn a_decaying_tail_never_enters_the_subnormal_range() {
         let mut r = Reverb::new(48_000.0);
-        r.set(ReverbParams { decay: 0.3, size: 0.5, damp_hz: 800.0, predelay_ms: 0.0 });
+        r.set(ReverbParams {
+            decay: 0.3,
+            size: 0.5,
+            damp_hz: 800.0,
+            predelay_ms: 0.0,
+        });
         r.tick(1.0, 1.0);
         for i in 0..48_000 * 20 {
             let (a, b) = r.tick(0.0, 0.0);
@@ -269,7 +319,10 @@ mod tests {
         let mut r = Reverb::new(48_000.0);
         let mut diff = 0.0f32;
         for i in 0..20_000 {
-            let (a, b) = r.tick(if i == 0 { 1.0 } else { 0.0 }, if i == 0 { 1.0 } else { 0.0 });
+            let (a, b) = r.tick(
+                if i == 0 { 1.0 } else { 0.0 },
+                if i == 0 { 1.0 } else { 0.0 },
+            );
             diff += (a - b).abs();
         }
         assert!(diff > 0.01);

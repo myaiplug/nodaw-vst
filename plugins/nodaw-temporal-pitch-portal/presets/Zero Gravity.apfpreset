@@ -1,0 +1,19 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Zero Gravity",
+  "type": "Warp Zones",
+  "subtype": "Up",
+  "mood": [
+    "Bright",
+    "Fast"
+  ],
+  "description": "Sped up and pitched up: 150 % time, +7 st",
+  "author": "NoDAW",
+  "params": {
+    "time": 150,
+    "pitch": 7.0,
+    "tone": 15,
+    "warp_sync": "1/2 Bar"
+  }
+}

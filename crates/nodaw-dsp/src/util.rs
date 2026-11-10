@@ -56,7 +56,11 @@ pub struct Smooth {
 impl Smooth {
     /// A smoother resting at `value`, with times in milliseconds.
     pub fn new(value: f32, sample_rate: f64, up_ms: f32, down_ms: f32) -> Self {
-        let mut s = Self { value, up: 1.0, down: 1.0 };
+        let mut s = Self {
+            value,
+            up: 1.0,
+            down: 1.0,
+        };
         s.set_times(sample_rate, up_ms, down_ms);
         s
     }
@@ -73,7 +77,11 @@ impl Smooth {
     /// Move one sample towards `target` and return the new value.
     #[inline]
     pub fn tick(&mut self, target: f32) -> f32 {
-        let c = if target > self.value { self.up } else { self.down };
+        let c = if target > self.value {
+            self.up
+        } else {
+            self.down
+        };
         self.value += (target - self.value) * c;
         if (target - self.value).abs() < 3.0e-5 {
             self.value = target;

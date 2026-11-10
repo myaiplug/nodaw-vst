@@ -1,0 +1,32 @@
+[package]
+name = "nodaw-temporal-pitch-portal"
+description = "NoDAW Temporal Pitch Portal: tempo-synced time warp and independent pitch shift as a CLAP/VST3 plugin"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-NoDAW-Proprietary"
+publish = false
+
+[lib]
+crate-type = ["staticlib", "rlib"]
+
+[features]
+default = ["ui"]
+ui = ["dep:apf-webview"]
+
+[dependencies]
+apf = { path = "../../vendor/apf/crates/apf" }
+apf-webview = { path = "../../vendor/apf/crates/apf-webview", optional = true }
+nodaw-dsp = { path = "../../crates/nodaw-dsp" }
+nodaw-kit = { path = "../../crates/nodaw-kit" }
+
+[dev-dependencies]
+clap-sys = "0.5"
+apf-test = { path = "../../vendor/apf/crates/apf-test" }
+
+[package.metadata.apf]
+name = "NoDAW Temporal Pitch Portal"
+bundle-id = "com.nodaw.temporal-pitch-portal"
+au-type = "aufx"
+au-subtype = "NdTp"
+au-manufacturer = "NdDw"
+au-manufacturer-name = "NoDAW"
