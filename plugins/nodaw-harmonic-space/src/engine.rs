@@ -82,7 +82,13 @@ impl Default for Settings {
             amp_db: 0.0,
             hpf_hz: 20.0,
             lpf_hz: 22_000.0,
-            bands: std::array::from_fn(|i| Band { freq: DEFAULT_FREQS[i], gain_db: 0.0, q: if i == 0 || i == BANDS - 1 { 0.707 } else { 1.0 }, solo: false, mute: false }),
+            bands: std::array::from_fn(|i| Band {
+                freq: DEFAULT_FREQS[i],
+                gain_db: 0.0,
+                q: if i == 0 || i == BANDS - 1 { 0.707 } else { 1.0 },
+                solo: false,
+                mute: false,
+            }),
             sub_db: 0.0,
             sub_hz: 80.0,
             delay_mix: 0.0,
@@ -236,7 +242,11 @@ impl Engine {
     }
 
     fn all_filters(&mut self) -> impl Iterator<Item = &mut EqBand> {
-        self.eq.iter_mut().chain(self.solo.iter_mut()).chain([&mut self.sub, &mut self.hpf, &mut self.lpf])
+        self.eq.iter_mut().chain(self.solo.iter_mut()).chain([
+            &mut self.sub,
+            &mut self.hpf,
+            &mut self.lpf,
+        ])
     }
 
     fn update(&mut self, s: &Settings) {
@@ -255,9 +265,16 @@ impl Engine {
             };
             b.set(shape, set.freq.clamp(10.0, nyq), set.q.max(0.5), 0.0, sr);
         }
-        self.sub.set(Shape::LowShelf, s.sub_hz.clamp(20.0, 400.0), 0.8, s.sub_db, sr);
+        self.sub.set(
+            Shape::LowShelf,
+            s.sub_hz.clamp(20.0, 400.0),
+            0.8,
+            s.sub_db,
+            sr,
+        );
         if s.hpf_hz > HPF_OFF_HZ {
-            self.hpf.set(Shape::HighPass, s.hpf_hz.min(nyq), 0.707, 0.0, sr);
+            self.hpf
+                .set(Shape::HighPass, s.hpf_hz.min(nyq), 0.707, 0.0, sr);
         } else {
             self.hpf.set(Shape::Peak, 1000.0, 1.0, 0.0, sr);
         }
@@ -266,7 +283,12 @@ impl Engine {
         } else {
             self.lpf.set(Shape::Peak, 1000.0, 1.0, 0.0, sr);
         }
-        let rp = ReverbParams { decay: s.decay_s, size: s.size, damp_hz: s.damp_hz, predelay_ms: s.predelay_ms };
+        let rp = ReverbParams {
+            decay: s.decay_s,
+            size: s.size,
+            damp_hz: s.damp_hz,
+            predelay_ms: s.predelay_ms,
+        };
         if rp != self.rev_set {
             self.rev_set = rp;
             self.reverb.set(rp);
@@ -313,11 +335,15 @@ impl Engine {
         }
         let eq_active = !self.eq.iter().all(|b| b.is_identity());
         let solo_active = any_solo || self.solo_amt.value() > 0.0;
-        let tone_active = !(self.sub.is_identity() && self.hpf.is_identity() && self.lpf.is_identity());
+        let tone_active =
+            !(self.sub.is_identity() && self.hpf.is_identity() && self.lpf.is_identity());
         let mut fx_peak = [0.0f32; 3];
         for i in 0..n {
             let (xl, xr) = (l[i], r[i]);
-            let (xl, xr) = (if xl.is_finite() { xl } else { 0.0 }, if xr.is_finite() { xr } else { 0.0 });
+            let (xl, xr) = (
+                if xl.is_finite() { xl } else { 0.0 },
+                if xr.is_finite() { xr } else { 0.0 },
+            );
             let g = self.amp.tick(amp_t);
             let (il, ir) = (xl * g, xr * g);
 
@@ -403,7 +429,10 @@ impl Engine {
             l[i] = undenorm(ol + (xl - ol) * bb);
             r[i] = undenorm(or + (xr - or) * bb);
         }
-        BlockInfo { fx_peak, correlation: self.corr.value() }
+        BlockInfo {
+            fx_peak,
+            correlation: self.corr.value(),
+        }
     }
 }
 
@@ -412,7 +441,9 @@ mod tests {
     use super::*;
 
     fn sine(n: usize, hz: f64, sr: f64, amp: f32) -> Vec<f32> {
-        (0..n).map(|i| (amp as f64 * (2.0 * std::f64::consts::PI * hz * i as f64 / sr).sin()) as f32).collect()
+        (0..n)
+            .map(|i| (amp as f64 * (2.0 * std::f64::consts::PI * hz * i as f64 / sr).sin()) as f32)
+            .collect()
     }
     fn run(e: &mut Engine, s: &Settings, x: &[f32], block: usize) -> (Vec<f32>, Vec<f32>) {
         let (mut l, mut r) = (x.to_vec(), x.to_vec());
@@ -432,7 +463,10 @@ mod tests {
         let mut e = Engine::new(sr);
         let (l, r) = run(&mut e, &Settings::default(), &x, 256);
         for i in 0..x.len() {
-            assert!((l[i] - x[i]).abs() < 1e-4 && (r[i] - x[i]).abs() < 1e-4, "@{i}");
+            assert!(
+                (l[i] - x[i]).abs() < 1e-4 && (r[i] - x[i]).abs() < 1e-4,
+                "@{i}"
+            );
         }
     }
 
@@ -446,7 +480,11 @@ mod tests {
         assert!((peak(&l[12_000..]) / 0.1 - db_to_gain(12.0)).abs() < 0.2);
         s.bands[2].mute = true;
         let (l, _) = run(&mut Engine::new(sr), &s, &x, 128);
-        assert!(peak(&l[12_000..]) < 0.1 * db_to_gain(-24.0), "{}", peak(&l[12_000..]));
+        assert!(
+            peak(&l[12_000..]) < 0.1 * db_to_gain(-24.0),
+            "{}",
+            peak(&l[12_000..])
+        );
     }
 
     #[test]
@@ -459,19 +497,37 @@ mod tests {
         let (l, _) = run(&mut Engine::new(sr), &s, &lo, 256);
         assert!(peak(&l[12_000..]) > 0.08, "the soloed band passes");
         let (l, _) = run(&mut Engine::new(sr), &s, &hi, 256);
-        assert!(peak(&l[12_000..]) < 0.01, "everything else is out: {}", peak(&l[12_000..]));
+        assert!(
+            peak(&l[12_000..]) < 0.01,
+            "everything else is out: {}",
+            peak(&l[12_000..])
+        );
     }
 
     #[test]
     fn filters_and_sub_shape_the_extremes() {
         let sr = 48_000.0;
-        let s = Settings { hpf_hz: 300.0, ..Settings::default() };
+        let s = Settings {
+            hpf_hz: 300.0,
+            ..Settings::default()
+        };
         let (l, _) = run(&mut Engine::new(sr), &s, &sine(24_000, 50.0, sr, 0.1), 256);
         assert!(peak(&l[12_000..]) < 0.01);
-        let s = Settings { lpf_hz: 2000.0, ..Settings::default() };
-        let (l, _) = run(&mut Engine::new(sr), &s, &sine(24_000, 12_000.0, sr, 0.1), 256);
+        let s = Settings {
+            lpf_hz: 2000.0,
+            ..Settings::default()
+        };
+        let (l, _) = run(
+            &mut Engine::new(sr),
+            &s,
+            &sine(24_000, 12_000.0, sr, 0.1),
+            256,
+        );
         assert!(peak(&l[12_000..]) < 0.01);
-        let s = Settings { sub_db: 10.0, ..Settings::default() };
+        let s = Settings {
+            sub_db: 10.0,
+            ..Settings::default()
+        };
         let (l, _) = run(&mut Engine::new(sr), &s, &sine(48_000, 40.0, sr, 0.1), 256);
         assert!(peak(&l[24_000..]) > 0.1 * db_to_gain(7.0));
     }
@@ -482,9 +538,31 @@ mod tests {
         let mut x = vec![0.0f32; 48_000 * 4];
         x[100] = 1.0;
         for (name, s) in [
-            ("delay", Settings { delay_mix: 0.8, delay_s: 0.25, delay_fb: 0.5, ..Settings::default() }),
-            ("reverb", Settings { reverb_mix: 0.6, decay_s: 1.0, ..Settings::default() }),
-            ("flanger", Settings { flanger_mix: 0.8, fl_fb: 0.6, ..Settings::default() }),
+            (
+                "delay",
+                Settings {
+                    delay_mix: 0.8,
+                    delay_s: 0.25,
+                    delay_fb: 0.5,
+                    ..Settings::default()
+                },
+            ),
+            (
+                "reverb",
+                Settings {
+                    reverb_mix: 0.6,
+                    decay_s: 1.0,
+                    ..Settings::default()
+                },
+            ),
+            (
+                "flanger",
+                Settings {
+                    flanger_mix: 0.8,
+                    fl_fb: 0.6,
+                    ..Settings::default()
+                },
+            ),
         ] {
             let (l, r) = run(&mut Engine::new(sr), &s, &x, 512);
             let after = peak(&l[2000..24_000]).max(peak(&r[2000..24_000]));
@@ -501,11 +579,22 @@ mod tests {
     fn mix_zero_and_bypass_are_the_dry_input() {
         let sr = 48_000.0;
         let x = sine(9600, 300.0, sr, 0.4);
-        let mut s = Settings { amp_db: 9.0, reverb_mix: 0.5, delay_mix: 0.5, hpf_hz: 200.0, mix: 0.0, ..Settings::default() };
+        let mut s = Settings {
+            amp_db: 9.0,
+            reverb_mix: 0.5,
+            delay_mix: 0.5,
+            hpf_hz: 200.0,
+            mix: 0.0,
+            ..Settings::default()
+        };
         s.bands[3].gain_db = 12.0;
         let (l, _) = run(&mut Engine::new(sr), &s, &x, 256);
         assert!(l.iter().zip(&x).all(|(a, b)| (a - b).abs() < 1e-5));
-        let s = Settings { mix: 1.0, bypass: true, ..s };
+        let s = Settings {
+            mix: 1.0,
+            bypass: true,
+            ..s
+        };
         let (l, _) = run(&mut Engine::new(sr), &s, &x, 256);
         assert!(l.iter().zip(&x).all(|(a, b)| (a - b).abs() < 1e-5));
     }

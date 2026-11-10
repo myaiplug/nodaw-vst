@@ -37,7 +37,10 @@ fn every_key_the_page_binds_is_a_real_parameter() {
     used.extend(js_knob_keys());
     assert!(!used.is_empty());
     for k in used {
-        assert!(PARAMS.iter().any(|p| p.key == k), "the page binds {k:?}, which is not a parameter");
+        assert!(
+            PARAMS.iter().any(|p| p.key == k),
+            "the page binds {k:?}, which is not a parameter"
+        );
     }
 }
 
@@ -52,6 +55,10 @@ fn every_parameter_has_a_control_on_the_page() {
     // by `apf.param("key")` in app.js
     for p in PARAMS {
         let quoted = format!("\"{}\"", p.key);
-        assert!(used.iter().any(|k| k == p.key) || JS.contains(&quoted), "parameter {} has no control on the page", p.key);
+        assert!(
+            used.iter().any(|k| k == p.key) || JS.contains(&quoted),
+            "parameter {} has no control on the page",
+            p.key
+        );
     }
 }

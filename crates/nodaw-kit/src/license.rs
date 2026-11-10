@@ -48,7 +48,14 @@ impl Product {
 }
 
 /// A product for tests.
-pub static TEST_PRODUCT: Product = Product { name: "NoDAW Test", folder: "Test", gumroad_product_id: "TODO", buy_url: "https://example.com/buy", hmac_key: b"nodaw-test/license/v1", user_agent: "NoDAW-Test/0" };
+pub static TEST_PRODUCT: Product = Product {
+    name: "NoDAW Test",
+    folder: "Test",
+    gumroad_product_id: "TODO",
+    buy_url: "https://example.com/buy",
+    hmac_key: b"nodaw-test/license/v1",
+    user_agent: "NoDAW-Test/0",
+};
 
 // ── policy ─────────────────────────────────────────────────────────────────────────────────
 
@@ -78,11 +85,22 @@ pub struct Record {
 fn mac_hex(key: &[u8], msg: &str) -> String {
     let mut m = <Hmac<Sha256> as Mac>::new_from_slice(key).expect("any key length works");
     m.update(msg.as_bytes());
-    m.finalize().into_bytes().iter().map(|b| format!("{b:02x}")).collect()
+    m.finalize()
+        .into_bytes()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 fn canon(r: &Record) -> String {
-    format!("v1|{}|{}|{}|{}|{}", r.trial_start, r.last_seen, r.key.as_deref().unwrap_or(""), r.verified_at, r.email.as_deref().unwrap_or(""))
+    format!(
+        "v1|{}|{}|{}|{}|{}",
+        r.trial_start,
+        r.last_seen,
+        r.key.as_deref().unwrap_or(""),
+        r.verified_at,
+        r.email.as_deref().unwrap_or("")
+    )
 }
 
 fn shadow_canon(start: u64) -> String {
@@ -91,7 +109,11 @@ fn shadow_canon(start: u64) -> String {
 
 impl Record {
     pub fn fresh(now: u64) -> Self {
-        Self { trial_start: now, last_seen: now, ..Default::default() }
+        Self {
+            trial_start: now,
+            last_seen: now,
+            ..Default::default()
+        }
     }
 
     pub fn to_json(&self, key: &[u8]) -> String {
@@ -121,7 +143,12 @@ impl Record {
     /// parses but the signature does not match, `Err(Unreadable)` otherwise.
     pub fn from_json(text: &str, key: &[u8]) -> Result<Self, ParseError> {
         let v = json::parse(text).map_err(|_| ParseError::Unreadable)?;
-        let num = |k: &str| v.get(k).and_then(Value::as_f64).filter(|x| x.is_finite() && *x >= 0.0).map(|x| x as u64);
+        let num = |k: &str| {
+            v.get(k)
+                .and_then(Value::as_f64)
+                .filter(|x| x.is_finite() && *x >= 0.0)
+                .map(|x| x as u64)
+        };
         let opt_str = |k: &str| v.get(k).and_then(Value::as_str).map(str::to_string);
         let r = Record {
             trial_start: num("trial_start").ok_or(ParseError::Unreadable)?,
@@ -130,7 +157,10 @@ impl Record {
             verified_at: num("verified_at").unwrap_or(0),
             email: opt_str("email"),
         };
-        let mac = v.get("mac").and_then(Value::as_str).ok_or(ParseError::Tampered)?;
+        let mac = v
+            .get("mac")
+            .and_then(Value::as_str)
+            .ok_or(ParseError::Tampered)?;
         if !constant_eq(mac.as_bytes(), mac_hex(key, &canon(&r)).as_bytes()) {
             return Err(ParseError::Tampered);
         }
@@ -139,7 +169,10 @@ impl Record {
 }
 
 pub fn shadow_json(start: u64, key: &[u8]) -> String {
-    format!("{{\"s\":{start},\"m\":\"{}\"}}", mac_hex(key, &shadow_canon(start)))
+    format!(
+        "{{\"s\":{start},\"m\":\"{}\"}}",
+        mac_hex(key, &shadow_canon(start))
+    )
 }
 
 pub fn parse_shadow(text: &str, key: &[u8]) -> Option<u64> {
@@ -188,7 +221,9 @@ pub fn evaluate(r: &Record, tampered: bool, now: u64) -> Status {
         // Never locked out offline: the age of the last check only decides whether to ask again.
         let age = now.saturating_sub(r.verified_at);
         let clock_back = r.verified_at > now + DAY;
-        return Status::Licensed { recheck_due: age >= RECHECK_SECS || clock_back };
+        return Status::Licensed {
+            recheck_due: age >= RECHECK_SECS || clock_back,
+        };
     }
     if tampered {
         return Status::Expired { tampered: true };
@@ -199,7 +234,9 @@ pub fn evaluate(r: &Record, tampered: bool, now: u64) -> Status {
     if elapsed >= total {
         Status::Expired { tampered: false }
     } else {
-        Status::Trial { days_left: (total - elapsed).div_ceil(DAY) }
+        Status::Trial {
+            days_left: (total - elapsed).div_ceil(DAY),
+        }
     }
 }
 
@@ -218,20 +255,31 @@ pub enum Verdict {
 /// Reads Gumroad's answer. Pure, so it is unit-tested without a network.
 pub fn parse_verify(status: u16, body: &str) -> Verdict {
     let Ok(v) = json::parse(body) else {
-        return if status >= 500 || status == 0 { Verdict::Unreachable(format!("Gumroad error ({status})")) } else { Verdict::Unreachable("Unexpected answer from Gumroad".into()) };
+        return if status >= 500 || status == 0 {
+            Verdict::Unreachable(format!("Gumroad error ({status})"))
+        } else {
+            Verdict::Unreachable("Unexpected answer from Gumroad".into())
+        };
     };
     let success = matches!(v.get("success"), Some(Value::Bool(true)));
     let message = v.get("message").and_then(Value::as_str).map(str::to_string);
     if !success {
         // 404 (no such license for this product) and 400 are definitive answers; 5xx are not.
         if (400..500).contains(&status) || status == 200 {
-            return Verdict::Invalid(message.unwrap_or_else(|| "That license key was not accepted.".into()));
+            return Verdict::Invalid(
+                message.unwrap_or_else(|| "That license key was not accepted.".into()),
+            );
         }
-        return Verdict::Unreachable(message.unwrap_or_else(|| format!("Gumroad error ({status})")));
+        return Verdict::Unreachable(
+            message.unwrap_or_else(|| format!("Gumroad error ({status})")),
+        );
     }
     let p = v.get("purchase");
     let flag = |k: &str| matches!(p.and_then(|p| p.get(k)), Some(Value::Bool(true)));
-    let set = |k: &str| p.and_then(|p| p.get(k)).is_some_and(|x| !matches!(x, Value::Null) && x.as_str() != Some(""));
+    let set = |k: &str| {
+        p.and_then(|p| p.get(k))
+            .is_some_and(|x| !matches!(x, Value::Null) && x.as_str() != Some(""))
+    };
     if flag("refunded") {
         return Verdict::Invalid("This purchase was refunded.".into());
     }
@@ -241,14 +289,21 @@ pub fn parse_verify(status: u16, body: &str) -> Verdict {
     if set("subscription_ended_at") || set("subscription_failed_at") {
         return Verdict::Invalid("This subscription has ended.".into());
     }
-    Verdict::Valid { email: p.and_then(|p| p.get("email")).and_then(Value::as_str).map(str::to_string) }
+    Verdict::Valid {
+        email: p
+            .and_then(|p| p.get("email"))
+            .and_then(Value::as_str)
+            .map(str::to_string),
+    }
 }
 
 fn form_escape(s: &str) -> String {
     let mut o = String::new();
     for b in s.bytes() {
         match b {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => o.push(b as char),
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                o.push(b as char)
+            }
             _ => o.push_str(&format!("%{b:02X}")),
         }
     }
@@ -260,15 +315,31 @@ pub fn verify_online(p: &'static Product, key: &str) -> Verdict {
     if !p.activation_ready() {
         return Verdict::Unreachable("Activation is not set up in this build yet.".into());
     }
-    let body = format!("product_id={}&license_key={}&increment_uses_count=false", form_escape(p.gumroad_product_id), form_escape(key));
-    let agent = ureq::AgentBuilder::new().timeout(NET_TIMEOUT).user_agent(p.user_agent).build();
-    match agent.post(VERIFY_URL).set("Content-Type", "application/x-www-form-urlencoded").send_string(&body) {
+    let body = format!(
+        "product_id={}&license_key={}&increment_uses_count=false",
+        form_escape(p.gumroad_product_id),
+        form_escape(key)
+    );
+    let agent = ureq::AgentBuilder::new()
+        .timeout(NET_TIMEOUT)
+        .user_agent(p.user_agent)
+        .build();
+    match agent
+        .post(VERIFY_URL)
+        .set("Content-Type", "application/x-www-form-urlencoded")
+        .send_string(&body)
+    {
         Ok(resp) => {
             let status = resp.status();
             parse_verify(status, &resp.into_string().unwrap_or_default())
         }
-        Err(ureq::Error::Status(status, resp)) => parse_verify(status, &resp.into_string().unwrap_or_default()),
-        Err(e) => Verdict::Unreachable(format!("Could not reach Gumroad: {}", short(&e.to_string()))),
+        Err(ureq::Error::Status(status, resp)) => {
+            parse_verify(status, &resp.into_string().unwrap_or_default())
+        }
+        Err(e) => Verdict::Unreachable(format!(
+            "Could not reach Gumroad: {}",
+            short(&e.to_string())
+        )),
     }
 }
 
@@ -289,7 +360,11 @@ pub struct Store {
 
 impl Default for Store {
     fn default() -> Self {
-        Self { main: None, shadow: None, key: TEST_PRODUCT.hmac_key }
+        Self {
+            main: None,
+            shadow: None,
+            key: TEST_PRODUCT.hmac_key,
+        }
     }
 }
 
@@ -299,18 +374,32 @@ impl Store {
     /// Support/NoDAW Labs/<folder>` and `~/Library/Caches/NoDAW Labs/<folder>`. Linux:
     /// `$XDG_CONFIG_HOME` / `$XDG_CACHE_HOME`.
     pub fn default_paths(p: &'static Product) -> Self {
-        let env = |k: &str| std::env::var_os(k).filter(|v| !v.is_empty()).map(PathBuf::from);
+        let env = |k: &str| {
+            std::env::var_os(k)
+                .filter(|v| !v.is_empty())
+                .map(PathBuf::from)
+        };
         let (main_dir, shadow_dir) = if cfg!(target_os = "windows") {
             (env("APPDATA"), env("LOCALAPPDATA"))
         } else if cfg!(target_os = "macos") {
             let h = env("HOME");
-            (h.as_ref().map(|h| h.join("Library/Application Support")), h.map(|h| h.join("Library/Caches")))
+            (
+                h.as_ref().map(|h| h.join("Library/Application Support")),
+                h.map(|h| h.join("Library/Caches")),
+            )
         } else {
             let h = env("HOME");
-            (env("XDG_CONFIG_HOME").or_else(|| h.as_ref().map(|h| h.join(".config"))), env("XDG_CACHE_HOME").or_else(|| h.map(|h| h.join(".cache"))))
+            (
+                env("XDG_CONFIG_HOME").or_else(|| h.as_ref().map(|h| h.join(".config"))),
+                env("XDG_CACHE_HOME").or_else(|| h.map(|h| h.join(".cache"))),
+            )
         };
         let sub = |d: PathBuf| d.join("NoDAW Labs").join(p.folder);
-        Self { main: main_dir.map(|d| sub(d).join("license.json")), shadow: shadow_dir.map(|d| sub(d).join(".cache")), key: p.hmac_key }
+        Self {
+            main: main_dir.map(|d| sub(d).join("license.json")),
+            shadow: shadow_dir.map(|d| sub(d).join(".cache")),
+            key: p.hmac_key,
+        }
     }
 
     fn read(p: &Option<PathBuf>) -> Option<String> {
@@ -324,18 +413,31 @@ impl Store {
             let _ = std::fs::create_dir_all(dir);
         }
         let tmp = p.with_extension("tmp");
-        std::fs::write(&tmp, text).and_then(|_| std::fs::rename(&tmp, p)).is_ok() || std::fs::write(p, text).is_ok()
+        std::fs::write(&tmp, text)
+            .and_then(|_| std::fs::rename(&tmp, p))
+            .is_ok()
+            || std::fs::write(p, text).is_ok()
     }
 
     /// Loads (or starts) the state. Returns the record and whether it had been tampered with.
     pub fn load(&self, now: u64) -> (Record, bool) {
         let shadow = Self::read(&self.shadow).and_then(|t| parse_shadow(&t, self.key));
-        let (mut rec, tampered) = match Self::read(&self.main).map(|t| Record::from_json(&t, self.key)) {
-            Some(Ok(r)) => (r, false),
-            Some(Err(ParseError::Tampered)) => (Record { trial_start: shadow.unwrap_or(0), last_seen: now, ..Default::default() }, true),
-            // Missing or garbage: a new trial, unless the shadow remembers an older start.
-            Some(Err(ParseError::Unreadable)) | None => (Record::fresh(shadow.unwrap_or(now).min(now)), false),
-        };
+        let (mut rec, tampered) =
+            match Self::read(&self.main).map(|t| Record::from_json(&t, self.key)) {
+                Some(Ok(r)) => (r, false),
+                Some(Err(ParseError::Tampered)) => (
+                    Record {
+                        trial_start: shadow.unwrap_or(0),
+                        last_seen: now,
+                        ..Default::default()
+                    },
+                    true,
+                ),
+                // Missing or garbage: a new trial, unless the shadow remembers an older start.
+                Some(Err(ParseError::Unreadable)) | None => {
+                    (Record::fresh(shadow.unwrap_or(now).min(now)), false)
+                }
+            };
         if let Some(s) = shadow {
             rec.trial_start = rec.trial_start.min(s);
         }
@@ -348,14 +450,18 @@ impl Store {
 
     pub fn save(&self, r: &Record) {
         Self::write(&self.main, &r.to_json(self.key));
-        if Self::read(&self.shadow).and_then(|t| parse_shadow(&t, self.key)) != Some(r.trial_start) {
+        if Self::read(&self.shadow).and_then(|t| parse_shadow(&t, self.key)) != Some(r.trial_start)
+        {
             Self::write(&self.shadow, &shadow_json(r.trial_start, self.key));
         }
     }
 }
 
 pub fn now_secs() -> u64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }
 
 // ── the live state shared by the plugin, its controller and the network threads ────────────
@@ -377,16 +483,37 @@ pub struct Manager {
 }
 
 impl Manager {
-    pub fn load(product: &'static Product, store: Store, now: u64, verifier: fn(&'static Product, &str) -> Verdict) -> Arc<Self> {
+    pub fn load(
+        product: &'static Product,
+        store: Store,
+        now: u64,
+        verifier: fn(&'static Product, &str) -> Verdict,
+    ) -> Arc<Self> {
         let (rec, tampered) = store.load(now);
-        let m = Arc::new(Self { product, store, inner: Mutex::new(Inner { rec, tampered, busy: false, message: None }), demo: AtomicBool::new(false), verifier });
+        let m = Arc::new(Self {
+            product,
+            store,
+            inner: Mutex::new(Inner {
+                rec,
+                tampered,
+                busy: false,
+                message: None,
+            }),
+            demo: AtomicBool::new(false),
+            verifier,
+        });
         m.refresh(now);
         m
     }
 
     /// The real one: files in the user's profile, Gumroad over HTTPS.
     pub fn load_default(product: &'static Product) -> Arc<Self> {
-        Self::load(product, Store::default_paths(product), now_secs(), verify_online)
+        Self::load(
+            product,
+            Store::default_paths(product),
+            now_secs(),
+            verify_online,
+        )
     }
 
     /// The product this manager licenses.
@@ -417,7 +544,12 @@ impl Manager {
     pub fn maybe_recheck(self: &Arc<Self>, now: u64) {
         let key = {
             let Ok(mut g) = self.inner.lock() else { return };
-            if g.busy || !matches!(evaluate(&g.rec, g.tampered, now), Status::Licensed { recheck_due: true }) {
+            if g.busy
+                || !matches!(
+                    evaluate(&g.rec, g.tampered, now),
+                    Status::Licensed { recheck_due: true }
+                )
+            {
                 return;
             }
             g.busy = true;
@@ -452,7 +584,11 @@ impl Manager {
             let v = (me.verifier)(me.product, &key);
             me.apply(&key, v, user, now_secs());
         };
-        if std::thread::Builder::new().name("nodaw-license".into()).spawn(run).is_err() {
+        if std::thread::Builder::new()
+            .name("nodaw-license".into())
+            .spawn(run)
+            .is_err()
+        {
             if let Ok(mut g) = self.inner.lock() {
                 g.busy = false;
             }
@@ -471,7 +607,15 @@ impl Manager {
                     g.rec.email = email;
                 }
                 g.tampered = false;
-                g.message = user.then(|| (true, format!("{} is activated. Thank you for supporting NoDAW!", self.product.name)));
+                g.message = user.then(|| {
+                    (
+                        true,
+                        format!(
+                            "{} is activated. Thank you for supporting NoDAW!",
+                            self.product.name
+                        ),
+                    )
+                });
                 self.store.save(&g.rec);
             }
             Verdict::Invalid(msg) => {
@@ -507,13 +651,19 @@ impl Manager {
             Status::Expired { tampered: true } => ("tampered", 0),
             Status::Licensed { .. } => ("licensed", 0),
         };
-        let mut o = format!("{{\"state\":\"{state}\",\"days_left\":{days},\"trial_days\":{TRIAL_DAYS},\"busy\":{}", g.busy);
+        let mut o = format!(
+            "{{\"state\":\"{state}\",\"days_left\":{days},\"trial_days\":{TRIAL_DAYS},\"busy\":{}",
+            g.busy
+        );
         o.push_str(",\"message\":");
         match &g.message {
             Some((_, m)) => json::write_str(&mut o, m),
             None => o.push_str("null"),
         }
-        o.push_str(&format!(",\"ok\":{}", g.message.as_ref().is_some_and(|m| m.0)));
+        o.push_str(&format!(
+            ",\"ok\":{}",
+            g.message.as_ref().is_some_and(|m| m.0)
+        ));
         o.push_str(",\"email\":");
         match &g.rec.email {
             Some(e) if matches!(s, Status::Licensed { .. }) => json::write_str(&mut o, e),
@@ -522,14 +672,24 @@ impl Manager {
         o.push_str(",\"key_hint\":");
         match &g.rec.key {
             Some(k) => {
-                let tail: String = k.chars().rev().take(4).collect::<Vec<_>>().into_iter().rev().collect();
+                let tail: String = k
+                    .chars()
+                    .rev()
+                    .take(4)
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .rev()
+                    .collect();
                 json::write_str(&mut o, &format!("••••{tail}"));
             }
             None => o.push_str("null"),
         }
         o.push_str(",\"buy_url\":");
         json::write_str(&mut o, self.product.buy_url);
-        o.push_str(&format!(",\"activation_ready\":{}", self.product.activation_ready()));
+        o.push_str(&format!(
+            ",\"activation_ready\":{}",
+            self.product.activation_ready()
+        ));
         o.push_str(",\"product\":");
         json::write_str(&mut o, self.product.name);
         o.push('}');
@@ -569,7 +729,12 @@ impl Dropout {
 
     pub fn new(sample_rate: f64) -> Self {
         let s = |x: f64| ((x * sample_rate).round() as u64).max(1);
-        Self { pos: 0, period: s(Self::PERIOD), gap: s(Self::GAP), fade: s(Self::FADE) }
+        Self {
+            pos: 0,
+            period: s(Self::PERIOD),
+            gap: s(Self::GAP),
+            fade: s(Self::FADE),
+        }
     }
 
     pub fn reset(&mut self) {
@@ -626,9 +791,18 @@ mod tests {
     fn a_new_trial_has_fourteen_days_and_counts_down() {
         let r = Record::fresh(T0);
         assert_eq!(evaluate(&r, false, T0), Status::Trial { days_left: 14 });
-        assert_eq!(evaluate(&r, false, T0 + DAY - 1), Status::Trial { days_left: 14 });
-        assert_eq!(evaluate(&r, false, T0 + DAY), Status::Trial { days_left: 13 });
-        assert_eq!(evaluate(&r, false, T0 + 13 * DAY + 5), Status::Trial { days_left: 1 });
+        assert_eq!(
+            evaluate(&r, false, T0 + DAY - 1),
+            Status::Trial { days_left: 14 }
+        );
+        assert_eq!(
+            evaluate(&r, false, T0 + DAY),
+            Status::Trial { days_left: 13 }
+        );
+        assert_eq!(
+            evaluate(&r, false, T0 + 13 * DAY + 5),
+            Status::Trial { days_left: 1 }
+        );
         assert!(!evaluate(&r, false, T0 + 13 * DAY).demo());
     }
 
@@ -656,13 +830,20 @@ mod tests {
         r.email = Some("a@b.c".into());
         let text = r.to_json(K);
         assert_eq!(Record::from_json(&text, K), Ok(r.clone()));
-        let edited = text.replace(&format!("\"trial_start\":{T0}"), &format!("\"trial_start\":{}", T0 + 30 * DAY));
+        let edited = text.replace(
+            &format!("\"trial_start\":{T0}"),
+            &format!("\"trial_start\":{}", T0 + 30 * DAY),
+        );
         assert_ne!(edited, text);
         assert_eq!(Record::from_json(&edited, K), Err(ParseError::Tampered));
-        let no_mac = r#"{"v":1,"trial_start":1,"last_seen":1,"key":null,"verified_at":0,"email":null}"#;
+        let no_mac =
+            r#"{"v":1,"trial_start":1,"last_seen":1,"key":null,"verified_at":0,"email":null}"#;
         assert_eq!(Record::from_json(no_mac, K), Err(ParseError::Tampered));
         assert_eq!(Record::from_json("garbage", K), Err(ParseError::Unreadable));
-        assert_eq!(evaluate(&Record::fresh(T0), true, T0), Status::Expired { tampered: true });
+        assert_eq!(
+            evaluate(&Record::fresh(T0), true, T0),
+            Status::Expired { tampered: true }
+        );
     }
 
     #[test]
@@ -670,8 +851,14 @@ mod tests {
         let mut r = Record::fresh(T0);
         r.key = Some("KEY-KEY-KEY".into());
         r.verified_at = T0;
-        assert_eq!(evaluate(&r, false, T0 + 29 * DAY), Status::Licensed { recheck_due: false });
-        assert_eq!(evaluate(&r, false, T0 + 30 * DAY), Status::Licensed { recheck_due: true });
+        assert_eq!(
+            evaluate(&r, false, T0 + 29 * DAY),
+            Status::Licensed { recheck_due: false }
+        );
+        assert_eq!(
+            evaluate(&r, false, T0 + 30 * DAY),
+            Status::Licensed { recheck_due: true }
+        );
         // A year offline, trial long over: still licensed, no dropouts.
         let s = evaluate(&r, false, T0 + 365 * DAY);
         assert!(matches!(s, Status::Licensed { .. }) && !s.demo());
@@ -680,23 +867,48 @@ mod tests {
     #[test]
     fn gumroad_answers_are_read_correctly() {
         let ok = r#"{"success":true,"uses":3,"purchase":{"email":"buyer@x.com","refunded":false,"chargebacked":false,"subscription_ended_at":null}}"#;
-        assert_eq!(parse_verify(200, ok), Verdict::Valid { email: Some("buyer@x.com".into()) });
+        assert_eq!(
+            parse_verify(200, ok),
+            Verdict::Valid {
+                email: Some("buyer@x.com".into())
+            }
+        );
         let nope = r#"{"success":false,"message":"That license does not exist for the provided product."}"#;
-        assert!(matches!(parse_verify(404, nope), Verdict::Invalid(m) if m.contains("does not exist")));
+        assert!(
+            matches!(parse_verify(404, nope), Verdict::Invalid(m) if m.contains("does not exist"))
+        );
         let refunded = r#"{"success":true,"purchase":{"refunded":true}}"#;
         assert!(matches!(parse_verify(200, refunded), Verdict::Invalid(_)));
         let charged = r#"{"success":true,"purchase":{"disputed":true,"dispute_won":false}}"#;
         assert!(matches!(parse_verify(200, charged), Verdict::Invalid(_)));
-        let ended = r#"{"success":true,"purchase":{"subscription_ended_at":"2026-01-01T00:00:00Z"}}"#;
+        let ended =
+            r#"{"success":true,"purchase":{"subscription_ended_at":"2026-01-01T00:00:00Z"}}"#;
         assert!(matches!(parse_verify(200, ended), Verdict::Invalid(_)));
-        assert!(matches!(parse_verify(503, "<html>down</html>"), Verdict::Unreachable(_)));
-        assert!(matches!(parse_verify(500, r#"{"success":false}"#), Verdict::Unreachable(_)));
+        assert!(matches!(
+            parse_verify(503, "<html>down</html>"),
+            Verdict::Unreachable(_)
+        ));
+        assert!(matches!(
+            parse_verify(500, r#"{"success":false}"#),
+            Verdict::Unreachable(_)
+        ));
     }
 
     fn tmp_store(tag: &str) -> (Store, PathBuf) {
-        let d = std::env::temp_dir().join(format!("nodaw-kit-lic-{tag}-{}-{}", std::process::id(), now_secs()));
+        let d = std::env::temp_dir().join(format!(
+            "nodaw-kit-lic-{tag}-{}-{}",
+            std::process::id(),
+            now_secs()
+        ));
         let _ = std::fs::remove_dir_all(&d);
-        (Store { main: Some(d.join("a").join("license.json")), shadow: Some(d.join("b").join(".cache")), key: K }, d)
+        (
+            Store {
+                main: Some(d.join("a").join("license.json")),
+                shadow: Some(d.join("b").join(".cache")),
+                key: K,
+            },
+            d,
+        )
     }
 
     #[test]
@@ -711,56 +923,107 @@ mod tests {
         assert!(evaluate(&r2, false, T0 + 20 * DAY).demo());
         // Editing the file by hand is detected.
         let p = st.main.clone().unwrap();
-        let text = std::fs::read_to_string(&p).unwrap().replace(&format!("\"trial_start\":{T0}"), &format!("\"trial_start\":{}", T0 + 19 * DAY));
+        let text = std::fs::read_to_string(&p).unwrap().replace(
+            &format!("\"trial_start\":{T0}"),
+            &format!("\"trial_start\":{}", T0 + 19 * DAY),
+        );
         std::fs::write(&p, text).unwrap();
         let (r3, t3) = st.load(T0 + 20 * DAY);
         assert!(t3);
-        assert_eq!(evaluate(&r3, t3, T0 + 20 * DAY), Status::Expired { tampered: true });
+        assert_eq!(
+            evaluate(&r3, t3, T0 + 20 * DAY),
+            Status::Expired { tampered: true }
+        );
         let _ = std::fs::remove_dir_all(d);
     }
 
     #[test]
     fn an_unwritable_location_never_fails_and_keeps_a_trial_in_memory() {
         // A file where a folder should be: nothing under it can be created, on any OS.
-        let blocker = std::env::temp_dir().join(format!("nodaw-kit-lic-blocker-{}", std::process::id()));
+        let blocker =
+            std::env::temp_dir().join(format!("nodaw-kit-lic-blocker-{}", std::process::id()));
         std::fs::write(&blocker, b"x").unwrap();
-        let st = Store { main: Some(blocker.join("sub").join("license.json")), shadow: Some(blocker.join("s").join(".cache")), key: K };
+        let st = Store {
+            main: Some(blocker.join("sub").join("license.json")),
+            shadow: Some(blocker.join("s").join(".cache")),
+            key: K,
+        };
         let (r, t) = st.load(T0);
         let _ = std::fs::remove_file(&blocker);
         assert!(!t);
         assert_eq!(evaluate(&r, t, T0), Status::Trial { days_left: 14 });
-        let m = Manager::load(&TEST_PRODUCT, Store::default(), T0, |_, _| Verdict::Unreachable("x".into()));
+        let m = Manager::load(&TEST_PRODUCT, Store::default(), T0, |_, _| {
+            Verdict::Unreachable("x".into())
+        });
         assert!(!m.demo_flag());
     }
 
     #[test]
     fn activation_unlocks_and_a_definitive_refusal_relocks_but_offline_does_not() {
         let (st, d) = tmp_store("mgr");
-        let m = Manager::load(&TEST_PRODUCT, st.clone(), T0, |_, _| Verdict::Unreachable("offline".into()));
+        let m = Manager::load(&TEST_PRODUCT, st.clone(), T0, |_, _| {
+            Verdict::Unreachable("offline".into())
+        });
         assert!(!m.demo_flag());
         m.refresh(T0 + 15 * DAY);
         assert!(m.demo_flag());
         assert!(m.activate("short").is_err());
-        m.apply("GOOD-KEY-1234", Verdict::Valid { email: Some("b@x.com".into()) }, true, T0 + 15 * DAY);
+        m.apply(
+            "GOOD-KEY-1234",
+            Verdict::Valid {
+                email: Some("b@x.com".into()),
+            },
+            true,
+            T0 + 15 * DAY,
+        );
         assert!(!m.demo_flag());
         assert!(m.to_json(T0 + 15 * DAY).contains("\"state\":\"licensed\""));
         // Reloaded from disk, months later, offline: still licensed.
-        let m2 = Manager::load(&TEST_PRODUCT, st.clone(), T0 + 100 * DAY, |_, _| Verdict::Unreachable("offline".into()));
+        let m2 = Manager::load(&TEST_PRODUCT, st.clone(), T0 + 100 * DAY, |_, _| {
+            Verdict::Unreachable("offline".into())
+        });
         assert!(!m2.demo_flag());
-        m2.apply("GOOD-KEY-1234", Verdict::Unreachable("offline".into()), false, T0 + 100 * DAY);
+        m2.apply(
+            "GOOD-KEY-1234",
+            Verdict::Unreachable("offline".into()),
+            false,
+            T0 + 100 * DAY,
+        );
         assert!(!m2.demo_flag());
         // Gumroad says refunded: back to the expired trial.
-        m2.apply("GOOD-KEY-1234", Verdict::Invalid("refunded".into()), false, T0 + 100 * DAY);
+        m2.apply(
+            "GOOD-KEY-1234",
+            Verdict::Invalid("refunded".into()),
+            false,
+            T0 + 100 * DAY,
+        );
         assert!(m2.demo_flag());
         let _ = std::fs::remove_dir_all(d);
     }
 
     #[test]
     fn two_products_never_share_a_file_or_accept_each_others_signature() {
-        static A: Product = Product { name: "A", folder: "A", gumroad_product_id: "TODO", buy_url: "https://a", hmac_key: b"a-key", user_agent: "a" };
-        static B: Product = Product { name: "B", folder: "B", gumroad_product_id: "TODO", buy_url: "https://b", hmac_key: b"b-key", user_agent: "b" };
+        static A: Product = Product {
+            name: "A",
+            folder: "A",
+            gumroad_product_id: "TODO",
+            buy_url: "https://a",
+            hmac_key: b"a-key",
+            user_agent: "a",
+        };
+        static B: Product = Product {
+            name: "B",
+            folder: "B",
+            gumroad_product_id: "TODO",
+            buy_url: "https://b",
+            hmac_key: b"b-key",
+            user_agent: "b",
+        };
         let r = Record::fresh(T0);
-        assert_eq!(Record::from_json(&r.to_json(A.hmac_key), B.hmac_key), Err(ParseError::Tampered));
+        assert_eq!(
+            Record::from_json(&r.to_json(A.hmac_key), B.hmac_key),
+            Err(ParseError::Tampered)
+        );
         let (pa, pb) = (Store::default_paths(&A), Store::default_paths(&B));
         if let (Some(a), Some(b)) = (pa.main, pb.main) {
             assert_ne!(a, b);
@@ -784,7 +1047,10 @@ mod tests {
         // The first 44 seconds are untouched.
         assert!(l[..(44.0 * sr) as usize].iter().all(|&x| x == 1.0));
         // No step bigger than a 15 ms raised cosine allows.
-        let max_step = l.windows(2).map(|w| (w[1] - w[0]).abs()).fold(0.0f32, f32::max);
+        let max_step = l
+            .windows(2)
+            .map(|w| (w[1] - w[0]).abs())
+            .fold(0.0f32, f32::max);
         assert!(max_step < 0.003, "{max_step}");
         // Off: nothing changes.
         let mut d2 = Dropout::new(sr);

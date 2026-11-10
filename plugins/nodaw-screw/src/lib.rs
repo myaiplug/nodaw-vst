@@ -24,7 +24,17 @@ use shared::{ScrewController, Shared};
 use apf_webview::{assets, Asset, WebView};
 
 /// Chop pattern choices: the factory patterns, then the one the user draws.
-const PATTERN_NAMES: &[&str] = &["Off", "Pulse", "Offbeat", "Skip", "Stutter", "Trap Roll", "Half-time", "Gallop", "Custom"];
+const PATTERN_NAMES: &[&str] = &[
+    "Off",
+    "Pulse",
+    "Offbeat",
+    "Skip",
+    "Stutter",
+    "Trap Roll",
+    "Half-time",
+    "Gallop",
+    "Custom",
+];
 const CUSTOM_PATTERN: usize = 8;
 const RATE_NAMES: &[&str] = &["1/4", "1/8", "1/16", "1/32", "1/8T", "1/16T"];
 
@@ -32,26 +42,82 @@ const RATE_NAMES: &[&str] = &["1/4", "1/8", "1/16", "1/32", "1/8T", "1/16T"];
 /// or changing a range would break saved sessions.
 pub const PARAMS: &[ParamDef] = &[
     ParamDef::bypass("bypass"),
-    ParamDef::float("in_gain", "Input", -24.0, 24.0, 0.0).unit("dB").decimals(1).module("Global"),
-    ParamDef::float("out_gain", "Output", -24.0, 24.0, 0.0).unit("dB").decimals(1).module("Global"),
-    ParamDef::float("mix", "Mix", 0.0, 100.0, 100.0).unit("%").decimals(0).module("Global"),
-    ParamDef::float("pitch", "Pitch", -12.0, 12.0, -3.0).unit("st").decimals(2).module("Screw"),
-    ParamDef::float("wow", "Wow", 0.0, 100.0, 0.0).unit("ct").decimals(1).module("Screw"),
-    ParamDef::float("wow_rate", "Wow Rate", 0.1, 10.0, 0.7).unit("Hz").curve(Curve::Log).decimals(2).module("Screw"),
-    ParamDef::float("flutter", "Flutter", 0.0, 100.0, 0.0).unit("%").decimals(0).module("Screw"),
-    ParamDef::float("lowpass", "Lowpass", 800.0, 20_000.0, 20_000.0).unit("Hz").curve(Curve::Log).decimals(0).module("Tone"),
-    ParamDef::float("bass", "Warmth", -6.0, 12.0, 0.0).unit("dB").decimals(1).module("Tone"),
-    ParamDef::float("rev_mix", "Reverb", 0.0, 100.0, 25.0).unit("%").decimals(0).module("Space"),
-    ParamDef::float("rev_decay", "Decay", 0.2, 20.0, 3.5).unit("s").curve(Curve::Log).decimals(2).module("Space"),
-    ParamDef::float("rev_size", "Size", 0.5, 2.0, 1.0).unit("x").decimals(2).module("Space"),
-    ParamDef::float("rev_damp", "Damping", 500.0, 20_000.0, 6000.0).unit("Hz").curve(Curve::Log).decimals(0).module("Space"),
-    ParamDef::float("rev_pre", "Pre-delay", 0.0, 250.0, 20.0).unit("ms").curve(Curve::Power(2.0)).decimals(0).module("Space"),
+    ParamDef::float("in_gain", "Input", -24.0, 24.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Global"),
+    ParamDef::float("out_gain", "Output", -24.0, 24.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Global"),
+    ParamDef::float("mix", "Mix", 0.0, 100.0, 100.0)
+        .unit("%")
+        .decimals(0)
+        .module("Global"),
+    ParamDef::float("pitch", "Pitch", -12.0, 12.0, -3.0)
+        .unit("st")
+        .decimals(2)
+        .module("Screw"),
+    ParamDef::float("wow", "Wow", 0.0, 100.0, 0.0)
+        .unit("ct")
+        .decimals(1)
+        .module("Screw"),
+    ParamDef::float("wow_rate", "Wow Rate", 0.1, 10.0, 0.7)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("Screw"),
+    ParamDef::float("flutter", "Flutter", 0.0, 100.0, 0.0)
+        .unit("%")
+        .decimals(0)
+        .module("Screw"),
+    ParamDef::float("lowpass", "Lowpass", 800.0, 20_000.0, 20_000.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("Tone"),
+    ParamDef::float("bass", "Warmth", -6.0, 12.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Tone"),
+    ParamDef::float("rev_mix", "Reverb", 0.0, 100.0, 25.0)
+        .unit("%")
+        .decimals(0)
+        .module("Space"),
+    ParamDef::float("rev_decay", "Decay", 0.2, 20.0, 3.5)
+        .unit("s")
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("Space"),
+    ParamDef::float("rev_size", "Size", 0.5, 2.0, 1.0)
+        .unit("x")
+        .decimals(2)
+        .module("Space"),
+    ParamDef::float("rev_damp", "Damping", 500.0, 20_000.0, 6000.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("Space"),
+    ParamDef::float("rev_pre", "Pre-delay", 0.0, 250.0, 20.0)
+        .unit("ms")
+        .curve(Curve::Power(2.0))
+        .decimals(0)
+        .module("Space"),
     ParamDef::choice("chop_pattern", "Chop Pattern", PATTERN_NAMES, 0).module("Chop"),
     ParamDef::choice("chop_rate", "Chop Rate", RATE_NAMES, 1).module("Chop"),
-    ParamDef::float("chop_depth", "Chop Depth", 0.0, 100.0, 100.0).unit("%").decimals(0).module("Chop"),
-    ParamDef::float("width", "Width", 0.0, 200.0, 100.0).unit("%").decimals(0).module("Global"),
+    ParamDef::float("chop_depth", "Chop Depth", 0.0, 100.0, 100.0)
+        .unit("%")
+        .decimals(0)
+        .module("Chop"),
+    ParamDef::float("width", "Width", 0.0, 200.0, 100.0)
+        .unit("%")
+        .decimals(0)
+        .module("Global"),
     ParamDef::bool("limiter", "Limiter", true).module("Output"),
-    ParamDef::float("ceiling", "Ceiling", -12.0, 0.0, -1.0).unit("dB").decimals(1).module("Output"),
+    ParamDef::float("ceiling", "Ceiling", -12.0, 0.0, -1.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Output"),
 ];
 
 const BYPASS: ParamId = ParamId::of(PARAMS, "bypass");
@@ -78,9 +144,41 @@ const CEILING: ParamId = ParamId::of(PARAMS, "ceiling");
 
 /// What a host's generic knobs (Bitwig, Ableton macros, hardware controllers) page through.
 const REMOTE: &[RemotePage] = &[
-    RemotePage { section: "Screw", name: "Screw", params: ["pitch", "mix", "wow", "wow_rate", "flutter", "lowpass", "bass", "out_gain"] },
-    RemotePage { section: "Space", name: "Space", params: ["rev_mix", "rev_decay", "rev_size", "rev_damp", "rev_pre", "width", "mix", "out_gain"] },
-    RemotePage { section: "Chop", name: "Chop", params: ["chop_pattern", "chop_rate", "chop_depth", "pitch", "rev_mix", "ceiling", "in_gain", "out_gain"] },
+    RemotePage {
+        section: "Screw",
+        name: "Screw",
+        params: [
+            "pitch", "mix", "wow", "wow_rate", "flutter", "lowpass", "bass", "out_gain",
+        ],
+    },
+    RemotePage {
+        section: "Space",
+        name: "Space",
+        params: [
+            "rev_mix",
+            "rev_decay",
+            "rev_size",
+            "rev_damp",
+            "rev_pre",
+            "width",
+            "mix",
+            "out_gain",
+        ],
+    },
+    RemotePage {
+        section: "Chop",
+        name: "Chop",
+        params: [
+            "chop_pattern",
+            "chop_rate",
+            "chop_depth",
+            "pitch",
+            "rev_mix",
+            "ceiling",
+            "in_gain",
+            "out_gain",
+        ],
+    },
 ];
 
 #[cfg(feature = "ui")]
@@ -104,7 +202,11 @@ pub struct NoDawScrew {
 /// The engine's settings from the parameter values. No allocation.
 fn settings(params: &Params, shared: &Shared) -> Settings {
     let pat = params.get_index(CHOP_PATTERN);
-    let pattern = if pat == CUSTOM_PATTERN { shared.custom_pattern() } else { chop::PATTERNS[pat.min(chop::PATTERNS.len() - 1)].1 };
+    let pattern = if pat == CUSTOM_PATTERN {
+        shared.custom_pattern()
+    } else {
+        chop::PATTERNS[pat.min(chop::PATTERNS.len() - 1)].1
+    };
     let rate = params.get_index(CHOP_RATE).min(chop::RATES.len() - 1);
     Settings {
         bypass: params.get_bool(BYPASS),
@@ -140,7 +242,8 @@ impl Plugin for NoDawScrew {
         vendor: "NoDAW",
         url: "https://nodaw.app",
         version: env!("CARGO_PKG_VERSION"),
-        description: "Chopped-and-screwed pitch, tape wobble, chop gate, reverb and a true-peak limiter",
+        description:
+            "Chopped-and-screwed pitch, tape wobble, chop gate, reverb and a true-peak limiter",
         features: &["audio-effect", "stereo"],
     };
     const LAYOUT: AudioLayout = AudioLayout::EFFECT_STEREO;
@@ -162,13 +265,20 @@ impl Plugin for NoDawScrew {
     ];
 
     fn new() -> Self {
-        Self { engine: Engine::new(48_000.0), shared: Arc::new(Shared::new()), dropout: license::Dropout::new(48_000.0) }
+        Self {
+            engine: Engine::new(48_000.0),
+            shared: Arc::new(Shared::new()),
+            dropout: license::Dropout::new(48_000.0),
+        }
     }
 
     fn controller(&mut self, host: HostHandle) -> Option<Arc<dyn Controller>> {
         // A licensed copy whose last online check is over 30 days old asks again, off-thread.
         self.shared.license.maybe_recheck(license::now_secs());
-        Some(Arc::new(ScrewController::new(self.shared.clone(), Some(host))))
+        Some(Arc::new(ScrewController::new(
+            self.shared.clone(),
+            Some(host),
+        )))
     }
 
     // Main thread: allocate everything here, for the sample rate the host will use.
@@ -181,8 +291,12 @@ impl Plugin for NoDawScrew {
         // window asks for the license state).
         self.shared.license.refresh(license::now_secs());
         self.engine.reset_to(&settings(params, &self.shared));
-        self.shared.sample_rate.store((config.sample_rate as f32).to_bits(), Ordering::Relaxed);
-        self.shared.latency.store(self.engine.latency() as u32, Ordering::Relaxed);
+        self.shared
+            .sample_rate
+            .store((config.sample_rate as f32).to_bits(), Ordering::Relaxed);
+        self.shared
+            .latency
+            .store(self.engine.latency() as u32, Ordering::Relaxed);
     }
 
     fn reset(&mut self) {
@@ -198,25 +312,49 @@ impl Plugin for NoDawScrew {
     }
 
     fn process(&mut self, audio: &mut AudioBuffer, ctx: &ProcessContext) -> ProcessStatus {
-        let Some((l, r)) = audio.stereo() else { return ProcessStatus::Error };
+        let Some((l, r)) = audio.stereo() else {
+            return ProcessStatus::Error;
+        };
         let s = settings(ctx.params, &self.shared);
         let sh = &*self.shared;
         sh.in_meter.record(l, r);
         sh.in_scope.push_stereo(l, r);
-        let info = self.engine.process(l, r, &s, ctx.transport.song_pos_beats, ctx.transport.playing, ctx.transport.tempo);
+        let info = self.engine.process(
+            l,
+            r,
+            &s,
+            ctx.transport.song_pos_beats,
+            ctx.transport.playing,
+            ctx.transport.tempo,
+        );
         // Lock-free: one relaxed atomic load. Bypassed audio is the dry signal: left alone.
-        self.dropout.process(l, r, sh.license.demo_flag() && !s.bypass);
+        self.dropout
+            .process(l, r, sh.license.demo_flag() && !s.bypass);
         sh.out_meter.record(l, r);
         sh.out_scope.push_stereo(l, r);
         GainReduction::record(&sh.gr, info.min_gain);
-        sh.step.store(if s.pattern.iter().any(|&v| v != 2) { info.step as u8 } else { 255 }, Ordering::Relaxed);
-        sh.playing.store(ctx.transport.playing as u8, Ordering::Relaxed);
+        sh.step.store(
+            if s.pattern.iter().any(|&v| v != 2) {
+                info.step as u8
+            } else {
+                255
+            },
+            Ordering::Relaxed,
+        );
+        sh.playing
+            .store(ctx.transport.playing as u8, Ordering::Relaxed);
         ProcessStatus::Continue
     }
 
     #[cfg(feature = "ui")]
     fn view() -> Option<Box<dyn View>> {
-        Some(Box::new(WebView::new(960, 600, UI).resizable(true).size_limits((760, 480), (2600, 1700)).fit_screen((48, 96)).background(10, 10, 10)))
+        Some(Box::new(
+            WebView::new(960, 600, UI)
+                .resizable(true)
+                .size_limits((760, 480), (2600, 1700))
+                .fit_screen((48, 96))
+                .background(10, 10, 10),
+        ))
     }
 }
 

@@ -6,7 +6,17 @@ nodaw_kit::conformance_tests!(
     nodaw_racks,
     nodaw_racks::NoDawRacks,
     nodaw_racks::PARAMS,
-    heavy = [("Drive", "24 dB"), ("Curve", "Diode"), ("Band 1 Gain", "18 dB"), ("Band 7 Type", "High Cut"), ("Width", "200 %"), ("Haas", "20 ms"), ("Mono Bass", "200 Hz"), ("Push", "18 dB"), ("Chain Order", "LIM > SPACE > EQ > SAT")],
+    heavy = [
+        ("Drive", "24 dB"),
+        ("Curve", "Diode"),
+        ("Band 1 Gain", "18 dB"),
+        ("Band 7 Type", "High Cut"),
+        ("Width", "200 %"),
+        ("Haas", "20 ms"),
+        ("Mono Bass", "200 Hz"),
+        ("Push", "18 dB"),
+        ("Chain Order", "LIM > SPACE > EQ > SAT")
+    ],
     neutral = [("Saturator On", "Off"), ("Limiter On", "Off")],
     null_tol = 2e-3
 );

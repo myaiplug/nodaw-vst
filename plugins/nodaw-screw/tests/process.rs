@@ -7,13 +7,18 @@ use apf_test::{allocations_in_process, CountingAllocator, Event, Instance};
 static ALLOCATOR: CountingAllocator = CountingAllocator;
 
 fn plugin(sr: f64, max_frames: u32) -> Instance {
-    let mut p = Instance::load(nodaw_screw::apf_entry_init, nodaw_screw::apf_entry_get_factory);
+    let mut p = Instance::load(
+        nodaw_screw::apf_entry_init,
+        nodaw_screw::apf_entry_get_factory,
+    );
     p.activate(sr, max_frames);
     p
 }
 
 fn sine(n: usize, hz: f64, sr: f64, amp: f32) -> Vec<f32> {
-    (0..n).map(|i| (amp as f64 * (2.0 * std::f64::consts::PI * hz * i as f64 / sr).sin()) as f32).collect()
+    (0..n)
+        .map(|i| (amp as f64 * (2.0 * std::f64::consts::PI * hz * i as f64 / sr).sin()) as f32)
+        .collect()
 }
 
 #[test]
@@ -24,15 +29,26 @@ fn the_host_sees_every_control_as_an_automatable_parameter() {
     for i in 0..p.param_count() {
         let info = p.param_info(i);
         assert!(ids.insert(info.id), "duplicate host id");
-        assert!(info.flags & clap_sys::ext::params::CLAP_PARAM_IS_AUTOMATABLE != 0, "param {i} is not automatable");
-        assert!(info.flags & clap_sys::ext::params::CLAP_PARAM_IS_HIDDEN == 0, "param {i} is hidden");
+        assert!(
+            info.flags & clap_sys::ext::params::CLAP_PARAM_IS_AUTOMATABLE != 0,
+            "param {i} is not automatable"
+        );
+        assert!(
+            info.flags & clap_sys::ext::params::CLAP_PARAM_IS_HIDDEN == 0,
+            "param {i} is hidden"
+        );
     }
 }
 
 #[test]
 fn parameter_text_round_trips_in_the_units_the_user_sees() {
     let mut p = plugin(48_000.0, 512);
-    for (name, text, expect) in [("Pitch", "-7.5 st", "-7.50 st"), ("Output", "-6 dB", "-6.0 dB"), ("Chop Pattern", "Trap Roll", "Trap Roll"), ("Limiter", "Off", "Off")] {
+    for (name, text, expect) in [
+        ("Pitch", "-7.5 st", "-7.50 st"),
+        ("Output", "-6 dB", "-6.0 dB"),
+        ("Chop Pattern", "Trap Roll", "Trap Roll"),
+        ("Limiter", "Off", "Off"),
+    ] {
         let host = p.set_text(name, text);
         let id = p.param_id(name);
         assert_eq!(p.value_to_text(id, host), expect, "{name}");
@@ -44,8 +60,14 @@ fn latency_and_tail_are_reported_and_exact() {
     for sr in [44_100.0, 48_000.0, 96_000.0] {
         let mut p = plugin(sr, 1024);
         let lat = p.latency() as usize;
-        assert!(lat as f64 / sr > 0.005 && (lat as f64 / sr) < 0.08, "{sr}: {lat}");
-        assert!(p.tail() as f64 / sr > 20.0, "tail covers the longest reverb");
+        assert!(
+            lat as f64 / sr > 0.005 && (lat as f64 / sr) < 0.08,
+            "{sr}: {lat}"
+        );
+        assert!(
+            p.tail() as f64 / sr > 20.0,
+            "tail covers the longest reverb"
+        );
         // Bypassed, an impulse comes back exactly `lat` samples later: the host's delay
         // compensation lines it up with the other tracks.
         p.set_text("Bypass", "On");
@@ -54,7 +76,15 @@ fn latency_and_tail_are_reported_and_exact() {
         x[9000] = 1.0;
         let out = p.render_effect(&[], &x, &x, 480);
         // Bypass crossfades in over a few milliseconds, so the impulse is placed 190 ms in.
-        let (idx, v) = out.left.iter().enumerate().skip(2000).fold((0, 0.0f32), |m, (i, v)| if v.abs() > m.1 { (i, v.abs()) } else { m });
+        let (idx, v) = out
+            .left
+            .iter()
+            .enumerate()
+            .skip(2000)
+            .fold(
+                (0, 0.0f32),
+                |m, (i, v)| if v.abs() > m.1 { (i, v.abs()) } else { m },
+            );
         assert_eq!(idx, 9000 + lat, "{sr}");
         assert!(v > 0.99, "{v}");
     }
@@ -75,7 +105,11 @@ fn process_never_allocates_even_with_automation_in_the_block() {
     let x = sine(48_000, 220.0, sr, 0.5);
     let before = allocations_in_process();
     for block in [32usize, 100, 480, 512] {
-        let events = [Event::param(10, pitch, 0.9), Event::param(20, mix, 0.5), Event::param(30, pattern, 3.0)];
+        let events = [
+            Event::param(10, pitch, 0.9),
+            Event::param(20, mix, 0.5),
+            Event::param(30, pattern, 3.0),
+        ];
         let _ = p.render_effect(&events, &x, &x, block);
         let events = [Event::param(0, pitch, 0.1)];
         let _ = p.render_effect(&events, &x, &x, block);
@@ -105,7 +139,16 @@ fn automation_moves_the_sound_inside_the_block() {
 #[test]
 fn state_round_trips_the_session() {
     let mut a = plugin(48_000.0, 512);
-    for (n, t) in [("Pitch", "-9.25 st"), ("Reverb", "61 %"), ("Decay", "7.5 s"), ("Chop Pattern", "Custom"), ("Chop Rate", "1/16T"), ("Limiter", "Off"), ("Ceiling", "-3.5 dB"), ("Width", "140 %")] {
+    for (n, t) in [
+        ("Pitch", "-9.25 st"),
+        ("Reverb", "61 %"),
+        ("Decay", "7.5 s"),
+        ("Chop Pattern", "Custom"),
+        ("Chop Rate", "1/16T"),
+        ("Limiter", "Off"),
+        ("Ceiling", "-3.5 dB"),
+        ("Width", "140 %"),
+    ] {
         a.set_text(n, t);
     }
     let blob = a.save_state();
@@ -114,7 +157,10 @@ fn state_round_trips_the_session() {
     assert!(b.load_state(blob.clone()));
     for i in 0..a.param_count() {
         let id = a.param_info(i).id;
-        assert!((a.host_value(id) - b.host_value(id)).abs() < 1e-9, "param {i} differs after load");
+        assert!(
+            (a.host_value(id) - b.host_value(id)).abs() < 1e-9,
+            "param {i} differs after load"
+        );
     }
     // Saving again gives the same bytes: nothing is lost or invented on the way.
     assert_eq!(b.save_state(), blob);
@@ -146,7 +192,10 @@ fn works_at_every_common_sample_rate_and_buffer_size() {
             p.set_text("Reverb", "40 %");
             let x = sine(8192, 200.0, sr, 0.5);
             let out = p.render_effect(&[], &x, &x, frames as usize);
-            assert!(out.left.iter().chain(&out.right).all(|v| v.is_finite()), "{sr} {frames}");
+            assert!(
+                out.left.iter().chain(&out.right).all(|v| v.is_finite()),
+                "{sr} {frames}"
+            );
         }
     }
 }

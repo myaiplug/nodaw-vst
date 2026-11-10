@@ -45,7 +45,7 @@ pub struct Shared {
 
 impl Shared {
     pub fn new() -> Self {
-        Self::with_license(Manager::load_default())
+        Self::with_license(license::load_default())
     }
 
     pub fn with_license(license: Arc<Manager>) -> Self {
@@ -107,7 +107,11 @@ impl ScrewController {
             shared,
             host,
             ab: Mutex::new("null".into()),
-            analysis: Mutex::new(Analysis { fft_in: SpectrumAnalyzer::new(FFT), fft_out: SpectrumAnalyzer::new(FFT), buf: vec![0.0; FFT] }),
+            analysis: Mutex::new(Analysis {
+                fft_in: SpectrumAnalyzer::new(FFT),
+                fft_out: SpectrumAnalyzer::new(FFT),
+                buf: vec![0.0; FFT],
+            }),
         }
     }
 
@@ -118,17 +122,28 @@ impl ScrewController {
     }
 
     fn steps_json(&self) -> String {
-        let v: Vec<String> = self.shared.custom_pattern().iter().map(|x| x.to_string()).collect();
+        let v: Vec<String> = self
+            .shared
+            .custom_pattern()
+            .iter()
+            .map(|x| x.to_string())
+            .collect();
         format!("[{}]", v.join(","))
     }
 
     fn state_json(&self) -> String {
-        let ab = self.ab.lock().map(|g| g.clone()).unwrap_or_else(|_| "null".into());
+        let ab = self
+            .ab
+            .lock()
+            .map(|g| g.clone())
+            .unwrap_or_else(|_| "null".into());
         format!("{{\"steps\":{},\"ab\":{}}}", self.steps_json(), ab)
     }
 
     fn parse_steps(v: &Value) -> Result<Pattern, String> {
-        let Value::Arr(items) = v else { return Err("steps must be an array".into()) };
+        let Value::Arr(items) = v else {
+            return Err("steps must be an array".into());
+        };
         if items.len() != STEPS {
             return Err(format!("steps needs {STEPS} entries"));
         }
@@ -220,13 +235,16 @@ impl Controller for ScrewController {
             "frame" => ControllerResponse::new(200, "application/octet-stream", self.frame()),
             "steps" => {
                 if r.is_post() {
-                    let parsed = json::parse(r.body_text().unwrap_or("")).and_then(|v| Self::parse_steps(&v));
+                    let parsed = json::parse(r.body_text().unwrap_or(""))
+                        .and_then(|v| Self::parse_steps(&v));
                     match parsed {
                         Ok(p) => {
                             self.shared.set_custom(&p);
                             self.dirty();
                         }
-                        Err(e) => return ControllerResponse::new(400, "text/plain", e.into_bytes()),
+                        Err(e) => {
+                            return ControllerResponse::new(400, "text/plain", e.into_bytes())
+                        }
                     }
                 }
                 ControllerResponse::json(self.steps_json())
@@ -244,7 +262,11 @@ impl Controller for ScrewController {
                     }
                     self.dirty();
                 }
-                let ab = self.ab.lock().map(|g| g.clone()).unwrap_or_else(|_| "null".into());
+                let ab = self
+                    .ab
+                    .lock()
+                    .map(|g| g.clone())
+                    .unwrap_or_else(|_| "null".into());
                 ControllerResponse::json(ab)
             }
             "license" => {
@@ -256,7 +278,10 @@ impl Controller for ScrewController {
                 if !r.is_post() {
                     return ControllerResponse::new(405, "text/plain", b"POST".to_vec());
                 }
-                let key = json::parse(r.body_text().unwrap_or("")).ok().and_then(|v| v.get("key").and_then(Value::as_str).map(str::to_string)).unwrap_or_default();
+                let key = json::parse(r.body_text().unwrap_or(""))
+                    .ok()
+                    .and_then(|v| v.get("key").and_then(Value::as_str).map(str::to_string))
+                    .unwrap_or_default();
                 if let Err(e) = self.shared.license.activate(&key) {
                     return ControllerResponse::new(400, "text/plain", e.into_bytes());
                 }
@@ -264,7 +289,10 @@ impl Controller for ScrewController {
             }
             "license-buy" => {
                 let ok = r.is_post() && license::open_buy_page();
-                ControllerResponse::json(format!("{{\"opened\":{ok},\"url\":\"{}\"}}", license::BUY_URL))
+                ControllerResponse::json(format!(
+                    "{{\"opened\":{ok},\"url\":\"{}\"}}",
+                    license::BUY_URL
+                ))
             }
             "ranges" => ControllerResponse::json(ranges_json()),
             "patterns" => ControllerResponse::json(patterns_json()),
@@ -280,7 +308,14 @@ pub fn ranges_json() -> String {
     let mut o = String::from("{");
     let mut first = true;
     for def in crate::PARAMS {
-        if let ParamKind::Float { min, max, default, curve, decimals } = def.kind {
+        if let ParamKind::Float {
+            min,
+            max,
+            default,
+            curve,
+            decimals,
+        } = def.kind
+        {
             if !first {
                 o.push(',');
             }
@@ -310,7 +345,10 @@ pub fn patterns_json() -> String {
             o.push(',');
         }
         let v: Vec<String> = steps.iter().map(|x| x.to_string()).collect();
-        o.push_str(&format!("{{\"name\":\"{name}\",\"steps\":[{}]}}", v.join(",")));
+        o.push_str(&format!(
+            "{{\"name\":\"{name}\",\"steps\":[{}]}}",
+            v.join(",")
+        ));
     }
     o.push(']');
     o
@@ -359,12 +397,22 @@ mod tests {
     use super::*;
 
     fn controller() -> ScrewController {
-        let lic = Manager::load(license::Store::default(), license::now_secs(), |_| license::Verdict::Unreachable("test".into()));
+        let lic = Manager::load(
+            &license::PRODUCT,
+            license::Store::default(),
+            license::now_secs(),
+            |_, _| license::Verdict::Unreachable("test".into()),
+        );
         ScrewController::new(Arc::new(Shared::with_license(lic)), None)
     }
 
     fn call(c: &ScrewController, method: &str, path: &str, body: &str) -> ControllerResponse {
-        c.request(&ControllerRequest { method, path, query: "", body: body.as_bytes() })
+        c.request(&ControllerRequest {
+            method,
+            path,
+            query: "",
+            body: body.as_bytes(),
+        })
     }
 
     #[test]
@@ -374,12 +422,20 @@ mod tests {
         let r = call(&a, "POST", "steps", "[2,2,2,2,0,0,0,0,1,1,1,1,2,0,2,0]");
         assert_eq!(r.status, 200);
         assert!(a.revision() > r0);
-        call(&a, "POST", "ab", "{\"active\":\"B\",\"A\":{\"pitch\":-3},\"B\":null}");
+        call(
+            &a,
+            "POST",
+            "ab",
+            "{\"active\":\"B\",\"A\":{\"pitch\":-3},\"B\":null}",
+        );
         let saved = a.save();
         let b = controller();
         b.load(&saved).unwrap();
         assert_eq!(b.save(), saved);
-        assert_eq!(b.shared.custom_pattern(), [2, 2, 2, 2, 0, 0, 0, 0, 1, 1, 1, 1, 2, 0, 2, 0]);
+        assert_eq!(
+            b.shared.custom_pattern(),
+            [2, 2, 2, 2, 0, 0, 0, 0, 1, 1, 1, 1, 2, 0, 2, 0]
+        );
         assert!(saved.contains("\"active\":\"B\""));
     }
 
@@ -403,7 +459,10 @@ mod tests {
         let v = json::parse(std::str::from_utf8(&r.body).unwrap()).unwrap();
         assert_eq!(v.get("state").and_then(Value::as_str), Some("trial"));
         assert_eq!(v.get("days_left").and_then(Value::as_f64), Some(14.0));
-        assert_eq!(call(&c, "POST", "license-activate", "{\"key\":\"x\"}").status, 400);
+        assert_eq!(
+            call(&c, "POST", "license-activate", "{\"key\":\"x\"}").status,
+            400
+        );
         assert_eq!(call(&c, "GET", "license-activate", "").status, 405);
     }
 
@@ -412,7 +471,9 @@ mod tests {
         let r = json::parse(&ranges_json()).unwrap();
         for def in crate::PARAMS {
             if let ParamKind::Float { min, max, .. } = def.kind {
-                let e = r.get(def.key).unwrap_or_else(|| panic!("{} missing", def.key));
+                let e = r
+                    .get(def.key)
+                    .unwrap_or_else(|| panic!("{} missing", def.key));
                 assert_eq!(e.get("min").and_then(|v| v.as_f64()), Some(min));
                 assert_eq!(e.get("max").and_then(|v| v.as_f64()), Some(max));
                 let mid = e.get("mid").and_then(|v| v.as_f64()).unwrap();
@@ -435,7 +496,8 @@ mod tests {
     fn a_preset_without_ab_slots_keeps_the_session_slots_and_reset_restores_the_pattern() {
         let c = controller();
         call(&c, "POST", "ab", "{\"x\":1}");
-        c.load("{\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}").unwrap();
+        c.load("{\"steps\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}")
+            .unwrap();
         assert!(c.save().contains("\"x\":1"));
         assert_eq!(c.shared.custom_pattern(), [0; STEPS]);
         c.reset();
@@ -449,12 +511,19 @@ mod tests {
         c.shared.in_scope.push_stereo(&[0.3; 9000], &[0.3; 9000]);
         let f = c.frame();
         assert_eq!(f.len(), (HEADER + 2 * BANDS) * 4);
-        let v: Vec<f32> = f.chunks(4).map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]])).collect();
+        let v: Vec<f32> = f
+            .chunks(4)
+            .map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+            .collect();
         assert!(v.iter().all(|x| x.is_finite()));
         assert_eq!((v[0], v[1]), (0.5, 0.25));
         assert_eq!(v[10], 48_000.0);
         // taking resets the meter
-        let v2: Vec<f32> = c.frame().chunks(4).map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]])).collect();
+        let v2: Vec<f32> = c
+            .frame()
+            .chunks(4)
+            .map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+            .collect();
         assert_eq!(v2[0], 0.0);
     }
 }

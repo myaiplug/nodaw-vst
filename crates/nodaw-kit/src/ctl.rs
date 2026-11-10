@@ -80,7 +80,10 @@ impl Meters {
     }
 
     pub fn custom(&self, i: usize) -> f32 {
-        self.custom.get(i).map(|a| f32::from_bits(a.load(Ordering::Relaxed))).unwrap_or(0.0)
+        self.custom
+            .get(i)
+            .map(|a| f32::from_bits(a.load(Ordering::Relaxed)))
+            .unwrap_or(0.0)
     }
 
     pub fn sample_rate(&self) -> f32 {
@@ -97,7 +100,9 @@ pub struct Slots {
 impl Slots {
     /// `n` slots at 0. Main thread.
     pub fn new(n: usize) -> Self {
-        Self { v: (0..n).map(|_| AtomicU32::new(0)).collect() }
+        Self {
+            v: (0..n).map(|_| AtomicU32::new(0)).collect(),
+        }
     }
     pub fn len(&self) -> usize {
         self.v.len()
@@ -111,7 +116,10 @@ impl Slots {
         }
     }
     pub fn get(&self, i: usize) -> f32 {
-        self.v.get(i).map(|a| f32::from_bits(a.load(Ordering::Relaxed))).unwrap_or(0.0)
+        self.v
+            .get(i)
+            .map(|a| f32::from_bits(a.load(Ordering::Relaxed)))
+            .unwrap_or(0.0)
     }
     /// Keep the largest non-negative value since the last [`Slots::take`] (peak meters).
     pub fn max(&self, i: usize, x: f32) {
@@ -124,11 +132,18 @@ impl Slots {
     }
     /// Read and clear.
     pub fn take(&self, i: usize) -> f32 {
-        self.v.get(i).map(|a| f32::from_bits(a.swap(0, Ordering::Relaxed))).unwrap_or(0.0)
+        self.v
+            .get(i)
+            .map(|a| f32::from_bits(a.swap(0, Ordering::Relaxed)))
+            .unwrap_or(0.0)
     }
     /// Every value, in order.
     pub fn read_all(&self, out: &mut Vec<f32>) {
-        out.extend(self.v.iter().map(|a| f32::from_bits(a.load(Ordering::Relaxed))));
+        out.extend(
+            self.v
+                .iter()
+                .map(|a| f32::from_bits(a.load(Ordering::Relaxed))),
+        );
     }
 }
 
@@ -177,7 +192,13 @@ impl LookExt {
     /// `looks[0]` is the default.
     pub fn new(looks: &'static [&'static str], peaks: usize, values: usize) -> Self {
         assert!(!looks.is_empty());
-        Self { looks, look: AtomicU8::new(0), rev: AtomicU64::new(0), peaks: Slots::new(peaks), values: Slots::new(values) }
+        Self {
+            looks,
+            look: AtomicU8::new(0),
+            rev: AtomicU64::new(0),
+            peaks: Slots::new(peaks),
+            values: Slots::new(values),
+        }
     }
     /// The current look.
     pub fn look(&self) -> &'static str {
@@ -185,7 +206,11 @@ impl LookExt {
     }
     /// Change the look; unknown names are refused.
     pub fn set_look(&self, name: &str) -> Result<(), String> {
-        let i = self.looks.iter().position(|s| *s == name).ok_or_else(|| format!("unknown look {name}"))?;
+        let i = self
+            .looks
+            .iter()
+            .position(|s| *s == name)
+            .ok_or_else(|| format!("unknown look {name}"))?;
         self.look.store(i as u8, Ordering::Relaxed);
         self.rev.fetch_add(1, Ordering::AcqRel);
         Ok(())
@@ -208,7 +233,10 @@ impl Ext for LookExt {
         if r.is_post() {
             // a JSON string, or the bare name (apf.plugin.post sends a string as is)
             let text = r.body_text().unwrap_or("").trim();
-            let name = json::parse(text).ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_else(|| text.to_string());
+            let name = json::parse(text)
+                .ok()
+                .and_then(|v| v.as_str().map(str::to_string))
+                .unwrap_or_else(|| text.to_string());
             if let Err(e) = self.set_look(&name) {
                 return Some(ControllerResponse::new(400, "text/plain", e.into_bytes()));
             }
@@ -253,7 +281,13 @@ pub struct KitController<E: Ext> {
 }
 
 impl<E: Ext> KitController<E> {
-    pub fn new(params: &'static [ParamDef], meters: Arc<Meters>, license: Arc<Manager>, ext: Arc<E>, host: Option<HostHandle>) -> Self {
+    pub fn new(
+        params: &'static [ParamDef],
+        meters: Arc<Meters>,
+        license: Arc<Manager>,
+        ext: Arc<E>,
+        host: Option<HostHandle>,
+    ) -> Self {
         Self {
             meters,
             license,
@@ -262,7 +296,11 @@ impl<E: Ext> KitController<E> {
             host,
             ab: Mutex::new("null".into()),
             rev: AtomicU64::new(0),
-            analysis: Mutex::new(Analysis { fft_in: SpectrumAnalyzer::new(FFT), fft_out: SpectrumAnalyzer::new(FFT), buf: vec![0.0; FFT] }),
+            analysis: Mutex::new(Analysis {
+                fft_in: SpectrumAnalyzer::new(FFT),
+                fft_out: SpectrumAnalyzer::new(FFT),
+                buf: vec![0.0; FFT],
+            }),
         }
     }
 
@@ -312,14 +350,22 @@ impl<E: Ext> KitController<E> {
         let mut extra = Vec::new();
         self.ext.frame_extra(&mut extra);
         let mut out = Vec::with_capacity((HEADER + 2 * BANDS + extra.len()) * 4);
-        for v in head.iter().chain(bands[0].iter()).chain(bands[1].iter()).chain(extra.iter()) {
+        for v in head
+            .iter()
+            .chain(bands[0].iter())
+            .chain(bands[1].iter())
+            .chain(extra.iter())
+        {
             out.extend_from_slice(&(if v.is_finite() { *v } else { -120.0 }).to_le_bytes());
         }
         out
     }
 
     fn ab_text(&self) -> String {
-        self.ab.lock().map(|g| g.clone()).unwrap_or_else(|_| "null".into())
+        self.ab
+            .lock()
+            .map(|g| g.clone())
+            .unwrap_or_else(|_| "null".into())
     }
 }
 
@@ -353,7 +399,9 @@ impl<E: Ext> Controller for KitController<E> {
     }
 
     fn revision(&self) -> u64 {
-        self.rev.load(Ordering::Acquire).wrapping_add(self.ext.revision())
+        self.rev
+            .load(Ordering::Acquire)
+            .wrapping_add(self.ext.revision())
     }
 
     fn request(&self, r: &ControllerRequest) -> ControllerResponse {
@@ -382,7 +430,10 @@ impl<E: Ext> Controller for KitController<E> {
                 if !r.is_post() {
                     return ControllerResponse::new(405, "text/plain", b"POST".to_vec());
                 }
-                let key = json::parse(r.body_text().unwrap_or("")).ok().and_then(|v| v.get("key").and_then(Value::as_str).map(str::to_string)).unwrap_or_default();
+                let key = json::parse(r.body_text().unwrap_or(""))
+                    .ok()
+                    .and_then(|v| v.get("key").and_then(Value::as_str).map(str::to_string))
+                    .unwrap_or_default();
                 if let Err(e) = self.license.activate(&key) {
                     return ControllerResponse::new(400, "text/plain", e.into_bytes());
                 }
@@ -397,7 +448,10 @@ impl<E: Ext> Controller for KitController<E> {
                 ControllerResponse::json(o)
             }
             "ranges" => ControllerResponse::json(crate::ranges_json(self.params)),
-            _ => self.ext.request(r).unwrap_or_else(ControllerResponse::not_found),
+            _ => self
+                .ext
+                .request(r)
+                .unwrap_or_else(ControllerResponse::not_found),
         }
     }
 }
@@ -455,7 +509,9 @@ pub fn floats_json(v: &[f32]) -> String {
 
 /// Read a JSON array of numbers into `out` (exactly `out.len()` entries).
 pub fn parse_floats(v: &Value, out: &mut [f32]) -> Result<(), String> {
-    let Value::Arr(items) = v else { return Err("expected an array".into()) };
+    let Value::Arr(items) = v else {
+        return Err("expected an array".into());
+    };
     if items.len() != out.len() {
         return Err(format!("expected {} numbers", out.len()));
     }
@@ -475,7 +531,10 @@ mod tests {
     use crate::license::{Store, Verdict, TEST_PRODUCT};
     use std::sync::atomic::AtomicI32;
 
-    const P: &[ParamDef] = &[ParamDef::bypass("bypass"), ParamDef::float("gain", "Gain", -24.0, 24.0, 0.0).unit("dB")];
+    const P: &[ParamDef] = &[
+        ParamDef::bypass("bypass"),
+        ParamDef::float("gain", "Gain", -24.0, 24.0, 0.0).unit("dB"),
+    ];
 
     #[derive(Default)]
     struct Counter {
@@ -515,12 +574,33 @@ mod tests {
     }
 
     fn ctl() -> KitController<Counter> {
-        let lic = Manager::load(&TEST_PRODUCT, Store::default(), license::now_secs(), |_, _| Verdict::Unreachable("test".into()));
-        KitController::new(P, Arc::new(Meters::default()), lic, Arc::new(Counter::default()), None)
+        let lic = Manager::load(
+            &TEST_PRODUCT,
+            Store::default(),
+            license::now_secs(),
+            |_, _| Verdict::Unreachable("test".into()),
+        );
+        KitController::new(
+            P,
+            Arc::new(Meters::default()),
+            lic,
+            Arc::new(Counter::default()),
+            None,
+        )
     }
 
-    fn call<E: Ext>(c: &KitController<E>, method: &str, path: &str, body: &str) -> ControllerResponse {
-        c.request(&ControllerRequest { method, path, query: "", body: body.as_bytes() })
+    fn call<E: Ext>(
+        c: &KitController<E>,
+        method: &str,
+        path: &str,
+        body: &str,
+    ) -> ControllerResponse {
+        c.request(&ControllerRequest {
+            method,
+            path,
+            query: "",
+            body: body.as_bytes(),
+        })
     }
 
     #[test]
@@ -538,7 +618,10 @@ mod tests {
         assert_eq!(b.ext.n.load(Ordering::Relaxed), 2);
         b.reset();
         assert_eq!(b.ext.n.load(Ordering::Relaxed), 0);
-        assert!(b.save().contains("\"active\":\"B\""), "reset keeps the A/B slots");
+        assert!(
+            b.save().contains("\"active\":\"B\""),
+            "reset keeps the A/B slots"
+        );
     }
 
     #[test]
@@ -561,18 +644,24 @@ mod tests {
         assert_eq!(v.get("state").and_then(Value::as_str), Some("trial"));
         assert_eq!(v.get("product").and_then(Value::as_str), Some("NoDAW Test"));
         let r = call(&c, "GET", "license-buy", "");
-        assert!(std::str::from_utf8(&r.body).unwrap().contains("example.com"));
+        assert!(std::str::from_utf8(&r.body)
+            .unwrap()
+            .contains("example.com"));
     }
 
     #[test]
     fn the_frame_has_the_documented_layout() {
         let c = ctl();
-        c.meters.record(&[0.5; 64], &[0.25; 64], &[0.1; 64], &[0.1; 64]);
+        c.meters
+            .record(&[0.5; 64], &[0.25; 64], &[0.1; 64], &[0.1; 64]);
         c.meters.set_custom(1, 7.0);
         call(&c, "POST", "count", "");
         let f = c.frame();
         assert_eq!(f.len(), (HEADER + 2 * BANDS + 1) * 4);
-        let v: Vec<f32> = f.chunks(4).map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]])).collect();
+        let v: Vec<f32> = f
+            .chunks(4)
+            .map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+            .collect();
         assert!(v.iter().all(|x| x.is_finite()));
         assert_eq!((v[0], v[1]), (0.5, 0.25));
         assert_eq!(v[10], 48_000.0);
@@ -607,8 +696,19 @@ mod tests {
     #[test]
     fn the_look_takes_json_or_a_bare_name_and_saves_with_the_session() {
         static LOOKS: &[&str] = &["dark", "light"];
-        let lic = Manager::load(&TEST_PRODUCT, Store::default(), license::now_secs(), |_, _| Verdict::Unreachable("test".into()));
-        let c = KitController::new(P, Arc::new(Meters::default()), lic, Arc::new(LookExt::new(LOOKS, 2, 1)), None);
+        let lic = Manager::load(
+            &TEST_PRODUCT,
+            Store::default(),
+            license::now_secs(),
+            |_, _| Verdict::Unreachable("test".into()),
+        );
+        let c = KitController::new(
+            P,
+            Arc::new(Meters::default()),
+            lic,
+            Arc::new(LookExt::new(LOOKS, 2, 1)),
+            None,
+        );
         assert_eq!(call(&c, "POST", "skin", "light").status, 200);
         assert_eq!(c.ext.look(), "light");
         assert_eq!(call(&c, "POST", "skin", "\"dark\"").status, 200);
@@ -616,8 +716,19 @@ mod tests {
         assert_eq!(call(&c, "POST", "skin", "chrome").status, 400);
         call(&c, "POST", "skin", "light");
         let saved = c.save();
-        let lic = Manager::load(&TEST_PRODUCT, Store::default(), license::now_secs(), |_, _| Verdict::Unreachable("test".into()));
-        let d = KitController::new(P, Arc::new(Meters::default()), lic, Arc::new(LookExt::new(LOOKS, 2, 1)), None);
+        let lic = Manager::load(
+            &TEST_PRODUCT,
+            Store::default(),
+            license::now_secs(),
+            |_, _| Verdict::Unreachable("test".into()),
+        );
+        let d = KitController::new(
+            P,
+            Arc::new(Meters::default()),
+            lic,
+            Arc::new(LookExt::new(LOOKS, 2, 1)),
+            None,
+        );
         d.load(&saved).unwrap();
         assert_eq!(d.ext.look(), "light");
         c.ext.peaks.max(1, 0.5);

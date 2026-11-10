@@ -35,7 +35,12 @@ impl Core {
     }
 
     pub fn with_license(license: Arc<license::Manager>) -> Self {
-        Self { meters: Arc::new(ctl::Meters::default()), license, dropout: license::Dropout::new(48_000.0), sr: 48_000.0 }
+        Self {
+            meters: Arc::new(ctl::Meters::default()),
+            license,
+            dropout: license::Dropout::new(48_000.0),
+            sr: 48_000.0,
+        }
     }
 
     /// Main thread (`activate`): a trial that ran out while the session was open takes effect
@@ -46,15 +51,28 @@ impl Core {
             self.dropout = license::Dropout::new(sample_rate);
         }
         self.license.refresh(license::now_secs());
-        self.meters.sample_rate.store((sample_rate as f32).to_bits(), Ordering::Relaxed);
+        self.meters
+            .sample_rate
+            .store((sample_rate as f32).to_bits(), Ordering::Relaxed);
         self.meters.latency.store(latency as u32, Ordering::Relaxed);
     }
 
     /// Main thread (`controller`): the page's controller, with the plugin's own extension.
-    pub fn controller<E: ctl::Ext>(&self, params: &'static [apf::param::ParamDef], ext: Arc<E>, host: HostHandle) -> Arc<dyn Controller> {
+    pub fn controller<E: ctl::Ext>(
+        &self,
+        params: &'static [apf::param::ParamDef],
+        ext: Arc<E>,
+        host: HostHandle,
+    ) -> Arc<dyn Controller> {
         // A licensed copy whose last online check is over 30 days old asks again, off-thread.
         self.license.maybe_recheck(license::now_secs());
-        Arc::new(ctl::KitController::new(params, self.meters.clone(), self.license.clone(), ext, Some(host)))
+        Arc::new(ctl::KitController::new(
+            params,
+            self.meters.clone(),
+            self.license.clone(),
+            ext,
+            Some(host),
+        ))
     }
 
     /// Audio thread, before processing.
@@ -64,8 +82,16 @@ impl Core {
 
     /// Audio thread, after processing: the trial dropout (one relaxed atomic load; bypassed
     /// audio is left alone), then the output meters.
-    pub fn end(&mut self, l: &mut [f32], r: &mut [f32], bypass: bool, playing: bool, gain_reduction: f32) {
-        self.dropout.process(l, r, self.license.demo_flag() && !bypass);
+    pub fn end(
+        &mut self,
+        l: &mut [f32],
+        r: &mut [f32],
+        bypass: bool,
+        playing: bool,
+        gain_reduction: f32,
+    ) {
+        self.dropout
+            .process(l, r, self.license.demo_flag() && !bypass);
         self.meters.record_out(l, r);
         GainReduction::record(&self.meters.gr, gain_reduction);
         self.meters.playing.store(playing as u8, Ordering::Relaxed);
@@ -79,7 +105,14 @@ pub fn ranges_json(params: &[ParamDef]) -> String {
     let mut o = String::from("{");
     let mut first = true;
     for def in params {
-        if let ParamKind::Float { min, max, default, curve, decimals } = def.kind {
+        if let ParamKind::Float {
+            min,
+            max,
+            default,
+            curve,
+            decimals,
+        } = def.kind
+        {
             if !first {
                 o.push(',');
             }
@@ -114,7 +147,13 @@ pub fn fixture_json(params: &[ParamDef], extra: &str) -> String {
             o.push(',');
         }
         let kind = match d.kind {
-            ParamKind::Float { min, max, default, curve, decimals } => {
+            ParamKind::Float {
+                min,
+                max,
+                default,
+                curve,
+                decimals,
+            } => {
                 let (c, e) = match curve {
                     Curve::Linear => ("lin", 1.0),
                     Curve::Log => ("log", 1.0),
@@ -122,14 +161,27 @@ pub fn fixture_json(params: &[ParamDef], extra: &str) -> String {
                 };
                 format!("\"kind\":\"float\",\"min\":{min},\"max\":{max},\"default\":{default},\"curve\":\"{c}\",\"exp\":{e},\"decimals\":{decimals}")
             }
-            ParamKind::Int { min, max, default } => format!("\"kind\":\"int\",\"min\":{min},\"max\":{max},\"default\":{default}"),
-            ParamKind::Bool { default } => format!("\"kind\":\"bool\",\"default\":{}", default as u8),
+            ParamKind::Int { min, max, default } => {
+                format!("\"kind\":\"int\",\"min\":{min},\"max\":{max},\"default\":{default}")
+            }
+            ParamKind::Bool { default } => {
+                format!("\"kind\":\"bool\",\"default\":{}", default as u8)
+            }
             ParamKind::Choice { options, default } => {
                 let opts: Vec<String> = options.iter().map(|s| format!("\"{}\"", esc(s))).collect();
-                format!("\"kind\":\"choice\",\"default\":{default},\"options\":[{}]", opts.join(","))
+                format!(
+                    "\"kind\":\"choice\",\"default\":{default},\"options\":[{}]",
+                    opts.join(",")
+                )
             }
         };
-        o.push_str(&format!("{{\"key\":\"{}\",\"name\":\"{}\",\"unit\":\"{}\",\"module\":\"{}\",{kind}}}", d.key, esc(d.name), esc(d.unit), esc(d.module)));
+        o.push_str(&format!(
+            "{{\"key\":\"{}\",\"name\":\"{}\",\"unit\":\"{}\",\"module\":\"{}\",{kind}}}",
+            d.key,
+            esc(d.name),
+            esc(d.unit),
+            esc(d.module)
+        ));
     }
     o.push_str("],\"ranges\":");
     o.push_str(&ranges_json(params));
@@ -156,7 +208,12 @@ mod tests {
     #[test]
     fn ranges_and_the_fixture_are_valid_json() {
         let r = json::parse(&ranges_json(P)).unwrap();
-        assert_eq!(r.get("freq").and_then(|v| v.get("curve")).and_then(|v| v.as_str()), Some("log"));
+        assert_eq!(
+            r.get("freq")
+                .and_then(|v| v.get("curve"))
+                .and_then(|v| v.as_str()),
+            Some("log")
+        );
         assert!(r.get("mode").is_none());
         let f = json::parse(&fixture_json(P, "\"extra\":4")).unwrap();
         assert_eq!(f.get("extra").and_then(|v| v.as_f64()), Some(4.0));

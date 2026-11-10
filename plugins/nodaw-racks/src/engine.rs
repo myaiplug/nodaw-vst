@@ -17,8 +17,58 @@ use nodaw_dsp::modfx::{balance, Correlation};
 use nodaw_dsp::sat::{Curve, Saturator};
 use nodaw_dsp::util::{db_to_gain, undenorm, Smooth};
 
-pub const ORDERS: [[usize; 4]; 24] = [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1], [0, 3, 1, 2], [0, 3, 2, 1], [1, 0, 2, 3], [1, 0, 3, 2], [1, 2, 0, 3], [1, 2, 3, 0], [1, 3, 0, 2], [1, 3, 2, 0], [2, 0, 1, 3], [2, 0, 3, 1], [2, 1, 0, 3], [2, 1, 3, 0], [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 0, 2, 1], [3, 1, 0, 2], [3, 1, 2, 0], [3, 2, 0, 1], [3, 2, 1, 0]];
-pub const ORDER_NAMES: &[&str] = &["SAT > EQ > SPACE > LIM", "SAT > EQ > LIM > SPACE", "SAT > SPACE > EQ > LIM", "SAT > SPACE > LIM > EQ", "SAT > LIM > EQ > SPACE", "SAT > LIM > SPACE > EQ", "EQ > SAT > SPACE > LIM", "EQ > SAT > LIM > SPACE", "EQ > SPACE > SAT > LIM", "EQ > SPACE > LIM > SAT", "EQ > LIM > SAT > SPACE", "EQ > LIM > SPACE > SAT", "SPACE > SAT > EQ > LIM", "SPACE > SAT > LIM > EQ", "SPACE > EQ > SAT > LIM", "SPACE > EQ > LIM > SAT", "SPACE > LIM > SAT > EQ", "SPACE > LIM > EQ > SAT", "LIM > SAT > EQ > SPACE", "LIM > SAT > SPACE > EQ", "LIM > EQ > SAT > SPACE", "LIM > EQ > SPACE > SAT", "LIM > SPACE > SAT > EQ", "LIM > SPACE > EQ > SAT"];
+pub const ORDERS: [[usize; 4]; 24] = [
+    [0, 1, 2, 3],
+    [0, 1, 3, 2],
+    [0, 2, 1, 3],
+    [0, 2, 3, 1],
+    [0, 3, 1, 2],
+    [0, 3, 2, 1],
+    [1, 0, 2, 3],
+    [1, 0, 3, 2],
+    [1, 2, 0, 3],
+    [1, 2, 3, 0],
+    [1, 3, 0, 2],
+    [1, 3, 2, 0],
+    [2, 0, 1, 3],
+    [2, 0, 3, 1],
+    [2, 1, 0, 3],
+    [2, 1, 3, 0],
+    [2, 3, 0, 1],
+    [2, 3, 1, 0],
+    [3, 0, 1, 2],
+    [3, 0, 2, 1],
+    [3, 1, 0, 2],
+    [3, 1, 2, 0],
+    [3, 2, 0, 1],
+    [3, 2, 1, 0],
+];
+pub const ORDER_NAMES: &[&str] = &[
+    "SAT > EQ > SPACE > LIM",
+    "SAT > EQ > LIM > SPACE",
+    "SAT > SPACE > EQ > LIM",
+    "SAT > SPACE > LIM > EQ",
+    "SAT > LIM > EQ > SPACE",
+    "SAT > LIM > SPACE > EQ",
+    "EQ > SAT > SPACE > LIM",
+    "EQ > SAT > LIM > SPACE",
+    "EQ > SPACE > SAT > LIM",
+    "EQ > SPACE > LIM > SAT",
+    "EQ > LIM > SAT > SPACE",
+    "EQ > LIM > SPACE > SAT",
+    "SPACE > SAT > EQ > LIM",
+    "SPACE > SAT > LIM > EQ",
+    "SPACE > EQ > SAT > LIM",
+    "SPACE > EQ > LIM > SAT",
+    "SPACE > LIM > SAT > EQ",
+    "SPACE > LIM > EQ > SAT",
+    "LIM > SAT > EQ > SPACE",
+    "LIM > SAT > SPACE > EQ",
+    "LIM > EQ > SAT > SPACE",
+    "LIM > EQ > SPACE > SAT",
+    "LIM > SPACE > SAT > EQ",
+    "LIM > SPACE > EQ > SAT",
+];
 
 /// Bands of the EQ.
 pub const BANDS: usize = 7;
@@ -220,7 +270,12 @@ impl Engine {
     pub fn reset_to(&mut self, s: &Settings) {
         self.sat.reset();
         self.limiter.reset();
-        for d in self.dry.iter_mut().chain(self.byp.iter_mut()).chain(self.haas.iter_mut()) {
+        for d in self
+            .dry
+            .iter_mut()
+            .chain(self.byp.iter_mut())
+            .chain(self.haas.iter_mut())
+        {
             d.clear();
         }
         self.corr = Correlation::new(self.sr);
@@ -237,7 +292,12 @@ impl Engine {
     pub fn reset(&mut self) {
         self.sat.reset();
         self.limiter.reset();
-        for d in self.dry.iter_mut().chain(self.byp.iter_mut()).chain(self.haas.iter_mut()) {
+        for d in self
+            .dry
+            .iter_mut()
+            .chain(self.byp.iter_mut())
+            .chain(self.haas.iter_mut())
+        {
             d.clear();
         }
         for b in self.eq.iter_mut().chain(self.tone.iter_mut()) {
@@ -260,7 +320,8 @@ impl Engine {
         self.tone[0].set(Shape::LowShelf, 700.0, 0.6, -0.5 * t, sr);
         self.tone[1].set(Shape::HighShelf, 1400.0, 0.6, 0.5 * t, sr);
         if s.sp_on && s.mono_hz > 20.5 {
-            self.mono.set(Shape::HighPass, s.mono_hz.min(nyq), 0.707, 0.0, sr);
+            self.mono
+                .set(Shape::HighPass, s.mono_hz.min(nyq), 0.707, 0.0, sr);
         } else {
             self.mono.set(Shape::Peak, 1000.0, 1.0, 0.0, sr);
         }
@@ -280,13 +341,21 @@ impl Engine {
         let out_t = db_to_gain(s.out_db);
         let byp_t = if s.bypass { 1.0 } else { 0.0 };
         let drive_t = db_to_gain(s.sat_drive_db);
-        let makeup = if s.sat_auto { s.sat_curve.makeup(drive_t) } else { 1.0 };
+        let makeup = if s.sat_auto {
+            s.sat_curve.makeup(drive_t)
+        } else {
+            1.0
+        };
         let sat_mix_t = if s.sat_on { s.sat_mix } else { 0.0 };
         let sp_t = if s.sp_on { 1.0 } else { 0.0 };
         let mid_t = db_to_gain(s.mid_db);
         let side_t = db_to_gain(s.side_db);
         let haas_t = (s.haas_ms.clamp(-MAX_HAAS_MS, MAX_HAAS_MS) as f64 * 0.001 * sr) as f32;
-        let lim_g_t = if s.lim_on { db_to_gain(s.lim_gain_db) } else { 1.0 };
+        let lim_g_t = if s.lim_on {
+            db_to_gain(s.lim_gain_db)
+        } else {
+            1.0
+        };
         if self.fresh {
             self.fresh = false;
             self.in_gain.reset(in_t);
@@ -314,7 +383,10 @@ impl Engine {
         let lat = self.lat;
         for i in 0..n {
             let (xl, xr) = (l[i], r[i]);
-            let (xl, xr) = (if xl.is_finite() { xl } else { 0.0 }, if xr.is_finite() { xr } else { 0.0 });
+            let (xl, xr) = (
+                if xl.is_finite() { xl } else { 0.0 },
+                if xr.is_finite() { xr } else { 0.0 },
+            );
             self.byp[0].push(xl);
             self.byp[1].push(xr);
             let (bl, br) = (self.byp[0].tap_int(lat), self.byp[1].tap_int(lat));
@@ -411,12 +483,20 @@ impl Engine {
         }
         // Adaptive release: the deeper the limiter works, the slower it lets go (program
         // dependent, less pumping on dense material).
-        let rel = if s.adaptive { s.release_ms * (1.0 + 3.0 * (1.0 - min_gain).clamp(0.0, 0.5) * 2.0) } else { s.release_ms };
+        let rel = if s.adaptive {
+            s.release_ms * (1.0 + 3.0 * (1.0 - min_gain).clamp(0.0, 0.5) * 2.0)
+        } else {
+            s.release_ms
+        };
         if (rel - self.rel_for).abs() > 0.5 {
             self.rel_for = rel;
             self.limiter.set_release_ms(sr, rel);
         }
-        BlockInfo { min_gain, module_peak: peaks, correlation: self.corr.value() }
+        BlockInfo {
+            min_gain,
+            module_peak: peaks,
+            correlation: self.corr.value(),
+        }
     }
 }
 
@@ -425,7 +505,9 @@ mod tests {
     use super::*;
 
     fn sine(n: usize, hz: f64, sr: f64, amp: f32) -> Vec<f32> {
-        (0..n).map(|i| (amp as f64 * (2.0 * std::f64::consts::PI * hz * i as f64 / sr).sin()) as f32).collect()
+        (0..n)
+            .map(|i| (amp as f64 * (2.0 * std::f64::consts::PI * hz * i as f64 / sr).sin()) as f32)
+            .collect()
     }
 
     fn run(e: &mut Engine, s: &Settings, x: &[f32], block: usize) -> (Vec<f32>, Vec<f32>) {
@@ -437,7 +519,11 @@ mod tests {
     }
 
     fn neutral() -> Settings {
-        Settings { sat_on: false, lim_on: false, ..Settings::default() }
+        Settings {
+            sat_on: false,
+            lim_on: false,
+            ..Settings::default()
+        }
     }
 
     #[test]
@@ -446,11 +532,19 @@ mod tests {
         let x = sine(9600, 440.0, sr, 0.5);
         for (k, order) in ORDERS.iter().enumerate().step_by(5) {
             let mut e = Engine::new(sr);
-            let s = Settings { order: *order, ..neutral() };
+            let s = Settings {
+                order: *order,
+                ..neutral()
+            };
             let (l, r) = run(&mut e, &s, &x, 256);
             let lat = e.latency();
             for i in lat + 2000..x.len() {
-                assert!((l[i] - x[i - lat]).abs() < 2e-3, "order {k} @{i}: {} vs {}", l[i], x[i - lat]);
+                assert!(
+                    (l[i] - x[i - lat]).abs() < 2e-3,
+                    "order {k} @{i}: {} vs {}",
+                    l[i],
+                    x[i - lat]
+                );
                 assert!((r[i] - x[i - lat]).abs() < 2e-3);
             }
         }
@@ -460,7 +554,12 @@ mod tests {
     fn the_limiter_holds_the_ceiling_and_reports_gain_reduction() {
         let sr = 48_000.0;
         let mut e = Engine::new(sr);
-        let s = Settings { sat_on: false, lim_gain_db: 12.0, ceiling_db: -1.0, ..Settings::default() };
+        let s = Settings {
+            sat_on: false,
+            lim_gain_db: 12.0,
+            ceiling_db: -1.0,
+            ..Settings::default()
+        };
         let x = sine(48_000, 100.0, sr, 0.9);
         let (mut l, mut r) = (x.clone(), x.clone());
         let mut min_g = 1.0f32;
@@ -469,7 +568,10 @@ mod tests {
         }
         assert!(min_g < 0.4, "{min_g}");
         let ceil = db_to_gain(-1.0) * 1.01;
-        assert!(l[4800..].iter().chain(&r[4800..]).all(|v| v.abs() <= ceil), "over the ceiling");
+        assert!(
+            l[4800..].iter().chain(&r[4800..]).all(|v| v.abs() <= ceil),
+            "over the ceiling"
+        );
     }
 
     #[test]
@@ -478,7 +580,12 @@ mod tests {
         let x = sine(48_000, 200.0, sr, 0.25);
         for curve in [Curve::Tape, Curve::Tube, Curve::Diode] {
             let mut e = Engine::new(sr);
-            let s = Settings { sat_curve: curve, sat_drive_db: 18.0, lim_on: false, ..Settings::default() };
+            let s = Settings {
+                sat_curve: curve,
+                sat_drive_db: 18.0,
+                lim_on: false,
+                ..Settings::default()
+            };
             let (l, _) = run(&mut e, &s, &x, 512);
             let rms = |v: &[f32]| (v.iter().map(|a| a * a).sum::<f32>() / v.len() as f32).sqrt();
             let (ri, ro) = (rms(&x[8000..]), rms(&l[8000..]));
@@ -505,7 +612,10 @@ mod tests {
     fn width_zero_is_mono_and_mono_bass_folds_the_lows() {
         let sr = 48_000.0;
         let mut e = Engine::new(sr);
-        let s = Settings { width: 0.0, ..neutral() };
+        let s = Settings {
+            width: 0.0,
+            ..neutral()
+        };
         let xl = sine(9600, 300.0, sr, 0.3);
         let xr: Vec<f32> = xl.iter().map(|v| -v * 0.5).collect();
         let (mut l, mut r) = (xl.clone(), xr.clone());
@@ -514,12 +624,18 @@ mod tests {
             assert!((l[i] - r[i]).abs() < 1e-3);
         }
         let mut e = Engine::new(sr);
-        let s = Settings { mono_hz: 300.0, ..neutral() };
+        let s = Settings {
+            mono_hz: 300.0,
+            ..neutral()
+        };
         let xl = sine(19200, 40.0, sr, 0.3);
         let xr: Vec<f32> = xl.iter().map(|v| -v).collect();
         let (mut l, mut r) = (xl.clone(), xr.clone());
         e.process(&mut l, &mut r, &s);
-        let side = l[12_000..].iter().zip(&r[12_000..]).fold(0.0f32, |m, (a, b)| m.max((a - b).abs() * 0.5));
+        let side = l[12_000..]
+            .iter()
+            .zip(&r[12_000..])
+            .fold(0.0f32, |m, (a, b)| m.max((a - b).abs() * 0.5));
         assert!(side < 0.03, "side at 40 Hz {side}");
     }
 
@@ -528,7 +644,14 @@ mod tests {
         for sr in [44_100.0, 48_000.0, 96_000.0] {
             for block in [1usize, 17, 64, 4096] {
                 let mut e = Engine::new(sr);
-                let mut s = Settings { sat_drive_db: 24.0, haas_ms: 12.0, width: 2.0, lim_gain_db: 18.0, mono_hz: 120.0, ..Settings::default() };
+                let mut s = Settings {
+                    sat_drive_db: 24.0,
+                    haas_ms: 12.0,
+                    width: 2.0,
+                    lim_gain_db: 18.0,
+                    mono_hz: 120.0,
+                    ..Settings::default()
+                };
                 s.bands[0].gain_db = 15.0;
                 s.bands[6].shape = Shape::LowPass;
                 s.bands[6].freq = 5000.0;
@@ -537,7 +660,10 @@ mod tests {
                 let (l, r) = run(&mut e, &s, &x, block);
                 for v in l.iter().chain(&r) {
                     assert!(v.is_finite(), "{sr} {block}");
-                    assert!(*v == 0.0 || v.abs() >= f32::MIN_POSITIVE, "denormal at {sr} {block}: {v:e}");
+                    assert!(
+                        *v == 0.0 || v.abs() >= f32::MIN_POSITIVE,
+                        "denormal at {sr} {block}: {v:e}"
+                    );
                 }
             }
         }

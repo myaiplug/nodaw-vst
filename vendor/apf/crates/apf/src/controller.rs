@@ -26,8 +26,8 @@
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Weak};
 
-use crate::view::{ViewContext, Shared};
 use crate::param::Params;
+use crate::view::{Shared, ViewContext};
 
 /// A request from the view to the plugin.
 #[derive(Debug, Clone, Copy)]
@@ -73,7 +73,11 @@ pub struct ControllerResponse {
 impl ControllerResponse {
     /// An answer with any status, content type and body.
     pub fn new(status: u16, content_type: impl Into<String>, body: impl Into<Vec<u8>>) -> Self {
-        Self { status, content_type: content_type.into(), body: body.into() }
+        Self {
+            status,
+            content_type: content_type.into(),
+            body: body.into(),
+        }
     }
 
     /// `200`, `application/json`.
@@ -136,11 +140,16 @@ pub struct HostHandle {
 
 impl HostHandle {
     pub(crate) fn new(shared: &Arc<Shared>) -> Self {
-        Self { params: shared.params.clone(), shared: Arc::downgrade(shared) }
+        Self {
+            params: shared.params.clone(),
+            shared: Arc::downgrade(shared),
+        }
     }
 
     fn shared(&self) -> Option<Arc<Shared>> {
-        self.shared.upgrade().filter(|s| !s.detached.load(Ordering::Acquire))
+        self.shared
+            .upgrade()
+            .filter(|s| !s.detached.load(Ordering::Acquire))
     }
 
     /// The plugin's parameter values (any thread).
@@ -160,7 +169,9 @@ impl HostHandle {
     /// changes need no call; hosts follow those by themselves.
     pub fn mark_dirty(&self) {
         let Some(shared) = self.shared() else { return };
-        let Some(host) = shared.host.get() else { return };
+        let Some(host) = shared.host.get() else {
+            return;
+        };
         if host.is_main_thread() {
             host.mark_dirty();
         } else {
@@ -209,7 +220,9 @@ impl HostHandle {
 
     /// Like [`Self::set_param`], with a plain value (Hz, dB, the option index; clamped).
     pub fn set_param_plain(&self, index: usize, plain: f64) -> bool {
-        let Some(def) = self.params.defs().get(index) else { return false };
+        let Some(def) = self.params.defs().get(index) else {
+            return false;
+        };
         let normalized = def.host_to_normalized(def.sanitize_host(def.plain_to_host(plain)));
         self.set_param(index, normalized)
     }
@@ -239,14 +252,19 @@ impl HostHandle {
 
 /// A query argument, percent-decoded (`encodeURIComponent` on the page side; `+` is a space).
 pub fn query_arg(query: &str, key: &str) -> Option<String> {
-    let raw = query.split('&').find_map(|kv| kv.strip_prefix(key).and_then(|rest| rest.strip_prefix('=')))?;
+    let raw = query
+        .split('&')
+        .find_map(|kv| kv.strip_prefix(key).and_then(|rest| rest.strip_prefix('=')))?;
     let bytes = raw.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
     let mut i = 0;
     while i < bytes.len() {
         match bytes[i] {
             b'%' if i + 2 < bytes.len() => {
-                match u8::from_str_radix(std::str::from_utf8(&bytes[i + 1..i + 3]).unwrap_or(""), 16) {
+                match u8::from_str_radix(
+                    std::str::from_utf8(&bytes[i + 1..i + 3]).unwrap_or(""),
+                    16,
+                ) {
                     Ok(b) => {
                         out.push(b);
                         i += 3;
@@ -276,7 +294,11 @@ impl TestController {
     pub(crate) const DEFAULT: &str = r#"{"notes": []}"#;
 
     pub(crate) fn new() -> Arc<Self> {
-        Arc::new(Self { text: std::sync::Mutex::new(Self::DEFAULT.into()), revision: 0.into(), resets: 0.into() })
+        Arc::new(Self {
+            text: std::sync::Mutex::new(Self::DEFAULT.into()),
+            revision: 0.into(),
+            resets: 0.into(),
+        })
     }
 
     pub(crate) fn set(&self, text: &str) {
@@ -326,11 +348,22 @@ mod tests {
 
     #[test]
     fn query_args_are_decoded() {
-        assert_eq!(query_arg("name=Warm%20Pad%3A%20%C3%A9&overwrite=1", "name").as_deref(), Some("Warm Pad: é"));
-        assert_eq!(query_arg("name=Warm%20Pad&overwrite=1", "overwrite").as_deref(), Some("1"));
+        assert_eq!(
+            query_arg("name=Warm%20Pad%3A%20%C3%A9&overwrite=1", "name").as_deref(),
+            Some("Warm Pad: é")
+        );
+        assert_eq!(
+            query_arg("name=Warm%20Pad&overwrite=1", "overwrite").as_deref(),
+            Some("1")
+        );
         assert_eq!(query_arg("names=x", "name"), None);
         assert_eq!(query_arg("id=a%2", "id").as_deref(), Some("a%2"));
-        let r = ControllerRequest { method: "post", path: "x", query: "pgen=12", body: b"{}" };
+        let r = ControllerRequest {
+            method: "post",
+            path: "x",
+            query: "pgen=12",
+            body: b"{}",
+        };
         assert!(r.is_post());
         assert_eq!(r.query_arg("pgen").as_deref(), Some("12"));
         assert_eq!(r.body_text(), Some("{}"));

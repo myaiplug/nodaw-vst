@@ -31,21 +31,36 @@ impl Value {
 
     /// The text of a string value.
     pub fn as_str(&self) -> Option<&str> {
-        if let Value::Str(s) = self { Some(s) } else { None }
+        if let Value::Str(s) = self {
+            Some(s)
+        } else {
+            None
+        }
     }
 
     /// The number, if this is one.
     pub fn as_f64(&self) -> Option<f64> {
-        if let Value::Num(n) = self { Some(*n) } else { None }
+        if let Value::Num(n) = self {
+            Some(*n)
+        } else {
+            None
+        }
     }
 
     /// The same data: like `==`, but the members of an object may come in any order (two
     /// writers of one value seldom agree on it).
     pub fn same_as(&self, other: &Value) -> bool {
         match (self, other) {
-            (Value::Arr(a), Value::Arr(b)) => a.len() == b.len() && a.iter().zip(b).all(|(x, y)| x.same_as(y)),
+            (Value::Arr(a), Value::Arr(b)) => {
+                a.len() == b.len() && a.iter().zip(b).all(|(x, y)| x.same_as(y))
+            }
             (Value::Obj(a), Value::Obj(b)) => {
-                a.len() == b.len() && a.iter().all(|(k, v)| b.iter().find(|(l, _)| l == k).is_some_and(|(_, w)| v.same_as(w)))
+                a.len() == b.len()
+                    && a.iter().all(|(k, v)| {
+                        b.iter()
+                            .find(|(l, _)| l == k)
+                            .is_some_and(|(_, w)| v.same_as(w))
+                    })
             }
             _ => self == other,
         }
@@ -54,7 +69,10 @@ impl Value {
 
 /// Parse JSON text; the error says what is wrong and where.
 pub fn parse(text: &str) -> Result<Value, String> {
-    let mut p = Parser { s: text.as_bytes(), i: 0 };
+    let mut p = Parser {
+        s: text.as_bytes(),
+        i: 0,
+    };
     p.ws();
     let v = p.value(0)?;
     p.ws();
@@ -67,7 +85,10 @@ pub fn parse(text: &str) -> Result<Value, String> {
 /// The members of a JSON object with the exact text of each value (byte ranges into `text`),
 /// so a value can be handed on as written, every digit of its numbers kept.
 pub fn members_raw(text: &str) -> Result<Vec<(String, std::ops::Range<usize>)>, String> {
-    let mut p = Parser { s: text.as_bytes(), i: 0 };
+    let mut p = Parser {
+        s: text.as_bytes(),
+        i: 0,
+    };
     p.ws();
     p.eat(b'{')?;
     let mut out = Vec::new();
@@ -107,7 +128,10 @@ pub fn members_raw(text: &str) -> Result<Vec<(String, std::ops::Range<usize>)>, 
 /// stay on one line. Strings and numbers are copied exactly as written. `text` must be valid
 /// JSON (check with [`parse`]); anything else is appended unchanged.
 pub fn write_pretty(out: &mut String, text: &str, indent: usize) {
-    let mut p = Parser { s: text.as_bytes(), i: 0 };
+    let mut p = Parser {
+        s: text.as_bytes(),
+        i: 0,
+    };
     p.ws();
     match p.raw(0) {
         Ok(tree) => tree.write(out, text, indent),
@@ -140,7 +164,10 @@ impl Raw {
                 if members.is_empty() {
                     return Some("{}".into());
                 }
-                let parts: Vec<String> = members.iter().map(|(k, v)| format!("{}: {}", &src[k.clone()], &src[v.range()])).collect();
+                let parts: Vec<String> = members
+                    .iter()
+                    .map(|(k, v)| format!("{}: {}", &src[k.clone()], &src[v.range()]))
+                    .collect();
                 let line = format!("{{ {} }}", parts.join(", "));
                 (line.len() <= 72).then_some(line)
             }
@@ -275,11 +302,18 @@ impl Parser<'_> {
             Some(b'n') => self.word("null", Value::Null),
             Some(c) if *c == b'-' || c.is_ascii_digit() => {
                 let start = self.i;
-                while self.i < self.s.len() && matches!(self.s[self.i], b'-' | b'+' | b'.' | b'e' | b'E' | b'0'..=b'9') {
+                while self.i < self.s.len()
+                    && matches!(
+                        self.s[self.i],
+                        b'-' | b'+' | b'.' | b'e' | b'E' | b'0'..=b'9'
+                    )
+                {
                     self.i += 1;
                 }
                 let text = std::str::from_utf8(&self.s[start..self.i]).unwrap_or("");
-                text.parse::<f64>().map(Value::Num).map_err(|_| self.err("bad number"))
+                text.parse::<f64>()
+                    .map(Value::Num)
+                    .map_err(|_| self.err("bad number"))
             }
             _ => Err(self.err("expected a value")),
         }
@@ -359,7 +393,10 @@ impl Parser<'_> {
     }
 
     fn hex4(&mut self) -> Result<u32, String> {
-        let digits = self.s.get(self.i..self.i + 4).ok_or_else(|| self.err("short \\u escape"))?;
+        let digits = self
+            .s
+            .get(self.i..self.i + 4)
+            .ok_or_else(|| self.err("short \\u escape"))?;
         let text = std::str::from_utf8(digits).map_err(|_| self.err("bad \\u escape"))?;
         let v = u32::from_str_radix(text, 16).map_err(|_| self.err("bad \\u escape"))?;
         self.i += 4;
@@ -370,12 +407,16 @@ impl Parser<'_> {
         self.eat(b'"')?;
         let mut out = Vec::new();
         loop {
-            let Some(&c) = self.s.get(self.i) else { return Err(self.err("unterminated string")) };
+            let Some(&c) = self.s.get(self.i) else {
+                return Err(self.err("unterminated string"));
+            };
             self.i += 1;
             match c {
                 b'"' => break,
                 b'\\' => {
-                    let Some(&e) = self.s.get(self.i) else { return Err(self.err("unterminated string")) };
+                    let Some(&e) = self.s.get(self.i) else {
+                        return Err(self.err("unterminated string"));
+                    };
                     self.i += 1;
                     let ch = match e {
                         b'"' => '"',
@@ -388,7 +429,9 @@ impl Parser<'_> {
                         b't' => '\t',
                         b'u' => {
                             let hi = self.hex4()?;
-                            let code = if (0xd800..0xdc00).contains(&hi) && self.s[self.i..].starts_with(b"\\u") {
+                            let code = if (0xd800..0xdc00).contains(&hi)
+                                && self.s[self.i..].starts_with(b"\\u")
+                            {
                                 self.i += 2;
                                 let lo = self.hex4()?;
                                 0x10000 + ((hi - 0xd800) << 10) + (lo.wrapping_sub(0xdc00) & 0x3ff)
@@ -456,8 +499,18 @@ mod tests {
 
     #[test]
     fn parses_and_writes() {
-        let v = parse(r#" {"a": [1, -2.5e1, true, null], "b": "x\"y\u00e9\ud83c\udfb9", "c": {}} "#).unwrap();
-        assert_eq!(v.get("a"), Some(&Value::Arr(vec![Value::Num(1.0), Value::Num(-25.0), Value::Bool(true), Value::Null])));
+        let v =
+            parse(r#" {"a": [1, -2.5e1, true, null], "b": "x\"y\u00e9\ud83c\udfb9", "c": {}} "#)
+                .unwrap();
+        assert_eq!(
+            v.get("a"),
+            Some(&Value::Arr(vec![
+                Value::Num(1.0),
+                Value::Num(-25.0),
+                Value::Bool(true),
+                Value::Null
+            ]))
+        );
         assert_eq!(v.get("b").and_then(Value::as_str), Some("x\"yé🎹"));
         assert!(parse("{\"a\": 1,}").is_err());
         assert!(parse("[1 2]").is_err());
@@ -465,7 +518,12 @@ mod tests {
         let mut s = String::new();
         write_str(&mut s, "a\"b\n");
         assert_eq!(s, r#""a\"b\n""#);
-        for (v, text) in [(2399.9999999997, "2400"), (0.3, "0.3"), (-12.0, "-12"), (-0.0000000001, "0")] {
+        for (v, text) in [
+            (2399.9999999997, "2400"),
+            (0.3, "0.3"),
+            (-12.0, "-12"),
+            (-0.0000000001, "0"),
+        ] {
             s.clear();
             write_num(&mut s, v);
             assert_eq!(s, text);
@@ -478,7 +536,11 @@ mod tests {
         let members = members_raw(text).unwrap();
         let keys: Vec<&str> = members.iter().map(|(k, _)| k.as_str()).collect();
         assert_eq!(keys, ["a", "b", "c"]);
-        assert_eq!(&text[members[0].1.clone()], "0.30000000000000004", "numbers exactly as written");
+        assert_eq!(
+            &text[members[0].1.clone()],
+            "0.30000000000000004",
+            "numbers exactly as written"
+        );
         assert!(text[members[1].1.clone()].starts_with("{\"x\""));
         assert!(members_raw("[1]").is_err());
         assert!(members_raw("{\"a\": 1} x").is_err());
@@ -486,7 +548,9 @@ mod tests {
         let mut out = String::new();
         write_pretty(&mut out, &text[members[1].1.clone()], 2);
         assert_eq!(out, "{\n    \"x\": [1, 2, 3],\n    \"y\": { \"k\": \"v\" },\n    \"z\": [\n      { \"q\": true },\n      []\n    ]\n  }");
-        assert!(parse(&out).unwrap().same_as(&parse(&text[members[1].1.clone()]).unwrap()));
+        assert!(parse(&out)
+            .unwrap()
+            .same_as(&parse(&text[members[1].1.clone()]).unwrap()));
     }
 
     #[test]
@@ -494,7 +558,10 @@ mod tests {
         let a = parse(r#"{"a": 1, "b": [1, {"c": 2, "d": 3}]}"#).unwrap();
         let b = parse(r#"{"b": [1, {"d": 3, "c": 2}], "a": 1.0}"#).unwrap();
         assert!(a.same_as(&b));
-        assert!(!a.same_as(&parse(r#"{"b": [{"d": 3, "c": 2}, 1], "a": 1}"#).unwrap()), "arrays keep their order");
+        assert!(
+            !a.same_as(&parse(r#"{"b": [{"d": 3, "c": 2}, 1], "a": 1}"#).unwrap()),
+            "arrays keep their order"
+        );
         assert!(!a.same_as(&parse(r#"{"a": 1}"#).unwrap()));
     }
 }

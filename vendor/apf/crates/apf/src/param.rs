@@ -87,16 +87,47 @@ pub struct ParamDef {
 
 impl ParamDef {
     const fn base(key: &'static str, name: &'static str, kind: ParamKind) -> Self {
-        Self { key, name, kind, unit: "", module: "", automatable: true, hidden: false, bypass: false }
+        Self {
+            key,
+            name,
+            kind,
+            unit: "",
+            module: "",
+            automatable: true,
+            hidden: false,
+            bypass: false,
+        }
     }
 
     /// A continuous parameter from `min` to `max`, linear, two decimals. Chain `.curve`, `.decimals`, `.unit`.
-    pub const fn float(key: &'static str, name: &'static str, min: f64, max: f64, default: f64) -> Self {
-        Self::base(key, name, ParamKind::Float { min, max, default, curve: Curve::Linear, decimals: 2 })
+    pub const fn float(
+        key: &'static str,
+        name: &'static str,
+        min: f64,
+        max: f64,
+        default: f64,
+    ) -> Self {
+        Self::base(
+            key,
+            name,
+            ParamKind::Float {
+                min,
+                max,
+                default,
+                curve: Curve::Linear,
+                decimals: 2,
+            },
+        )
     }
 
     /// A whole-number parameter from `min` to `max`.
-    pub const fn int(key: &'static str, name: &'static str, min: i32, max: i32, default: i32) -> Self {
+    pub const fn int(
+        key: &'static str,
+        name: &'static str,
+        min: i32,
+        max: i32,
+        default: i32,
+    ) -> Self {
         Self::base(key, name, ParamKind::Int { min, max, default })
     }
 
@@ -106,7 +137,12 @@ impl ParamDef {
     }
 
     /// One of `options`; `default` is the index of the starting option.
-    pub const fn choice(key: &'static str, name: &'static str, options: &'static [&'static str], default: u32) -> Self {
+    pub const fn choice(
+        key: &'static str,
+        name: &'static str,
+        options: &'static [&'static str],
+        default: u32,
+    ) -> Self {
         Self::base(key, name, ParamKind::Choice { options, default })
     }
 
@@ -143,16 +179,42 @@ impl ParamDef {
 
     /// How a float's slider maps onto its range (see [`Curve`]).
     pub const fn curve(mut self, c: Curve) -> Self {
-        if let ParamKind::Float { min, max, default, decimals, .. } = self.kind {
-            self.kind = ParamKind::Float { min, max, default, curve: c, decimals };
+        if let ParamKind::Float {
+            min,
+            max,
+            default,
+            decimals,
+            ..
+        } = self.kind
+        {
+            self.kind = ParamKind::Float {
+                min,
+                max,
+                default,
+                curve: c,
+                decimals,
+            };
         }
         self
     }
 
     /// Digits after the decimal point in a float's display text.
     pub const fn decimals(mut self, d: u8) -> Self {
-        if let ParamKind::Float { min, max, default, curve, .. } = self.kind {
-            self.kind = ParamKind::Float { min, max, default, curve, decimals: d };
+        if let ParamKind::Float {
+            min,
+            max,
+            default,
+            curve,
+            ..
+        } = self.kind
+        {
+            self.kind = ParamKind::Float {
+                min,
+                max,
+                default,
+                curve,
+                decimals: d,
+            };
         }
         self
     }
@@ -195,16 +257,26 @@ impl ParamDef {
 
     /// Clamp (and for stepped parameters round) a value coming from the host.
     pub fn sanitize_host(&self, v: f64) -> f64 {
-        let v = if v.is_finite() { v } else { self.default_host_value() };
+        let v = if v.is_finite() {
+            v
+        } else {
+            self.default_host_value()
+        };
         let (lo, hi) = self.host_range();
         let v = v.clamp(lo, hi);
-        if self.step_count().is_some() { v.round() } else { v }
+        if self.step_count().is_some() {
+            v.round()
+        } else {
+            v
+        }
     }
 
     /// Host value to the value the DSP uses (Hz, dB, the integer, 0/1, the option index).
     pub fn host_to_plain(&self, v: f64) -> f64 {
         match self.kind {
-            ParamKind::Float { min, max, curve, .. } => {
+            ParamKind::Float {
+                min, max, curve, ..
+            } => {
                 let n = v.clamp(0.0, 1.0);
                 match curve {
                     Curve::Linear => min + (max - min) * n,
@@ -219,7 +291,9 @@ impl ParamDef {
     /// A plain value (Hz, dB, ...) to the host value (0..1 for a float).
     pub fn plain_to_host(&self, plain: f64) -> f64 {
         match self.kind {
-            ParamKind::Float { min, max, curve, .. } => {
+            ParamKind::Float {
+                min, max, curve, ..
+            } => {
                 if max == min {
                     return 0.0;
                 }
@@ -238,7 +312,11 @@ impl ParamDef {
     /// Host value to 0..1, the position of a slider in a view.
     pub fn host_to_normalized(&self, v: f64) -> f64 {
         let (lo, hi) = self.host_range();
-        if hi > lo { ((v - lo) / (hi - lo)).clamp(0.0, 1.0) } else { 0.0 }
+        if hi > lo {
+            ((v - lo) / (hi - lo)).clamp(0.0, 1.0)
+        } else {
+            0.0
+        }
     }
 
     /// A slider position 0..1 to the host value.
@@ -315,7 +393,9 @@ impl ParamDef {
                     num = num[..num.len() - 1].trim();
                     scale = 1000.0;
                 }
-                num.parse::<f64>().ok().map(|v| self.plain_to_host(v * scale))
+                num.parse::<f64>()
+                    .ok()
+                    .map(|v| self.plain_to_host(v * scale))
             }
         }
     }
@@ -387,12 +467,24 @@ pub fn validate(params: &[ParamDef]) -> Result<(), String> {
                 return Err(format!("parameter key '{}' is used twice", p.key));
             }
             if q.host_id() == p.host_id() {
-                return Err(format!("parameter keys '{}' and '{}' hash to the same id", q.key, p.key));
+                return Err(format!(
+                    "parameter keys '{}' and '{}' hash to the same id",
+                    q.key, p.key
+                ));
             }
         }
         match p.kind {
-            ParamKind::Float { min, max, default, curve, .. } => {
-                if min.partial_cmp(&max) != Some(std::cmp::Ordering::Less) || default < min || default > max {
+            ParamKind::Float {
+                min,
+                max,
+                default,
+                curve,
+                ..
+            } => {
+                if min.partial_cmp(&max) != Some(std::cmp::Ordering::Less)
+                    || default < min
+                    || default > max
+                {
                     return Err(format!("parameter '{}': range or default is wrong", p.key));
                 }
                 if curve == Curve::Log && min <= 0.0 {
@@ -406,7 +498,10 @@ pub fn validate(params: &[ParamDef]) -> Result<(), String> {
             }
             ParamKind::Choice { options, default } => {
                 if options.len() < 2 || default as usize >= options.len() {
-                    return Err(format!("parameter '{}': needs two options and a valid default", p.key));
+                    return Err(format!(
+                        "parameter '{}': needs two options and a valid default",
+                        p.key
+                    ));
                 }
             }
             ParamKind::Bool { .. } => {}
@@ -416,11 +511,17 @@ pub fn validate(params: &[ParamDef]) -> Result<(), String> {
 }
 
 /// Checks that every key a remote-controls page names is a parameter.
-pub fn validate_pages(pages: &[crate::plugin::RemotePage], params: &[ParamDef]) -> Result<(), String> {
+pub fn validate_pages(
+    pages: &[crate::plugin::RemotePage],
+    params: &[ParamDef],
+) -> Result<(), String> {
     for page in pages {
         for key in page.params.iter().filter(|k| !k.is_empty()) {
             if !params.iter().any(|p| p.key == *key) {
-                return Err(format!("remote-controls page '{}' names '{key}', which is no parameter", page.name));
+                return Err(format!(
+                    "remote-controls page '{}' names '{key}', which is no parameter",
+                    page.name
+                ));
             }
         }
     }
@@ -457,7 +558,10 @@ pub struct Params {
 impl Params {
     /// A store holding every parameter's default.
     pub fn new(defs: &'static [ParamDef]) -> Self {
-        let values = defs.iter().map(|d| AtomicF64::new(d.default_host_value())).collect();
+        let values = defs
+            .iter()
+            .map(|d| AtomicF64::new(d.default_host_value()))
+            .collect();
         Self { defs, values }
     }
 
@@ -542,8 +646,12 @@ mod tests {
     use super::*;
 
     const DEFS: &[ParamDef] = &[
-        ParamDef::float("cutoff", "Cutoff", 20.0, 20000.0, 1000.0).unit("Hz").curve(Curve::Log),
-        ParamDef::float("gain", "Gain", -60.0, 6.0, -6.0).unit("dB").decimals(1),
+        ParamDef::float("cutoff", "Cutoff", 20.0, 20000.0, 1000.0)
+            .unit("Hz")
+            .curve(Curve::Log),
+        ParamDef::float("gain", "Gain", -60.0, 6.0, -6.0)
+            .unit("dB")
+            .decimals(1),
         ParamDef::choice("wave", "Wave", &["Sine", "Saw"], 1),
         ParamDef::int("voices", "Voices", 1, 16, 8),
         ParamDef::bypass("bypass"),
@@ -598,7 +706,10 @@ mod tests {
 
     #[test]
     fn duplicate_keys_are_rejected() {
-        const BAD: &[ParamDef] = &[ParamDef::bool("a", "A", false), ParamDef::bool("a", "B", true)];
+        const BAD: &[ParamDef] = &[
+            ParamDef::bool("a", "A", false),
+            ParamDef::bool("a", "B", true),
+        ];
         assert!(validate(BAD).is_err());
     }
 }

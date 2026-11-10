@@ -171,9 +171,17 @@ pub(crate) struct Shared {
 }
 
 impl Shared {
-    pub(crate) fn new(params: Params, info: PluginInfo, factory_presets: &'static [&'static str]) -> Self {
-        let mut id_map: Vec<(u32, u32)> =
-            params.defs().iter().enumerate().map(|(i, d)| (d.host_id(), i as u32)).collect();
+    pub(crate) fn new(
+        params: Params,
+        info: PluginInfo,
+        factory_presets: &'static [&'static str],
+    ) -> Self {
+        let mut id_map: Vec<(u32, u32)> = params
+            .defs()
+            .iter()
+            .enumerate()
+            .map(|(i, d)| (d.host_id(), i as u32))
+            .collect();
         id_map.sort_unstable();
         let shared = Self {
             params: Arc::new(params),
@@ -213,14 +221,25 @@ impl Shared {
     fn data_mark_now(&self, text: Option<String>) -> Option<DataMark> {
         let c = self.controller()?;
         let reference = text.unwrap_or_else(|| c.save());
-        Some(DataMark { reference, checked: Some(c.revision()), same: true })
+        Some(DataMark {
+            reference,
+            checked: Some(c.revision()),
+            same: true,
+        })
     }
 
     /// A mark for a preset the controller's data is not known to match (a session's preset).
     fn data_mark_for(&self, preset: &Preset) -> Option<DataMark> {
         let slot = self.controller.get()?;
-        let reference = preset.controller.clone().unwrap_or_else(|| slot.default.clone());
-        Some(DataMark { reference, checked: None, same: false })
+        let reference = preset
+            .controller
+            .clone()
+            .unwrap_or_else(|| slot.default.clone());
+        Some(DataMark {
+            reference,
+            checked: None,
+            same: false,
+        })
     }
 
     /// After a state without a preset in it was loaded (or at creation): name the sound after
@@ -246,12 +265,19 @@ impl Shared {
 
     pub(crate) fn set_current(&self, source: Source, name: String) {
         let read = preset::read(&source, &self.factory).ok();
-        let values = read.as_ref().map_or_else(|| self.host_values(), |p| p.host_values(&self.params));
+        let values = read
+            .as_ref()
+            .map_or_else(|| self.host_values(), |p| p.host_values(&self.params));
         let data = match &read {
             Some(p) => self.data_mark_for(p),
             None => self.data_mark_now(None),
         };
-        *self.current() = Some(CurrentPreset { source, name, values, data });
+        *self.current() = Some(CurrentPreset {
+            source,
+            name,
+            values,
+            data,
+        });
     }
 
     /// The current preset: its source, its name, and whether the sound (parameters or
@@ -260,7 +286,12 @@ impl Shared {
         let (source, name, values, mark) = {
             let current = self.current();
             let c = current.as_ref()?;
-            (c.source.clone(), c.name.clone(), c.values.clone(), c.data.as_ref().map(|m| (m.checked, m.same)))
+            (
+                c.source.clone(),
+                c.name.clone(),
+                c.values.clone(),
+                c.data.as_ref().map(|m| (m.checked, m.same)),
+            )
         };
         let mut changed = !preset::same_sound(&self.params, &values, &self.host_values());
         if let (Some((checked, same)), Some(ctrl)) = (mark, self.controller()) {
@@ -269,9 +300,17 @@ impl Shared {
                 same
             } else {
                 // Only when the controller's data changed: compare it with the preset's.
-                let reference = self.current().as_ref().and_then(|c| c.data.as_ref().map(|m| m.reference.clone()));
+                let reference = self
+                    .current()
+                    .as_ref()
+                    .and_then(|c| c.data.as_ref().map(|m| m.reference.clone()));
                 let same = reference.is_some_and(|r| preset::same_data(&r, &ctrl.save()));
-                if let Some(m) = self.current().as_mut().filter(|c| c.source == source).and_then(|c| c.data.as_mut()) {
+                if let Some(m) = self
+                    .current()
+                    .as_mut()
+                    .filter(|c| c.source == source)
+                    .and_then(|c| c.data.as_mut())
+                {
                     m.checked = Some(revision);
                     m.same = same;
                 }
@@ -306,7 +345,8 @@ impl Shared {
     }
 
     pub(crate) fn remember_view_size(&self, width: u32, height: u32) {
-        self.view_size.store((width as u64) << 32 | height as u64, Ordering::Relaxed);
+        self.view_size
+            .store((width as u64) << 32 | height as u64, Ordering::Relaxed);
     }
 
     pub(crate) fn view_scale(&self) -> f64 {
@@ -314,12 +354,18 @@ impl Shared {
     }
 
     pub(crate) fn set_view_scale(&self, scale: f64) {
-        let scale = if scale.is_finite() && scale > 0.0 { scale } else { 1.0 };
+        let scale = if scale.is_finite() && scale > 0.0 {
+            scale
+        } else {
+            1.0
+        };
         self.view_scale.store(scale.to_bits(), Ordering::Relaxed);
     }
 
     pub(crate) fn host_values(&self) -> Vec<f64> {
-        (0..self.params.len()).map(|i| self.params.host_value(i)).collect()
+        (0..self.params.len())
+            .map(|i| self.params.host_value(i))
+            .collect()
     }
 
     /// Load a preset into the parameters and tell the host. `from_view`: the plugin chose
@@ -327,7 +373,11 @@ impl Shared {
     pub(crate) fn load_preset(&self, source: &Source, from_view: bool) -> Result<(), String> {
         let p = preset::read(source, &self.factory)?;
         if p.plugin.as_deref().is_some_and(|id| id != self.info.id) {
-            return Err(format!("'{}' is a preset of another plugin ({})", p.name, p.plugin.unwrap_or_default()));
+            return Err(format!(
+                "'{}' is a preset of another plugin ({})",
+                p.name,
+                p.plugin.unwrap_or_default()
+            ));
         }
         p.apply(&self.params);
         // The controller's data after the parameters; a failed load leaves it reset.
@@ -396,7 +446,11 @@ impl Shared {
         if waiting == 0 || !learnable_cc(cc) || waiting as usize > self.params.len() {
             return None;
         }
-        if self.learning.compare_exchange(waiting, 0, Ordering::AcqRel, Ordering::Relaxed).is_err() {
+        if self
+            .learning
+            .compare_exchange(waiting, 0, Ordering::AcqRel, Ordering::Relaxed)
+            .is_err()
+        {
             return None;
         }
         self.map_cc(cc, Some(waiting as usize - 1));
@@ -418,13 +472,18 @@ impl Shared {
 
     /// (controller, parameter index) of every MIDI learn mapping.
     pub(crate) fn cc_mappings(&self) -> Vec<(u8, usize)> {
-        (0..128u8).filter_map(|cc| self.cc_target(cc).map(|i| (cc, i))).collect()
+        (0..128u8)
+            .filter_map(|cc| self.cc_target(cc).map(|i| (cc, i)))
+            .collect()
     }
 
     /// Index of the parameter with this host id, without allocating (audio thread).
     #[inline]
     pub(crate) fn index_of(&self, host_id: u32) -> Option<usize> {
-        self.id_map.binary_search_by_key(&host_id, |e| e.0).ok().map(|i| self.id_map[i].1 as usize)
+        self.id_map
+            .binary_search_by_key(&host_id, |e| e.0)
+            .ok()
+            .map(|i| self.id_map[i].1 as usize)
     }
 
     #[inline]
@@ -450,11 +509,21 @@ impl ViewContext {
 
     /// Like [`ViewContext::without_host`], with these factory presets instead of the
     /// plugin's: for tests of preset browsers with a generated library.
-    pub fn without_host_with_presets<P: crate::Plugin>(plugin: &mut P, factory_presets: &'static [&'static str]) -> ViewContext {
-        let shared = Arc::new(Shared::new(Params::new(P::PARAMS), P::INFO, factory_presets));
+    pub fn without_host_with_presets<P: crate::Plugin>(
+        plugin: &mut P,
+        factory_presets: &'static [&'static str],
+    ) -> ViewContext {
+        let shared = Arc::new(Shared::new(
+            Params::new(P::PARAMS),
+            P::INFO,
+            factory_presets,
+        ));
         if let Some(controller) = plugin.controller(crate::controller::HostHandle::new(&shared)) {
             let default = controller.save();
-            let _ = shared.controller.set(ControllerSlot { controller, default });
+            let _ = shared.controller.set(ControllerSlot {
+                controller,
+                default,
+            });
             shared.name_current_sound();
         }
         ViewContext { shared }
@@ -479,7 +548,9 @@ impl ViewContext {
 
     /// Set a parameter from a control position 0..1.
     pub fn set_normalized(&self, index: usize, normalized: f64) {
-        let Some(def) = self.shared.params.defs().get(index) else { return };
+        let Some(def) = self.shared.params.defs().get(index) else {
+            return;
+        };
         let v = def.normalized_to_host(normalized);
         self.shared.params.set_host_value(index, v);
         self.shared.bump_generation();
@@ -496,8 +567,14 @@ impl ViewContext {
     /// Ask the host for a new view size, in logical pixels; the host answers with `set_size`.
     pub fn request_resize(&self, width: u32, height: u32) -> bool {
         let scale = self.shared.view_scale();
-        let (w, h) = ((width as f64 * scale).round() as u32, (height as f64 * scale).round() as u32);
-        self.shared.host.get().is_some_and(|host| host.request_resize(w, h))
+        let (w, h) = (
+            (width as f64 * scale).round() as u32,
+            (height as f64 * scale).round() as u32,
+        );
+        self.shared
+            .host
+            .get()
+            .is_some_and(|host| host.request_resize(w, h))
     }
 
     /// The plugin's name, vendor and id.
@@ -508,7 +585,10 @@ impl ViewContext {
     /// The last value (0..127) of a MIDI controller number (mod wheel, pedal, ...), on any
     /// channel.
     pub fn cc_value(&self, cc: u8) -> u8 {
-        self.shared.controllers.get(cc as usize).map_or(0, |c| c.load(Ordering::Relaxed))
+        self.shared
+            .controllers
+            .get(cc as usize)
+            .map_or(0, |c| c.load(Ordering::Relaxed))
     }
 
     /// The pitch wheel, -1..1.
@@ -555,12 +635,29 @@ impl ViewContext {
 
     /// Like [`ViewContext::save_preset`], with what the preset says about itself; `None`
     /// keeps what the overwritten preset said.
-    pub fn save_preset_with(&self, name: &str, overwrite: bool, meta: Option<&Metadata>) -> Result<Source, SaveError> {
+    pub fn save_preset_with(
+        &self,
+        name: &str,
+        overwrite: bool,
+        meta: Option<&Metadata>,
+    ) -> Result<Source, SaveError> {
         let s = &self.shared;
         let data = s.controller().map(|c| c.save());
-        let source = preset::save(&s.info, &s.factory, &s.params, data.as_deref(), meta, name, overwrite)?;
-        let current =
-            CurrentPreset { source: source.clone(), name: name.trim().to_owned(), values: s.host_values(), data: s.data_mark_now(data) };
+        let source = preset::save(
+            &s.info,
+            &s.factory,
+            &s.params,
+            data.as_deref(),
+            meta,
+            name,
+            overwrite,
+        )?;
+        let current = CurrentPreset {
+            source: source.clone(),
+            name: name.trim().to_owned(),
+            values: s.host_values(),
+            data: s.data_mark_now(data),
+        };
         *s.current() = Some(current);
         s.bump_generation();
         if let Some(h) = s.host.get() {
@@ -591,7 +688,9 @@ impl ViewContext {
 
     /// The next controller moved (any channel) will move this parameter. `None` cancels.
     pub fn learn(&self, index: Option<usize>) {
-        let v = index.filter(|&i| i < self.shared.params.len()).map_or(0, |i| i as u32 + 1);
+        let v = index
+            .filter(|&i| i < self.shared.params.len())
+            .map_or(0, |i| i as u32 + 1);
         self.shared.learning.store(v, Ordering::Release);
         self.shared.bump_generation();
     }
@@ -632,18 +731,34 @@ mod tests {
     use super::*;
     use crate::param::ParamDef;
 
-    const DEFS: &[ParamDef] = &[ParamDef::float("a", "A", 0.0, 1.0, 0.5), ParamDef::float("b", "B", 0.0, 1.0, 0.5)];
-    const INFO: PluginInfo =
-        PluginInfo { id: "dev.test.learn", name: "Learn", vendor: "Test", url: "", version: "1", description: "", features: &[] };
+    const DEFS: &[ParamDef] = &[
+        ParamDef::float("a", "A", 0.0, 1.0, 0.5),
+        ParamDef::float("b", "B", 0.0, 1.0, 0.5),
+    ];
+    const INFO: PluginInfo = PluginInfo {
+        id: "dev.test.learn",
+        name: "Learn",
+        vendor: "Test",
+        url: "",
+        version: "1",
+        description: "",
+        features: &[],
+    };
 
     #[test]
     fn midi_learn_takes_the_next_controller() {
         let shared = Arc::new(Shared::new(Params::new(DEFS), INFO, &[]));
-        let ctx = ViewContext { shared: shared.clone() };
+        let ctx = ViewContext {
+            shared: shared.clone(),
+        };
         assert_eq!(shared.learn_cc(21), None, "not learning");
         ctx.learn(Some(1));
         assert_eq!(ctx.learning(), Some(1));
-        assert_eq!(shared.learn_cc(64), None, "the sustain pedal is never learned");
+        assert_eq!(
+            shared.learn_cc(64),
+            None,
+            "the sustain pedal is never learned"
+        );
         assert_eq!(shared.learn_cc(121), None, "nor channel mode messages");
         assert_eq!(shared.learn_cc(21), Some(1));
         assert_eq!(ctx.learning(), None);
@@ -671,7 +786,10 @@ mod tests {
     fn with_controller() -> (Arc<Shared>, Arc<crate::controller::TestController>) {
         let shared = Arc::new(Shared::new(Params::new(DEFS), INFO, FACTORY));
         let c = crate::controller::TestController::new();
-        let _ = shared.controller.set(ControllerSlot { controller: c.clone(), default: c.save() });
+        let _ = shared.controller.set(ControllerSlot {
+            controller: c.clone(),
+            default: c.save(),
+        });
         shared.name_current_sound();
         (shared, c)
     }
@@ -679,15 +797,23 @@ mod tests {
     #[test]
     fn presets_carry_the_controller_data() {
         let (shared, c) = with_controller();
-        let ctx = ViewContext { shared: shared.clone() };
+        let ctx = ViewContext {
+            shared: shared.clone(),
+        };
         assert!(ctx.controller().is_some());
         // The default sound is "Init": its parameters and its controller data match.
-        assert_eq!(ctx.current_preset().map(|p| (p.1, p.2)), Some(("Init".into(), false)));
+        assert_eq!(
+            ctx.current_preset().map(|p| (p.1, p.2)),
+            Some(("Init".into(), false))
+        );
 
         // JSON data: loaded after the parameters, exactly as written in the file.
         ctx.load_preset(&Source::Factory("Json".into())).unwrap();
         assert_eq!(ctx.params().host_value(0), 0.25);
-        assert_eq!(c.get(), r#"{"notes": [60, 64, 67], "tempo": 0.30000000000000004}"#);
+        assert_eq!(
+            c.get(),
+            r#"{"notes": [60, 64, 67], "tempo": 0.30000000000000004}"#
+        );
         assert_eq!(ctx.current_preset().map(|p| p.2), Some(false));
         // A change of the data alone marks the preset changed; the same data written
         // differently (another order, other spaces) does not.
@@ -706,11 +832,17 @@ mod tests {
         ctx.load_preset(&Source::Factory("None".into())).unwrap();
         assert_eq!(c.resets.load(Ordering::Relaxed), resets + 1);
         assert_eq!(c.get(), crate::controller::TestController::DEFAULT);
-        assert_eq!(ctx.current_preset().map(|p| (p.1, p.2)), Some(("None".into(), false)));
+        assert_eq!(
+            ctx.current_preset().map(|p| (p.1, p.2)),
+            Some(("None".into(), false))
+        );
 
         // Data the controller cannot load: an error, the controller reset, no current preset.
         c.set("something");
-        assert!(ctx.load_preset(&Source::Factory("Bad".into())).unwrap_err().contains("cannot read"));
+        assert!(ctx
+            .load_preset(&Source::Factory("Bad".into()))
+            .unwrap_err()
+            .contains("cannot read"));
         assert_eq!(c.get(), crate::controller::TestController::DEFAULT);
         assert!(ctx.current_preset().is_none());
     }

@@ -82,7 +82,15 @@ pub fn triangle(t: f32, dt: f32) -> f32 {
         4.0 * t - 4.0
     };
     // The slope turns from +4 to -4 at the peak, and back at the bottom.
-    let wrap = |d: f32| if d > 0.5 { d - 1.0 } else if d < -0.5 { d + 1.0 } else { d };
+    let wrap = |d: f32| {
+        if d > 0.5 {
+            d - 1.0
+        } else if d < -0.5 {
+            d + 1.0
+        } else {
+            d
+        }
+    };
     naive - 8.0 * dt * poly_blamp(wrap(t - 0.25), dt) + 8.0 * dt * poly_blamp(wrap(t - 0.75), dt)
 }
 
@@ -152,7 +160,10 @@ impl Oscillator {
 
     /// At phase 0 with a step of 0 (it does not move): set a frequency before use.
     pub const fn new() -> Self {
-        Self { phase: 0.0, step: 0.0 }
+        Self {
+            phase: 0.0,
+            step: 0.0,
+        }
     }
 
     /// Set the pitch. Cheap: one division. Safe to call every sample for a pitch bend or
@@ -252,7 +263,13 @@ pub struct Lfo {
 impl Lfo {
     /// A stopped LFO (rate 0) of `shape`, at phase 0.
     pub const fn new(shape: LfoShape) -> Self {
-        Self { shape, phase: 0.0, step: 0.0, held: 0.0, seed: 0x9e37_79b9 }
+        Self {
+            shape,
+            phase: 0.0,
+            step: 0.0,
+            held: 0.0,
+            seed: 0x9e37_79b9,
+        }
     }
 
     /// Change the shape, keeping phase and rate.
@@ -361,13 +378,20 @@ mod tests {
 
     #[test]
     fn saw_and_square_stay_in_range_and_have_the_right_pitch() {
-        for (wave, name) in [(Waveform::Saw, "saw"), (Waveform::Square, "square"), (Waveform::Triangle, "triangle")] {
+        for (wave, name) in [
+            (Waveform::Saw, "saw"),
+            (Waveform::Square, "square"),
+            (Waveform::Triangle, "triangle"),
+        ] {
             let mut osc = Oscillator::new();
             osc.set_frequency(1000.0, 48000.0);
             let x: Vec<f32> = (0..48000).map(|_| osc.tick(wave)).collect();
             assert!(x.iter().all(|s| s.abs() <= 1.2), "{name} out of range");
             let rising = x.windows(2).filter(|w| w[0] < 0.0 && w[1] >= 0.0).count();
-            assert!((999..=1001).contains(&rising), "{name}: {rising} cycles in a second");
+            assert!(
+                (999..=1001).contains(&rising),
+                "{name}: {rising} cycles in a second"
+            );
         }
     }
 
@@ -412,17 +436,31 @@ mod tests {
                 t -= 1.0;
             }
         }
-        assert!(blep_err < naive_err * 0.5, "blep {blep_err} naive {naive_err}");
+        assert!(
+            blep_err < naive_err * 0.5,
+            "blep {blep_err} naive {naive_err}"
+        );
     }
 
     #[test]
     fn blamp_triangle_rounds_its_corners_towards_the_ideal() {
         let dt = 0.05f32; // 2.4 kHz at 48 kHz: the corners are a visible part of each cycle
-        let naive = |t: f32| if t < 0.25 { 4.0 * t } else if t < 0.75 { 2.0 - 4.0 * t } else { 4.0 * t - 4.0 };
+        let naive = |t: f32| {
+            if t < 0.25 {
+                4.0 * t
+            } else if t < 0.75 {
+                2.0 - 4.0 * t
+            } else {
+                4.0 * t - 4.0
+            }
+        };
         // At the peak the band-limited triangle is lower than the naive one, nearer the
         // ideal (the series up to Nyquist).
         let want = ideal_triangle(0.25, dt as f64);
-        let (n_err, b_err) = ((naive(0.25) as f64 - want).abs(), (triangle(0.25, dt) as f64 - want).abs());
+        let (n_err, b_err) = (
+            (naive(0.25) as f64 - want).abs(),
+            (triangle(0.25, dt) as f64 - want).abs(),
+        );
         assert!(b_err < n_err, "blamp {b_err} naive {n_err}");
         // And at a low pitch it is the plain triangle.
         assert!((triangle(0.25, 0.001) - 1.0).abs() < 0.01);
@@ -431,7 +469,12 @@ mod tests {
 
     #[test]
     fn lfo_shapes_cover_their_range_and_rate() {
-        for (shape, cycles) in [(LfoShape::Sine, 10), (LfoShape::Triangle, 10), (LfoShape::Saw, 10), (LfoShape::Square, 10)] {
+        for (shape, cycles) in [
+            (LfoShape::Sine, 10),
+            (LfoShape::Triangle, 10),
+            (LfoShape::Saw, 10),
+            (LfoShape::Square, 10),
+        ] {
             let mut lfo = Lfo::new(shape);
             lfo.set_rate(10.0, 1000.0);
             let x: Vec<f32> = (0..1000).map(|_| lfo.tick()).collect();
@@ -454,7 +497,9 @@ mod tests {
         assert!(x.iter().all(|v| (-1.0..=1.0).contains(v)));
         let mut u = Lfo::new(LfoShape::Sine);
         u.set_rate(1.0, 100.0);
-        assert!((0..100).map(|_| u.tick_unipolar()).all(|v| (0.0..=1.0).contains(&v)));
+        assert!((0..100)
+            .map(|_| u.tick_unipolar())
+            .all(|v| (0.0..=1.0).contains(&v)));
         u.reset();
         assert_eq!(u.phase(), 0.0);
     }

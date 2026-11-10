@@ -55,11 +55,21 @@ pub fn test_signal(sr: f64, seconds: f64) -> (Vec<f32>, Vec<f32>) {
         seed ^= seed << 5;
         let white = (seed as f32 / u32::MAX as f32) * 2.0 - 1.0;
         pink = 0.97 * pink + 0.03 * white;
-        let burst = if (t % 1.0) < 0.25 { 0.6 * pink + 0.05 * white } else { 0.0 };
+        let burst = if (t % 1.0) < 0.25 {
+            0.6 * pink + 0.05 * white
+        } else {
+            0.0
+        };
         let beat = t % 0.5;
-        let kick = (-beat * 18.0).exp() as f32 * (2.0 * std::f64::consts::PI * (50.0 + 90.0 * (-beat * 30.0).exp()) * beat).sin() as f32 * 0.55;
+        let kick = (-beat * 18.0).exp() as f32
+            * (2.0 * std::f64::consts::PI * (50.0 + 90.0 * (-beat * 30.0).exp()) * beat).sin()
+                as f32
+            * 0.55;
         let chord = |hz: f64| (2.0 * std::f64::consts::PI * hz * t).sin() as f32;
-        let (cl, cr) = (0.06 * (chord(220.0) + chord(277.18)), 0.06 * (chord(329.63) + chord(220.0 * 1.001)));
+        let (cl, cr) = (
+            0.06 * (chord(220.0) + chord(277.18)),
+            0.06 * (chord(329.63) + chord(220.0 * 1.001)),
+        );
         l[i] = sweep + burst + kick + cl;
         r[i] = sweep * 0.9 + burst * 0.8 + kick + cr;
     }

@@ -116,7 +116,11 @@ impl SvfCoeffs {
     /// From a resonance amount `0..=1` (0 = none, 1 = a sharp peak, just short of
     /// self-oscillation), the mapping the demo synth's knob uses: k from 2 down to 0.05.
     pub fn from_resonance(cutoff_hz: f32, resonance: f32, sample_rate: f32) -> Self {
-        Self::new(cutoff_hz, 2.0 - 1.95 * resonance.clamp(0.0, 1.0), sample_rate)
+        Self::new(
+            cutoff_hz,
+            2.0 - 1.95 * resonance.clamp(0.0, 1.0),
+            sample_rate,
+        )
     }
 
     fn from_g(g: f32, k: f32) -> Self {
@@ -168,7 +172,12 @@ impl Svf {
         self.ic1 = 2.0 * v1 - self.ic1;
         self.ic2 = 2.0 * v2 - self.ic2;
         let high = x - c.k * v1 - v2;
-        SvfOutput { low: v2, band: v1, high, notch: v2 + high }
+        SvfOutput {
+            low: v2,
+            band: v1,
+            high,
+            notch: v2 + high,
+        }
     }
 
     /// Only the low-pass output (a little cheaper than [`process`](Self::process)).

@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use crate::controller::{Controller, HostHandle};
-use crate::view::View;
 use crate::param::{ParamDef, Params};
+use crate::view::View;
 
 /// Static description of a plugin, shown by hosts.
 #[derive(Debug, Clone, Copy)]
@@ -41,9 +41,17 @@ pub struct AudioLayout {
 
 impl AudioLayout {
     /// No audio input, stereo output, notes in.
-    pub const INSTRUMENT_STEREO: Self = Self { main_input: 0, main_output: 2, note_input: true };
+    pub const INSTRUMENT_STEREO: Self = Self {
+        main_input: 0,
+        main_output: 2,
+        note_input: true,
+    };
     /// Stereo in and out, no notes.
-    pub const EFFECT_STEREO: Self = Self { main_input: 2, main_output: 2, note_input: false };
+    pub const EFFECT_STEREO: Self = Self {
+        main_input: 2,
+        main_output: 2,
+        note_input: false,
+    };
 }
 
 /// What `activate` is told about the coming processing.
@@ -228,7 +236,11 @@ impl<'a> AudioBuffer<'a> {
     /// Every pointer must be valid for `offset + len` samples, the channels must not overlap,
     /// and nothing else may access them for `'a`.
     pub unsafe fn from_raw(channels: &'a [*mut f32], offset: usize, len: usize) -> Self {
-        Self { channels, offset, len }
+        Self {
+            channels,
+            offset,
+            len,
+        }
     }
 
     /// Frames in this (sub-)block.
@@ -260,7 +272,9 @@ impl<'a> AudioBuffer<'a> {
     pub fn channels_mut(&mut self) -> impl Iterator<Item = &mut [f32]> + '_ {
         let (offset, len) = (self.offset, self.len);
         // SAFETY: as in `channel`; each pointer is a different channel.
-        self.channels.iter().map(move |&p| unsafe { std::slice::from_raw_parts_mut(p.add(offset), len) })
+        self.channels
+            .iter()
+            .map(move |&p| unsafe { std::slice::from_raw_parts_mut(p.add(offset), len) })
     }
 
     /// Left and right of a stereo (or wider) output.

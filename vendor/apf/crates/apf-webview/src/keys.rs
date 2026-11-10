@@ -40,7 +40,13 @@ impl KeyCombo {
     /// Parses `"cmd+d"`, `"Cmd+Shift+Z"`, `"alt+left"`, `"backspace"`; `meta`/`command` mean
     /// cmd, `option` means alt, `control` means ctrl. `None` for anything else.
     pub fn parse(text: &str) -> Option<KeyCombo> {
-        let mut combo = KeyCombo { cmd: false, shift: false, alt: false, ctrl: false, key: Key::Space };
+        let mut combo = KeyCombo {
+            cmd: false,
+            shift: false,
+            alt: false,
+            ctrl: false,
+            key: Key::Space,
+        };
         let mut key = None;
         let lower = text.trim().to_ascii_lowercase();
         // "cmd++" is the plus key.
@@ -98,11 +104,17 @@ pub struct Claims(Vec<KeyCombo>);
 impl Claims {
     /// `"keys cmd+d cmd+z backspace"` (space separated; an empty list claims nothing).
     pub fn parse(list: &str) -> Claims {
-        Claims(list.split_ascii_whitespace().filter_map(KeyCombo::parse).collect())
+        Claims(
+            list.split_ascii_whitespace()
+                .filter_map(KeyCombo::parse)
+                .collect(),
+        )
     }
 
     pub fn contains(&self, combo: &KeyCombo) -> bool {
-        self.0.iter().any(|c| c == combo || (c.key == combo.key && Self::same_mods_but_shift_char(c, combo)))
+        self.0
+            .iter()
+            .any(|c| c == combo || (c.key == combo.key && Self::same_mods_but_shift_char(c, combo)))
     }
 
     /// `"cmd+="` also matches ⌘+ on a keyboard where + needs shift: for printable keys shift
@@ -127,7 +139,10 @@ mod tests {
     #[test]
     fn shortcuts_parse_and_match() {
         let c = KeyCombo::parse("Cmd+Shift+Z").unwrap();
-        assert_eq!((c.cmd, c.shift, c.alt, c.ctrl, c.key), (true, true, false, false, Key::Char('z')));
+        assert_eq!(
+            (c.cmd, c.shift, c.alt, c.ctrl, c.key),
+            (true, true, false, false, Key::Char('z'))
+        );
         assert_eq!(KeyCombo::parse("backspace").unwrap().key, Key::Backspace);
         assert_eq!(KeyCombo::parse("meta+d"), KeyCombo::parse("cmd+d"));
         assert_eq!(KeyCombo::parse("cmd++").unwrap().key, Key::Char('+'));
@@ -138,10 +153,19 @@ mod tests {
         let claims = Claims::parse("cmd+d cmd+z cmd+shift+z backspace nonsense+x cmd+=");
         assert!(claims.contains(&KeyCombo::parse("cmd+d").unwrap()));
         assert!(claims.contains(&KeyCombo::parse("cmd+shift+z").unwrap()));
-        assert!(!claims.contains(&KeyCombo::parse("cmd+s").unwrap()), "not claimed: stays with the host");
+        assert!(
+            !claims.contains(&KeyCombo::parse("cmd+s").unwrap()),
+            "not claimed: stays with the host"
+        );
         assert!(!claims.contains(&KeyCombo::parse("space").unwrap()));
-        assert!(!claims.contains(&KeyCombo::parse("cmd+alt+d").unwrap()), "other modifiers are another shortcut");
-        assert!(claims.contains(&KeyCombo::parse("cmd+shift+=").unwrap()), "shift belongs to the character");
+        assert!(
+            !claims.contains(&KeyCombo::parse("cmd+alt+d").unwrap()),
+            "other modifiers are another shortcut"
+        );
+        assert!(
+            claims.contains(&KeyCombo::parse("cmd+shift+=").unwrap()),
+            "shift belongs to the character"
+        );
         assert!(Claims::parse("").is_empty());
     }
 }

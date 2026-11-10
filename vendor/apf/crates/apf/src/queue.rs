@@ -31,8 +31,15 @@ impl<T: Copy> SpscQueue<T> {
     /// A queue holding at least `capacity` messages (rounded up to a power of two).
     pub fn new(capacity: usize) -> Self {
         let cap = capacity.max(2).next_power_of_two();
-        let slots = (0..cap).map(|_| UnsafeCell::new(MaybeUninit::uninit())).collect();
-        Self { slots, mask: cap - 1, head: Padded(AtomicUsize::new(0)), tail: Padded(AtomicUsize::new(0)) }
+        let slots = (0..cap)
+            .map(|_| UnsafeCell::new(MaybeUninit::uninit()))
+            .collect();
+        Self {
+            slots,
+            mask: cap - 1,
+            head: Padded(AtomicUsize::new(0)),
+            tail: Padded(AtomicUsize::new(0)),
+        }
     }
 
     /// How many values fit.

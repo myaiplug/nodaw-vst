@@ -39,58 +39,175 @@ const HIGH_TYPES: &[&str] = &["High Shelf", "High Cut", "Bell"];
 /// The parameters. Append only.
 pub const PARAMS: &[ParamDef] = &[
     ParamDef::bypass("bypass"),
-    ParamDef::float("in_gain", "Input", -24.0, 24.0, 0.0).unit("dB").decimals(1).module("Master"),
-    ParamDef::float("out_gain", "Output", -24.0, 24.0, 0.0).unit("dB").decimals(1).module("Master"),
-    ParamDef::float("mix", "Mix", 0.0, 100.0, 100.0).unit("%").decimals(0).module("Master"),
+    ParamDef::float("in_gain", "Input", -24.0, 24.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Master"),
+    ParamDef::float("out_gain", "Output", -24.0, 24.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Master"),
+    ParamDef::float("mix", "Mix", 0.0, 100.0, 100.0)
+        .unit("%")
+        .decimals(0)
+        .module("Master"),
     ParamDef::choice("order", "Chain Order", ORDER_NAMES, 0).module("Master"),
     ParamDef::bool("sat_on", "Saturator On", true).module("Saturator"),
     ParamDef::choice("sat_curve", "Curve", SAT_CURVES, 0).module("Saturator"),
-    ParamDef::float("sat_drive", "Drive", 0.0, 24.0, 6.0).unit("dB").decimals(1).module("Saturator"),
-    ParamDef::float("sat_tone", "Tone", -6.0, 6.0, 0.0).unit("dB").decimals(1).module("Saturator"),
-    ParamDef::float("sat_mix", "Sat Mix", 0.0, 100.0, 100.0).unit("%").decimals(0).module("Saturator"),
+    ParamDef::float("sat_drive", "Drive", 0.0, 24.0, 6.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Saturator"),
+    ParamDef::float("sat_tone", "Tone", -6.0, 6.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Saturator"),
+    ParamDef::float("sat_mix", "Sat Mix", 0.0, 100.0, 100.0)
+        .unit("%")
+        .decimals(0)
+        .module("Saturator"),
     ParamDef::bool("sat_auto", "Auto Gain", true).module("Saturator"),
     ParamDef::bool("eq_on", "EQ On", true).module("EQ"),
     ParamDef::bool("eq1_on", "Band 1 On", true).module("EQ"),
-    ParamDef::float("eq1_freq", "Band 1 Freq", 20.0, 20_000.0, 80.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("eq1_gain", "Band 1 Gain", -18.0, 18.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("eq1_q", "Band 1 Q", 0.1, 18.0, 0.707).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("eq1_freq", "Band 1 Freq", 20.0, 20_000.0, 80.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("eq1_gain", "Band 1 Gain", -18.0, 18.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("eq1_q", "Band 1 Q", 0.1, 18.0, 0.707)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("eq2_on", "Band 2 On", true).module("EQ"),
-    ParamDef::float("eq2_freq", "Band 2 Freq", 20.0, 20_000.0, 200.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("eq2_gain", "Band 2 Gain", -18.0, 18.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("eq2_q", "Band 2 Q", 0.1, 18.0, 1.0).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("eq2_freq", "Band 2 Freq", 20.0, 20_000.0, 200.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("eq2_gain", "Band 2 Gain", -18.0, 18.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("eq2_q", "Band 2 Q", 0.1, 18.0, 1.0)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("eq3_on", "Band 3 On", true).module("EQ"),
-    ParamDef::float("eq3_freq", "Band 3 Freq", 20.0, 20_000.0, 500.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("eq3_gain", "Band 3 Gain", -18.0, 18.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("eq3_q", "Band 3 Q", 0.1, 18.0, 1.0).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("eq3_freq", "Band 3 Freq", 20.0, 20_000.0, 500.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("eq3_gain", "Band 3 Gain", -18.0, 18.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("eq3_q", "Band 3 Q", 0.1, 18.0, 1.0)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("eq4_on", "Band 4 On", true).module("EQ"),
-    ParamDef::float("eq4_freq", "Band 4 Freq", 20.0, 20_000.0, 1200.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("eq4_gain", "Band 4 Gain", -18.0, 18.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("eq4_q", "Band 4 Q", 0.1, 18.0, 1.0).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("eq4_freq", "Band 4 Freq", 20.0, 20_000.0, 1200.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("eq4_gain", "Band 4 Gain", -18.0, 18.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("eq4_q", "Band 4 Q", 0.1, 18.0, 1.0)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("eq5_on", "Band 5 On", true).module("EQ"),
-    ParamDef::float("eq5_freq", "Band 5 Freq", 20.0, 20_000.0, 3000.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("eq5_gain", "Band 5 Gain", -18.0, 18.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("eq5_q", "Band 5 Q", 0.1, 18.0, 1.0).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("eq5_freq", "Band 5 Freq", 20.0, 20_000.0, 3000.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("eq5_gain", "Band 5 Gain", -18.0, 18.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("eq5_q", "Band 5 Q", 0.1, 18.0, 1.0)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("eq6_on", "Band 6 On", true).module("EQ"),
-    ParamDef::float("eq6_freq", "Band 6 Freq", 20.0, 20_000.0, 7000.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("eq6_gain", "Band 6 Gain", -18.0, 18.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("eq6_q", "Band 6 Q", 0.1, 18.0, 1.0).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("eq6_freq", "Band 6 Freq", 20.0, 20_000.0, 7000.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("eq6_gain", "Band 6 Gain", -18.0, 18.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("eq6_q", "Band 6 Q", 0.1, 18.0, 1.0)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("eq7_on", "Band 7 On", true).module("EQ"),
-    ParamDef::float("eq7_freq", "Band 7 Freq", 20.0, 20_000.0, 12000.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("eq7_gain", "Band 7 Gain", -18.0, 18.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("eq7_q", "Band 7 Q", 0.1, 18.0, 0.707).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("eq7_freq", "Band 7 Freq", 20.0, 20_000.0, 12000.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("eq7_gain", "Band 7 Gain", -18.0, 18.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("eq7_q", "Band 7 Q", 0.1, 18.0, 0.707)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::choice("eq1_type", "Band 1 Type", LOW_TYPES, 0).module("EQ"),
     ParamDef::choice("eq7_type", "Band 7 Type", HIGH_TYPES, 0).module("EQ"),
     ParamDef::bool("sp_on", "Spatial On", true).module("Spatial"),
-    ParamDef::float("sp_width", "Width", 0.0, 200.0, 100.0).unit("%").decimals(0).module("Spatial"),
-    ParamDef::float("sp_haas", "Haas", -30.0, 30.0, 0.0).unit("ms").decimals(1).module("Spatial"),
-    ParamDef::float("sp_mid", "Mid", -12.0, 12.0, 0.0).unit("dB").decimals(1).module("Spatial"),
-    ParamDef::float("sp_side", "Side", -12.0, 12.0, 0.0).unit("dB").decimals(1).module("Spatial"),
-    ParamDef::float("sp_pan", "Pan", -100.0, 100.0, 0.0).unit("%").decimals(0).module("Spatial"),
-    ParamDef::float("sp_mono", "Mono Bass", 20.0, 500.0, 20.0).unit("Hz").curve(Curve::Log).decimals(0).module("Spatial"),
+    ParamDef::float("sp_width", "Width", 0.0, 200.0, 100.0)
+        .unit("%")
+        .decimals(0)
+        .module("Spatial"),
+    ParamDef::float("sp_haas", "Haas", -30.0, 30.0, 0.0)
+        .unit("ms")
+        .decimals(1)
+        .module("Spatial"),
+    ParamDef::float("sp_mid", "Mid", -12.0, 12.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Spatial"),
+    ParamDef::float("sp_side", "Side", -12.0, 12.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Spatial"),
+    ParamDef::float("sp_pan", "Pan", -100.0, 100.0, 0.0)
+        .unit("%")
+        .decimals(0)
+        .module("Spatial"),
+    ParamDef::float("sp_mono", "Mono Bass", 20.0, 500.0, 20.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("Spatial"),
     ParamDef::bool("lim_on", "Limiter On", true).module("Limiter"),
-    ParamDef::float("lim_gain", "Push", 0.0, 24.0, 0.0).unit("dB").decimals(1).module("Limiter"),
-    ParamDef::float("lim_ceiling", "Ceiling", -12.0, 0.0, -1.0).unit("dB").decimals(1).module("Limiter"),
-    ParamDef::float("lim_release", "Release", 5.0, 1000.0, 120.0).unit("ms").curve(Curve::Log).decimals(0).module("Limiter"),
+    ParamDef::float("lim_gain", "Push", 0.0, 24.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Limiter"),
+    ParamDef::float("lim_ceiling", "Ceiling", -12.0, 0.0, -1.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Limiter"),
+    ParamDef::float("lim_release", "Release", 5.0, 1000.0, 120.0)
+        .unit("ms")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("Limiter"),
     ParamDef::bool("lim_adaptive", "Adaptive", true).module("Limiter"),
 ];
 
@@ -106,10 +223,42 @@ const SAT_TONE: ParamId = ParamId::of(PARAMS, "sat_tone");
 const SAT_MIX: ParamId = ParamId::of(PARAMS, "sat_mix");
 const SAT_AUTO: ParamId = ParamId::of(PARAMS, "sat_auto");
 const EQ_ON: ParamId = ParamId::of(PARAMS, "eq_on");
-const BAND_ON: [ParamId; BANDS] = [ParamId::of(PARAMS, "eq1_on"), ParamId::of(PARAMS, "eq2_on"), ParamId::of(PARAMS, "eq3_on"), ParamId::of(PARAMS, "eq4_on"), ParamId::of(PARAMS, "eq5_on"), ParamId::of(PARAMS, "eq6_on"), ParamId::of(PARAMS, "eq7_on")];
-const BAND_FREQ: [ParamId; BANDS] = [ParamId::of(PARAMS, "eq1_freq"), ParamId::of(PARAMS, "eq2_freq"), ParamId::of(PARAMS, "eq3_freq"), ParamId::of(PARAMS, "eq4_freq"), ParamId::of(PARAMS, "eq5_freq"), ParamId::of(PARAMS, "eq6_freq"), ParamId::of(PARAMS, "eq7_freq")];
-const BAND_GAIN: [ParamId; BANDS] = [ParamId::of(PARAMS, "eq1_gain"), ParamId::of(PARAMS, "eq2_gain"), ParamId::of(PARAMS, "eq3_gain"), ParamId::of(PARAMS, "eq4_gain"), ParamId::of(PARAMS, "eq5_gain"), ParamId::of(PARAMS, "eq6_gain"), ParamId::of(PARAMS, "eq7_gain")];
-const BAND_Q: [ParamId; BANDS] = [ParamId::of(PARAMS, "eq1_q"), ParamId::of(PARAMS, "eq2_q"), ParamId::of(PARAMS, "eq3_q"), ParamId::of(PARAMS, "eq4_q"), ParamId::of(PARAMS, "eq5_q"), ParamId::of(PARAMS, "eq6_q"), ParamId::of(PARAMS, "eq7_q")];
+const BAND_ON: [ParamId; BANDS] = [
+    ParamId::of(PARAMS, "eq1_on"),
+    ParamId::of(PARAMS, "eq2_on"),
+    ParamId::of(PARAMS, "eq3_on"),
+    ParamId::of(PARAMS, "eq4_on"),
+    ParamId::of(PARAMS, "eq5_on"),
+    ParamId::of(PARAMS, "eq6_on"),
+    ParamId::of(PARAMS, "eq7_on"),
+];
+const BAND_FREQ: [ParamId; BANDS] = [
+    ParamId::of(PARAMS, "eq1_freq"),
+    ParamId::of(PARAMS, "eq2_freq"),
+    ParamId::of(PARAMS, "eq3_freq"),
+    ParamId::of(PARAMS, "eq4_freq"),
+    ParamId::of(PARAMS, "eq5_freq"),
+    ParamId::of(PARAMS, "eq6_freq"),
+    ParamId::of(PARAMS, "eq7_freq"),
+];
+const BAND_GAIN: [ParamId; BANDS] = [
+    ParamId::of(PARAMS, "eq1_gain"),
+    ParamId::of(PARAMS, "eq2_gain"),
+    ParamId::of(PARAMS, "eq3_gain"),
+    ParamId::of(PARAMS, "eq4_gain"),
+    ParamId::of(PARAMS, "eq5_gain"),
+    ParamId::of(PARAMS, "eq6_gain"),
+    ParamId::of(PARAMS, "eq7_gain"),
+];
+const BAND_Q: [ParamId; BANDS] = [
+    ParamId::of(PARAMS, "eq1_q"),
+    ParamId::of(PARAMS, "eq2_q"),
+    ParamId::of(PARAMS, "eq3_q"),
+    ParamId::of(PARAMS, "eq4_q"),
+    ParamId::of(PARAMS, "eq5_q"),
+    ParamId::of(PARAMS, "eq6_q"),
+    ParamId::of(PARAMS, "eq7_q"),
+];
 const EQ1_TYPE: ParamId = ParamId::of(PARAMS, "eq1_type");
 const EQ7_TYPE: ParamId = ParamId::of(PARAMS, "eq7_type");
 const SP_ON: ParamId = ParamId::of(PARAMS, "sp_on");
@@ -126,11 +275,57 @@ const LIM_RELEASE: ParamId = ParamId::of(PARAMS, "lim_release");
 const LIM_ADAPTIVE: ParamId = ParamId::of(PARAMS, "lim_adaptive");
 
 const REMOTE: &[RemotePage] = &[
-    RemotePage { section: "Racks", name: "Saturator", params: ["sat_drive", "sat_tone", "sat_mix", "sat_curve", "sat_on", "in_gain", "mix", "out_gain"] },
-    RemotePage { section: "Racks", name: "EQ Low", params: ["eq1_gain", "eq1_freq", "eq2_gain", "eq2_freq", "eq3_gain", "eq3_freq", "eq4_gain", "eq4_freq"] },
-    RemotePage { section: "Racks", name: "EQ High", params: ["eq4_gain", "eq4_freq", "eq5_gain", "eq5_freq", "eq6_gain", "eq6_freq", "eq7_gain", "eq7_freq"] },
-    RemotePage { section: "Racks", name: "Spatial", params: ["sp_width", "sp_haas", "sp_mid", "sp_side", "sp_pan", "sp_mono", "sp_on", "mix"] },
-    RemotePage { section: "Racks", name: "Limiter", params: ["lim_gain", "lim_ceiling", "lim_release", "lim_adaptive", "lim_on", "in_gain", "mix", "out_gain"] },
+    RemotePage {
+        section: "Racks",
+        name: "Saturator",
+        params: [
+            "sat_drive",
+            "sat_tone",
+            "sat_mix",
+            "sat_curve",
+            "sat_on",
+            "in_gain",
+            "mix",
+            "out_gain",
+        ],
+    },
+    RemotePage {
+        section: "Racks",
+        name: "EQ Low",
+        params: [
+            "eq1_gain", "eq1_freq", "eq2_gain", "eq2_freq", "eq3_gain", "eq3_freq", "eq4_gain",
+            "eq4_freq",
+        ],
+    },
+    RemotePage {
+        section: "Racks",
+        name: "EQ High",
+        params: [
+            "eq4_gain", "eq4_freq", "eq5_gain", "eq5_freq", "eq6_gain", "eq6_freq", "eq7_gain",
+            "eq7_freq",
+        ],
+    },
+    RemotePage {
+        section: "Racks",
+        name: "Spatial",
+        params: [
+            "sp_width", "sp_haas", "sp_mid", "sp_side", "sp_pan", "sp_mono", "sp_on", "mix",
+        ],
+    },
+    RemotePage {
+        section: "Racks",
+        name: "Limiter",
+        params: [
+            "lim_gain",
+            "lim_ceiling",
+            "lim_release",
+            "lim_adaptive",
+            "lim_on",
+            "in_gain",
+            "mix",
+            "out_gain",
+        ],
+    },
 ];
 
 #[cfg(feature = "ui")]
@@ -158,7 +353,13 @@ pub struct NoDawRacks {
 
 /// The engine's settings from the parameters. No allocation.
 pub fn settings(p: &Params) -> Settings {
-    let mut bands = [Band { on: true, shape: Shape::Peak, freq: 1000.0, gain_db: 0.0, q: 1.0 }; BANDS];
+    let mut bands = [Band {
+        on: true,
+        shape: Shape::Peak,
+        freq: 1000.0,
+        gain_db: 0.0,
+        q: 1.0,
+    }; BANDS];
     for (i, b) in bands.iter_mut().enumerate() {
         b.on = p.get_bool(BAND_ON[i]);
         b.freq = p.get_f32(BAND_FREQ[i]);
@@ -228,7 +429,11 @@ impl Plugin for NoDawRacks {
     ];
 
     fn new() -> Self {
-        Self { engine: Engine::new(48_000.0), core: Core::new(&PRODUCT), ext: Arc::new(LookExt::new(SKINS, 4, 1)) }
+        Self {
+            engine: Engine::new(48_000.0),
+            core: Core::new(&PRODUCT),
+            ext: Arc::new(LookExt::new(SKINS, 4, 1)),
+        }
     }
 
     fn controller(&mut self, host: HostHandle) -> Option<Arc<dyn Controller>> {
@@ -240,7 +445,8 @@ impl Plugin for NoDawRacks {
             self.engine = Engine::new(config.sample_rate);
         }
         self.engine.reset_to(&settings(params));
-        self.core.activate(config.sample_rate, self.engine.latency());
+        self.core
+            .activate(config.sample_rate, self.engine.latency());
     }
 
     fn reset(&mut self) {
@@ -257,11 +463,14 @@ impl Plugin for NoDawRacks {
     }
 
     fn process(&mut self, audio: &mut AudioBuffer, ctx: &ProcessContext) -> ProcessStatus {
-        let Some((l, r)) = audio.stereo() else { return ProcessStatus::Error };
+        let Some((l, r)) = audio.stereo() else {
+            return ProcessStatus::Error;
+        };
         let s = settings(ctx.params);
         self.core.begin(l, r);
         let info = self.engine.process(l, r, &s);
-        self.core.end(l, r, s.bypass, ctx.transport.playing, info.min_gain);
+        self.core
+            .end(l, r, s.bypass, ctx.transport.playing, info.min_gain);
         for (i, v) in info.module_peak.iter().enumerate() {
             self.ext.peaks.max(i, *v);
         }
@@ -271,7 +480,13 @@ impl Plugin for NoDawRacks {
 
     #[cfg(feature = "ui")]
     fn view() -> Option<Box<dyn View>> {
-        Some(Box::new(WebView::new(960, 600, UI).resizable(true).size_limits((760, 480), (2600, 1700)).fit_screen((48, 96)).background(8, 9, 14)))
+        Some(Box::new(
+            WebView::new(960, 600, UI)
+                .resizable(true)
+                .size_limits((760, 480), (2600, 1700))
+                .fit_screen((48, 96))
+                .background(8, 9, 14),
+        ))
     }
 }
 

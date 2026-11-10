@@ -45,10 +45,10 @@ use std::rc::Rc;
 
 use apf::controller::query_arg;
 use apf::preset::{Metadata, SaveError, Source};
-use apf::{ControllerRequest, View, ViewContext, ParamKind, ParentWindow};
+use apf::{ControllerRequest, ParamKind, ParentWindow, View, ViewContext};
 use raw_window_handle::{
-    AppKitWindowHandle, HandleError, HasWindowHandle, RawWindowHandle, Win32WindowHandle, WindowHandle,
-    XlibWindowHandle,
+    AppKitWindowHandle, HandleError, HasWindowHandle, RawWindowHandle, Win32WindowHandle,
+    WindowHandle, XlibWindowHandle,
 };
 use wry::dpi::{LogicalPosition, LogicalSize};
 use wry::http::{header::CONTENT_TYPE, Request, Response, StatusCode};
@@ -180,7 +180,10 @@ impl WebView {
         #[cfg(not(any(target_os = "macos", target_os = "windows")))]
         let room: Option<(f64, f64)> = None;
         if let Some((w, h)) = room {
-            let (w, h) = ((w as u32).saturating_sub(margin.0), (h as u32).saturating_sub(margin.1));
+            let (w, h) = (
+                (w as u32).saturating_sub(margin.0),
+                (h as u32).saturating_sub(margin.1),
+            );
             self.width = w.clamp(self.min_size.0, self.max_size.0);
             self.height = h.clamp(self.min_size.1, self.max_size.1);
         }
@@ -209,8 +212,14 @@ impl WebView {
         #[cfg(target_os = "windows")]
         {
             let s = self.scale();
-            let size = ((self.width as f64 * s).round() as u32, (self.height as f64 * s).round() as u32);
-            return Rect { position: wry::dpi::PhysicalPosition::new(0, 0).into(), size: wry::dpi::PhysicalSize::new(size.0, size.1).into() };
+            let size = (
+                (self.width as f64 * s).round() as u32,
+                (self.height as f64 * s).round() as u32,
+            );
+            return Rect {
+                position: wry::dpi::PhysicalPosition::new(0, 0).into(),
+                size: wry::dpi::PhysicalSize::new(size.0, size.1).into(),
+            };
         }
         #[allow(unreachable_code)]
         Rect {
@@ -227,7 +236,8 @@ impl HasWindowHandle for Parent {
         let raw = match self.0 {
             ParentWindow::AppKit(view) => RawWindowHandle::AppKit(AppKitWindowHandle::new(view)),
             ParentWindow::Win32(hwnd) => {
-                let hwnd = NonZeroIsize::new(hwnd.as_ptr() as isize).ok_or(HandleError::Unavailable)?;
+                let hwnd =
+                    NonZeroIsize::new(hwnd.as_ptr() as isize).ok_or(HandleError::Unavailable)?;
                 RawWindowHandle::Win32(Win32WindowHandle::new(hwnd))
             }
             ParentWindow::X11(id) => RawWindowHandle::Xlib(XlibWindowHandle::new(id as _)),
@@ -245,7 +255,8 @@ impl View for WebView {
 
     #[cfg(target_os = "windows")]
     fn scale(&self) -> f64 {
-        self.host_scale.unwrap_or_else(|| win::scale_of(self.parent))
+        self.host_scale
+            .unwrap_or_else(|| win::scale_of(self.parent))
     }
 
     #[cfg(target_os = "windows")]
@@ -269,7 +280,10 @@ impl View for WebView {
     }
 
     fn adjust_size(&self, width: u32, height: u32) -> (u32, u32) {
-        (width.clamp(self.min_size.0, self.max_size.0), height.clamp(self.min_size.1, self.max_size.1))
+        (
+            width.clamp(self.min_size.0, self.max_size.0),
+            height.clamp(self.min_size.1, self.max_size.1),
+        )
     }
 
     fn set_size(&mut self, width: u32, height: u32) -> bool {
@@ -296,16 +310,26 @@ impl View for WebView {
         let assets = self.assets;
         // NoDAW patch: the development switches are debug/devtools-build only; a shipped plugin does not read the environment.
         let dev_switches = cfg!(any(debug_assertions, feature = "devtools"));
-        let dev_dir = if dev_switches { std::env::var_os("APF_UI_DIR").map(PathBuf::from) } else { None };
+        let dev_dir = if dev_switches {
+            std::env::var_os("APF_UI_DIR").map(PathBuf::from)
+        } else {
+            None
+        };
         let protocol_ctx = ctx.clone();
         let ipc_ctx = ctx;
-        let sizing = Sizing { resizable: self.resizable, min: self.min_size, max: self.max_size };
+        let sizing = Sizing {
+            resizable: self.resizable,
+            min: self.min_size,
+            max: self.max_size,
+        };
         self.page = Rc::new(PageLink::default());
         let page = self.page.clone();
 
         #[cfg(target_os = "windows")]
         let mut web_context = {
-            let ParentWindow::Win32(hwnd) = parent else { return Err("the web view needs a Win32 window".into()) };
+            let ParentWindow::Win32(hwnd) = parent else {
+                return Err("the web view needs a Win32 window".into());
+            };
             self.parent = Some(hwnd.as_ptr() as isize);
             page.parent.set(hwnd.as_ptr() as isize);
             page.scale.set(self.scale());
@@ -323,7 +347,11 @@ impl View for WebView {
         };
         #[cfg(not(target_os = "windows"))]
         let mut builder = WebViewBuilder::new();
-        if let Some(script) = dev_switches.then(|| std::env::var_os("APF_UI_INJECT_JS")).flatten().and_then(|p| std::fs::read_to_string(p).ok()) {
+        if let Some(script) = dev_switches
+            .then(|| std::env::var_os("APF_UI_INJECT_JS"))
+            .flatten()
+            .and_then(|p| std::fs::read_to_string(p).ok())
+        {
             builder = builder.with_initialization_script(script);
         }
         let builder = builder
@@ -334,7 +362,9 @@ impl View for WebView {
             .with_custom_protocol(SCHEME.into(), move |_id, request| {
                 serve(&protocol_ctx, &sizing, assets, dev_dir.as_deref(), &request)
             })
-            .with_ipc_handler(move |request: Request<String>| handle_message(&ipc_ctx, &sizing, &page, request.body()))
+            .with_ipc_handler(move |request: Request<String>| {
+                handle_message(&ipc_ctx, &sizing, &page, request.body())
+            })
             .with_url(page_url("index.html"));
 
         // AU hosts (Logic among them) hand the plugin a view that is not in a window yet, and
@@ -344,7 +374,9 @@ impl View for WebView {
         if let ParentWindow::AppKit(view) = parent {
             if !unsafe { mac::in_window(view) } {
                 let staging = mac::Staging::new(self.width, self.height)?;
-                let webview = builder.build_as_child(&Parent(ParentWindow::AppKit(staging.view()))).map_err(|e| e.to_string())?;
+                let webview = builder
+                    .build_as_child(&Parent(ParentWindow::AppKit(staging.view())))
+                    .map_err(|e| e.to_string())?;
                 unsafe { mac::adopt(&webview, view, self.width, self.height) };
                 if self.resizable {
                     self.follower = mac::Follower::new(&webview, self.min_size, self.max_size);
@@ -356,7 +388,11 @@ impl View for WebView {
             }
         }
 
-        let webview = Rc::new(builder.build_as_child(&Parent(parent)).map_err(|e| e.to_string())?);
+        let webview = Rc::new(
+            builder
+                .build_as_child(&Parent(parent))
+                .map_err(|e| e.to_string())?,
+        );
         // wry pins a child webview's size; a resizable web view follows its parent view also
         // when a host resizes that without calling `set_size`.
         #[cfg(target_os = "macos")]
@@ -368,7 +404,13 @@ impl View for WebView {
             self.web_context = Some(web_context);
             if self.resizable {
                 if let Some(hwnd) = self.parent {
-                    self.follower = win::Follower::new(hwnd, &webview, self.min_size, self.max_size, self.scale());
+                    self.follower = win::Follower::new(
+                        hwnd,
+                        &webview,
+                        self.min_size,
+                        self.max_size,
+                        self.scale(),
+                    );
                 }
             }
         }
@@ -417,12 +459,16 @@ mod win {
     use std::rc::{Rc, Weak};
 
     use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, POINT, RECT, WPARAM};
-    use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromPoint, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST, MONITOR_DEFAULTTOPRIMARY};
+    use windows::Win32::Graphics::Gdi::{
+        GetMonitorInfoW, MonitorFromPoint, MonitorFromWindow, MONITORINFO,
+        MONITOR_DEFAULTTONEAREST, MONITOR_DEFAULTTOPRIMARY,
+    };
     use windows::Win32::UI::HiDpi::{GetDpiForSystem, GetDpiForWindow};
     use windows::Win32::UI::Input::KeyboardAndMouse::{MapVirtualKeyW, MAPVK_VK_TO_VSC};
     use windows::Win32::UI::Shell::{DefSubclassProc, RemoveWindowSubclass, SetWindowSubclass};
     use windows::Win32::UI::WindowsAndMessaging::{
-        AdjustWindowRectEx, GetAncestor, GetClientRect, GetWindowRect, PostMessageW, GA_ROOT, WINDOW_EX_STYLE, WM_KEYDOWN, WM_KEYUP, WM_NCDESTROY, WM_SIZE, WM_SYSKEYDOWN, WM_SYSKEYUP,
+        AdjustWindowRectEx, GetAncestor, GetClientRect, GetWindowRect, PostMessageW, GA_ROOT,
+        WINDOW_EX_STYLE, WM_KEYDOWN, WM_KEYUP, WM_NCDESTROY, WM_SIZE, WM_SYSKEYDOWN, WM_SYSKEYUP,
         WS_OVERLAPPEDWINDOW,
     };
     use wry::dpi::{PhysicalPosition, PhysicalSize};
@@ -437,35 +483,63 @@ mod win {
     pub fn scale_of(parent: Option<isize>) -> f64 {
         // SAFETY: plain Win32 getters; a stale handle answers 0.
         let dpi = parent.map_or(0, |p| unsafe { GetDpiForWindow(hwnd(p)) });
-        let dpi = if dpi == 0 { unsafe { GetDpiForSystem() } } else { dpi };
-        if dpi == 0 { 1.0 } else { dpi as f64 / 96.0 }
+        let dpi = if dpi == 0 {
+            unsafe { GetDpiForSystem() }
+        } else {
+            dpi
+        };
+        if dpi == 0 {
+            1.0
+        } else {
+            dpi as f64 / 96.0
+        }
     }
 
     /// WebView2's user data folder for this plugin: `%LOCALAPPDATA%\<vendor>\<plugin>\WebView2`.
     pub fn data_dir(info: &apf::PluginInfo) -> Option<PathBuf> {
         let base = PathBuf::from(std::env::var_os("LOCALAPPDATA")?);
-        Some(base.join(apf::preset::file_stem_of(info.vendor)).join(apf::preset::file_stem_of(info.name)).join("WebView2"))
+        Some(
+            base.join(apf::preset::file_stem_of(info.vendor))
+                .join(apf::preset::file_stem_of(info.name))
+                .join("WebView2"),
+        )
     }
 
     fn work_area(monitor: windows::Win32::Graphics::Gdi::HMONITOR) -> Option<RECT> {
-        let mut info = MONITORINFO { cbSize: std::mem::size_of::<MONITORINFO>() as u32, ..Default::default() };
+        let mut info = MONITORINFO {
+            cbSize: std::mem::size_of::<MONITORINFO>() as u32,
+            ..Default::default()
+        };
         // SAFETY: `info` is a MONITORINFO with its size set.
-        unsafe { GetMonitorInfoW(monitor, &mut info) }.as_bool().then_some(info.rcWork)
+        unsafe { GetMonitorInfoW(monitor, &mut info) }
+            .as_bool()
+            .then_some(info.rcWork)
     }
 
     /// The primary monitor without the taskbar, less the frame of a window around the web view
     /// (hosts put it in a window of their own), in logical pixels.
     pub fn primary_work_area() -> Option<(f64, f64)> {
         // SAFETY: plain Win32 getters.
-        let r = work_area(unsafe { MonitorFromPoint(POINT { x: 0, y: 0 }, MONITOR_DEFAULTTOPRIMARY) })?;
+        let r =
+            work_area(unsafe { MonitorFromPoint(POINT { x: 0, y: 0 }, MONITOR_DEFAULTTOPRIMARY) })?;
         let mut frame = RECT::default();
         // SAFETY: computes the frame of a standard window around an empty client area.
-        let (fw, fh) = match unsafe { AdjustWindowRectEx(&mut frame, WS_OVERLAPPEDWINDOW, false, WINDOW_EX_STYLE::default()) } {
+        let (fw, fh) = match unsafe {
+            AdjustWindowRectEx(
+                &mut frame,
+                WS_OVERLAPPEDWINDOW,
+                false,
+                WINDOW_EX_STYLE::default(),
+            )
+        } {
             Ok(()) => (frame.right - frame.left, frame.bottom - frame.top),
             Err(_) => (0, 0),
         };
         let s = scale_of(None);
-        Some((((r.right - r.left) - fw) as f64 / s, ((r.bottom - r.top) - fh) as f64 / s))
+        Some((
+            ((r.right - r.left) - fw) as f64 / s,
+            ((r.bottom - r.top) - fh) as f64 / s,
+        ))
     }
 
     /// The largest web view the monitor of the host's window has room for, in logical pixels:
@@ -484,13 +558,19 @@ mod win {
             let root = GetAncestor(parent, GA_ROOT);
             let (mut cw, mut ch) = (0, 0);
             if !root.is_invalid() && GetWindowRect(root, &mut frame).is_ok() {
-                let (w, h) = ((frame.right - frame.left) - (client.right - client.left), (frame.bottom - frame.top) - (client.bottom - client.top));
+                let (w, h) = (
+                    (frame.right - frame.left) - (client.right - client.left),
+                    (frame.bottom - frame.top) - (client.bottom - client.top),
+                );
                 // A docked web view in a host's main window has no frame of its own to speak of.
                 if (0..1000).contains(&w) && (0..600).contains(&h) {
                     (cw, ch) = (w, h);
                 }
             }
-            Some((((work.right - work.left) - cw) as f64 / scale, ((work.bottom - work.top) - ch) as f64 / scale))
+            Some((
+                ((work.right - work.left) - cw) as f64 / scale,
+                ((work.bottom - work.top) - ch) as f64 / scale,
+            ))
         }
     }
 
@@ -518,7 +598,12 @@ mod win {
                 (true, true) => WM_SYSKEYDOWN,
                 (false, true) => WM_SYSKEYUP,
             };
-            let _ = PostMessageW(Some(hwnd(parent)), msg, WPARAM(code as usize), LPARAM(lparam as isize));
+            let _ = PostMessageW(
+                Some(hwnd(parent)),
+                msg,
+                WPARAM(code as usize),
+                LPARAM(lparam as isize),
+            );
         }
     }
 
@@ -538,11 +623,24 @@ mod win {
     }
 
     impl Follower {
-        pub fn new(parent: isize, webview: &Rc<WebView>, min: (u32, u32), max: (u32, u32), scale: f64) -> Option<Follower> {
-            let state = Box::new(Follow { parent: hwnd(parent), webview: Rc::downgrade(webview), min, max, scale: Cell::new(scale) });
+        pub fn new(
+            parent: isize,
+            webview: &Rc<WebView>,
+            min: (u32, u32),
+            max: (u32, u32),
+            scale: f64,
+        ) -> Option<Follower> {
+            let state = Box::new(Follow {
+                parent: hwnd(parent),
+                webview: Rc::downgrade(webview),
+                min,
+                max,
+                scale: Cell::new(scale),
+            });
             let data = &*state as *const Follow as usize;
             // SAFETY: `state` outlives the subclass: Drop removes it before freeing the box.
-            let ok = unsafe { SetWindowSubclass(state.parent, Some(follow_proc), data, data) }.as_bool();
+            let ok =
+                unsafe { SetWindowSubclass(state.parent, Some(follow_proc), data, data) }.as_bool();
             ok.then(|| {
                 fill(&state);
                 Follower { state }
@@ -565,7 +663,14 @@ mod win {
         }
     }
 
-    unsafe extern "system" fn follow_proc(window: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM, id: usize, data: usize) -> LRESULT {
+    unsafe extern "system" fn follow_proc(
+        window: HWND,
+        msg: u32,
+        wparam: WPARAM,
+        lparam: LPARAM,
+        id: usize,
+        data: usize,
+    ) -> LRESULT {
         match msg {
             WM_SIZE => {
                 let result = DefSubclassProc(window, msg, wparam, lparam);
@@ -581,7 +686,9 @@ mod win {
     }
 
     fn fill(s: &Follow) {
-        let Some(webview) = s.webview.upgrade() else { return };
+        let Some(webview) = s.webview.upgrade() else {
+            return;
+        };
         let mut r = RECT::default();
         // SAFETY: a getter on the host's window.
         if unsafe { GetClientRect(s.parent, &mut r) }.is_err() {
@@ -595,7 +702,10 @@ mod win {
         let px = |v: u32| (v as f64 * sc).round() as i32;
         let w = w.clamp(px(s.min.0), px(s.max.0).max(px(s.min.0)));
         let h = h.clamp(px(s.min.1), px(s.max.1).max(px(s.min.1)));
-        let _ = webview.set_bounds(Rect { position: PhysicalPosition::new(0, 0).into(), size: PhysicalSize::new(w as u32, h as u32).into() });
+        let _ = webview.set_bounds(Rect {
+            position: PhysicalPosition::new(0, 0).into(),
+            size: PhysicalSize::new(w as u32, h as u32).into(),
+        });
     }
 }
 
@@ -612,10 +722,14 @@ mod mac {
     use objc2::runtime::{AnyObject, NSObjectProtocol, ProtocolObject};
     use objc2::MainThreadMarker;
     use objc2_app_kit::{
-        NSApplication, NSAutoresizingMaskOptions, NSBackingStoreType, NSEvent, NSEventMask, NSEventModifierFlags, NSEventType, NSResponder, NSScreen, NSView,
+        NSApplication, NSAutoresizingMaskOptions, NSBackingStoreType, NSEvent, NSEventMask,
+        NSEventModifierFlags, NSEventType, NSResponder, NSScreen, NSView,
         NSViewFrameDidChangeNotification, NSWindow, NSWindowStyleMask,
     };
-    use objc2_foundation::{NSArray, NSNotification, NSNotificationCenter, NSPoint, NSRect, NSRunLoopCommonModes, NSSize};
+    use objc2_foundation::{
+        NSArray, NSNotification, NSNotificationCenter, NSPoint, NSRect, NSRunLoopCommonModes,
+        NSSize,
+    };
 
     use crate::keys::{Claims, Key, KeyCombo};
     use wry::{WebView, WebViewExtMacOS};
@@ -635,8 +749,12 @@ mod mac {
 
     impl Staging {
         pub fn new(width: u32, height: u32) -> Result<Self, String> {
-            let mtm = MainThreadMarker::new().ok_or("the web view must be opened on the main thread")?;
-            let rect = NSRect::new(NSPoint::new(0.0, 0.0), NSSize::new(width as f64, height as f64));
+            let mtm =
+                MainThreadMarker::new().ok_or("the web view must be opened on the main thread")?;
+            let rect = NSRect::new(
+                NSPoint::new(0.0, 0.0),
+                NSSize::new(width as f64, height as f64),
+            );
             // SAFETY: plain AppKit calls on the main thread.
             let window = unsafe {
                 NSWindow::initWithContentRect_styleMask_backing_defer(
@@ -648,7 +766,9 @@ mod mac {
                 )
             };
             unsafe { window.setReleasedWhenClosed(false) };
-            let content = window.contentView().ok_or("the staging window has no content view")?;
+            let content = window
+                .contentView()
+                .ok_or("the staging window has no content view")?;
             Ok(Self { window, content })
         }
 
@@ -672,7 +792,10 @@ mod mac {
         let view = webview.webview();
         view.removeFromSuperview();
         parent.addSubview(&view);
-        view.setAutoresizingMask(NSAutoresizingMaskOptions::ViewWidthSizable | NSAutoresizingMaskOptions::ViewHeightSizable);
+        view.setAutoresizingMask(
+            NSAutoresizingMaskOptions::ViewWidthSizable
+                | NSAutoresizingMaskOptions::ViewHeightSizable,
+        );
         set_frame(webview, width, height);
     }
 
@@ -719,7 +842,11 @@ mod mac {
                 )
             };
             fill(view, limits);
-            Some(Follower { token, view: Weak::new(view), limits })
+            Some(Follower {
+                token,
+                view: Weak::new(view),
+                limits,
+            })
         }
 
         /// Lay the webview out again (after `set_size`).
@@ -740,14 +867,20 @@ mod mac {
     /// The parent's size within the limits, the page's top edge at the parent's top.
     fn fill(view: &NSView, limits: Limits) {
         // SAFETY: AppKit getters on the main thread.
-        let Some(parent) = (unsafe { view.superview() }) else { return };
+        let Some(parent) = (unsafe { view.superview() }) else {
+            return;
+        };
         let size = parent.bounds().size;
         if size.width < 1.0 || size.height < 1.0 {
             return;
         }
         let w = size.width.clamp(limits.min.0 as f64, limits.max.0 as f64);
         let h = size.height.clamp(limits.min.1 as f64, limits.max.1 as f64);
-        let y = if parent.isFlipped() { 0.0 } else { size.height - h };
+        let y = if parent.isFlipped() {
+            0.0
+        } else {
+            size.height - h
+        };
         view.setFrame(NSRect::new(NSPoint::new(0.0, y), NSSize::new(w, h)));
     }
 
@@ -770,7 +903,10 @@ mod mac {
             116 => Key::PageUp,
             121 => Key::PageDown,
             _ => {
-                let text = event.charactersIgnoringModifiers()?.to_string().to_lowercase();
+                let text = event
+                    .charactersIgnoringModifiers()?
+                    .to_string()
+                    .to_lowercase();
                 let mut chars = text.chars();
                 let c = chars.next()?;
                 if chars.next().is_some() || c.is_control() {
@@ -832,20 +968,31 @@ mod mac {
                 // SAFETY: an AppKit getter on the main thread.
                 let host = || unsafe { view.nextResponder() };
                 let kind = ev.r#type();
-                let code = if kind == NSEventType::FlagsChanged { 0 } else { ev.keyCode() };
+                let code = if kind == NSEventType::FlagsChanged {
+                    0
+                } else {
+                    ev.keyCode()
+                };
                 // A key-up ends the key's trip to the host, wherever the focus went meanwhile.
                 let mut up_to_host = kind == NSEventType::KeyUp && {
                     let mut to_host = to_host.borrow_mut();
                     let at = to_host.iter().position(|&c| c == code);
                     at.map(|i| to_host.swap_remove(i)).is_some()
                 };
-                let (Some(window), Some(ev_window)) = (view.window(), ev.window(mtm)) else { return pass };
+                let (Some(window), Some(ev_window)) = (view.window(), ev.window(mtm)) else {
+                    return pass;
+                };
                 if !std::ptr::eq(&*window, &*ev_window) {
                     return pass;
                 }
                 // The focus must be in the webview (WebKit's own views live inside it).
-                let Some(focus) = window.firstResponder() else { return pass };
-                if !focus.downcast_ref::<NSView>().is_some_and(|r| r.isDescendantOf(&view)) {
+                let Some(focus) = window.firstResponder() else {
+                    return pass;
+                };
+                if !focus
+                    .downcast_ref::<NSView>()
+                    .is_some_and(|r| r.isDescendantOf(&view))
+                {
                     return pass;
                 }
                 match kind {
@@ -868,7 +1015,8 @@ mod mac {
                         pending.retain(|p| p.id.1 != code);
                         pending.push(Pending { id, up: None });
                         drop(pending);
-                        let claimed = combo_of(ev).is_some_and(|combo| claims.borrow().contains(&combo));
+                        let claimed =
+                            combo_of(ev).is_some_and(|combo| claims.borrow().contains(&combo));
                         if !claimed {
                             return pass;
                         }
@@ -879,7 +1027,11 @@ mod mac {
                         std::ptr::null_mut()
                     }
                     NSEventType::KeyUp => {
-                        if let Some(p) = pending.borrow_mut().iter_mut().find(|p| p.id.1 == code && p.up.is_none()) {
+                        if let Some(p) = pending
+                            .borrow_mut()
+                            .iter_mut()
+                            .find(|p| p.id.1 == code && p.up.is_none())
+                        {
                             // The page has not decided on the key-down yet: the host gets this
                             // key-up after the key-down, if at all.
                             p.up = Some(objc2::Message::retain(ev));
@@ -902,7 +1054,8 @@ mod mac {
             let mask = NSEventMask::KeyDown | NSEventMask::KeyUp | NSEventMask::FlagsChanged;
             // SAFETY: the block runs on the main thread for this process's events; the
             // monitor is removed in Drop.
-            let monitor = unsafe { NSEvent::addLocalMonitorForEventsMatchingMask_handler(mask, &block) }?;
+            let monitor =
+                unsafe { NSEvent::addLocalMonitorForEventsMatchingMask_handler(mask, &block) }?;
             Some(KeyMonitor { monitor })
         }
     }
@@ -940,7 +1093,9 @@ mod mac {
         // SAFETY: AppKit getters on the main thread.
         let parent = unsafe { view.superview() }?;
         let window = view.window()?;
-        let screen = window.screen().or_else(|| NSScreen::mainScreen(MainThreadMarker::new()?))?;
+        let screen = window
+            .screen()
+            .or_else(|| NSScreen::mainScreen(MainThreadMarker::new()?))?;
         let room = screen.visibleFrame().size;
         let (chrome_w, chrome_h) = chrome(&window, &parent).unwrap_or((0.0, 0.0));
         Some((room.width - chrome_w, room.height - chrome_h))
@@ -958,7 +1113,9 @@ mod mac {
     /// Whether this process is a view service (an AUv3 extension, Apple's AU hosting
     /// service): its windows only stand in for the host's.
     fn in_view_service() -> bool {
-        let Some(mtm) = MainThreadMarker::new() else { return true };
+        let Some(mtm) = MainThreadMarker::new() else {
+            return true;
+        };
         let app = NSApplication::sharedApplication(mtm);
         let name = app.class().name().to_string_lossy().into_owned();
         name.contains("ViewService") || name.contains("Extension")
@@ -973,16 +1130,28 @@ mod mac {
             return;
         }
         // SAFETY: AppKit calls on the main thread.
-        let Some(parent) = (unsafe { view.superview() }) else { return };
+        let Some(parent) = (unsafe { view.superview() }) else {
+            return;
+        };
         let Some(window) = view.window() else { return };
         if chrome(&window, &parent).is_none() {
             return;
         }
-        let Some(screen) = window.screen() else { return };
+        let Some(screen) = window.screen() else {
+            return;
+        };
         let vis = screen.visibleFrame();
         let mut f = window.frame();
-        let x = f.origin.x.min(vis.origin.x + vis.size.width - f.size.width).max(vis.origin.x);
-        let y = f.origin.y.max(vis.origin.y).min(vis.origin.y + vis.size.height - f.size.height);
+        let x = f
+            .origin
+            .x
+            .min(vis.origin.x + vis.size.width - f.size.width)
+            .max(vis.origin.x);
+        let y = f
+            .origin
+            .y
+            .max(vis.origin.y)
+            .min(vis.origin.y + vis.size.height - f.size.height);
         if (x, y) != (f.origin.x, f.origin.y) {
             f.origin = NSPoint::new(x, y);
             window.setFrameOrigin(f.origin);
@@ -992,7 +1161,10 @@ mod mac {
     /// wry's own `set_bounds` needs the view to be in a window; this does not.
     pub fn set_frame(webview: &WebView, width: u32, height: u32) {
         let view = webview.webview();
-        view.setFrame(NSRect::new(NSPoint::new(0.0, 0.0), NSSize::new(width as f64, height as f64)));
+        view.setFrame(NSRect::new(
+            NSPoint::new(0.0, 0.0),
+            NSSize::new(width as f64, height as f64),
+        ));
     }
 }
 
@@ -1004,7 +1176,11 @@ fn page_url(path: &str) -> String {
     }
 }
 
-fn response(status: StatusCode, mime: &str, body: Cow<'static, [u8]>) -> Response<Cow<'static, [u8]>> {
+fn response(
+    status: StatusCode,
+    mime: &str,
+    body: Cow<'static, [u8]>,
+) -> Response<Cow<'static, [u8]>> {
     Response::builder()
         .status(status)
         .header(CONTENT_TYPE, mime)
@@ -1046,8 +1222,17 @@ fn serve(
 ) -> Response<Cow<'static, [u8]>> {
     let path = request.uri().path().trim_start_matches('/');
     let query = request.uri().query().unwrap_or("");
-    let json = |body: String| response(StatusCode::OK, "application/json", Cow::Owned(body.into_bytes()));
-    if let Some(route) = path.strip_prefix("__apf/plugin/").or((path == "__apf/plugin").then_some("")) {
+    let json = |body: String| {
+        response(
+            StatusCode::OK,
+            "application/json",
+            Cow::Owned(body.into_bytes()),
+        )
+    };
+    if let Some(route) = path
+        .strip_prefix("__apf/plugin/")
+        .or((path == "__apf/plugin").then_some(""))
+    {
         return plugin_request(ctx, request.method().as_str(), route, query, request.body());
     }
     match path {
@@ -1058,22 +1243,36 @@ fn serve(
             let rev = ctx.controller().map(|c| c.revision());
             let since_rev = query_arg(query, "rev").and_then(|v| v.parse::<u64>().ok());
             if since == Some(ctx.generation()) && (rev.is_none() || since_rev == rev) {
-                return response(StatusCode::NO_CONTENT, "application/json", Cow::Borrowed(&[]));
+                return response(
+                    StatusCode::NO_CONTENT,
+                    "application/json",
+                    Cow::Borrowed(&[]),
+                );
             }
             return json(values_json(ctx));
         }
         "__apf/echo" => {
             let body = request.body();
-            let hash = body.iter().fold(0x811c_9dc5u32, |h, &b| (h ^ b as u32).wrapping_mul(0x0100_0193));
-            return json(format!("{{\"method\":\"{}\",\"length\":{},\"fnv1a\":{hash}}}", request.method().as_str(), body.len()));
+            let hash = body.iter().fold(0x811c_9dc5u32, |h, &b| {
+                (h ^ b as u32).wrapping_mul(0x0100_0193)
+            });
+            return json(format!(
+                "{{\"method\":\"{}\",\"length\":{},\"fnv1a\":{hash}}}",
+                request.method().as_str(),
+                body.len()
+            ));
         }
         "__apf/presets" => return json(presets_json(ctx)),
         "__apf/preset/load" => {
-            let result = query_arg(query, "id").and_then(|id| Source::from_id(&id)).ok_or("no such preset".to_string());
+            let result = query_arg(query, "id")
+                .and_then(|id| Source::from_id(&id))
+                .ok_or("no such preset".to_string());
             return json(outcome(result.and_then(|s| ctx.load_preset(&s))));
         }
         "__apf/preset/delete" => {
-            let result = query_arg(query, "id").and_then(|id| Source::from_id(&id)).ok_or("no such preset".to_string());
+            let result = query_arg(query, "id")
+                .and_then(|id| Source::from_id(&id))
+                .ok_or("no such preset".to_string());
             return json(outcome(result.and_then(|s| ctx.delete_preset(&s))));
         }
         "__apf/preset/save" => {
@@ -1088,7 +1287,11 @@ fn serve(
                     out.push('}');
                 }
                 Err(e) => {
-                    let _ = write!(out, "{{\"ok\":false,\"exists\":{},\"error\":", matches!(e, SaveError::Exists(_)));
+                    let _ = write!(
+                        out,
+                        "{{\"ok\":false,\"exists\":{},\"error\":",
+                        matches!(e, SaveError::Exists(_))
+                    );
                     json_str(&mut out, &e.to_string());
                     out.push('}');
                 }
@@ -1096,7 +1299,9 @@ fn serve(
             return json(out);
         }
         "__apf/learn" => {
-            let index = query_arg(query, "index").and_then(|v| v.parse::<i64>().ok()).unwrap_or(-1);
+            let index = query_arg(query, "index")
+                .and_then(|v| v.parse::<i64>().ok())
+                .unwrap_or(-1);
             ctx.learn(usize::try_from(index).ok());
             return json("{\"ok\":true}".into());
         }
@@ -1118,23 +1323,49 @@ fn serve(
     }
     match assets.iter().find(|a| a.path == path) {
         Some(a) => response(StatusCode::OK, mime_of(path), Cow::Borrowed(a.bytes)),
-        None => response(StatusCode::NOT_FOUND, "text/plain", Cow::Borrowed(b"not found")),
+        None => response(
+            StatusCode::NOT_FOUND,
+            "text/plain",
+            Cow::Borrowed(b"not found"),
+        ),
     }
 }
 
 /// `/__apf/plugin/<route>`: the plugin controller's own requests.
-fn plugin_request(ctx: &ViewContext, method: &str, route: &str, query: &str, body: &[u8]) -> Response<Cow<'static, [u8]>> {
+fn plugin_request(
+    ctx: &ViewContext,
+    method: &str,
+    route: &str,
+    query: &str,
+    body: &[u8],
+) -> Response<Cow<'static, [u8]>> {
     let Some(controller) = ctx.controller() else {
-        return response(StatusCode::NOT_FOUND, "text/plain", Cow::Borrowed(b"this plugin has no controller"));
+        return response(
+            StatusCode::NOT_FOUND,
+            "text/plain",
+            Cow::Borrowed(b"this plugin has no controller"),
+        );
     };
-    let request = ControllerRequest { method, path: route, query, body };
+    let request = ControllerRequest {
+        method,
+        path: route,
+        query,
+        body,
+    };
     // A panic must not unwind into WebKit's callback (that aborts the host).
-    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| controller.request(&request))) {
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        controller.request(&request)
+    })) {
         Ok(r) => {
-            let status = StatusCode::from_u16(r.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+            let status =
+                StatusCode::from_u16(r.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
             response(status, &r.content_type, Cow::Owned(r.body))
         }
-        Err(_) => response(StatusCode::INTERNAL_SERVER_ERROR, "text/plain", Cow::Borrowed(b"the plugin's request handler panicked")),
+        Err(_) => response(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "text/plain",
+            Cow::Borrowed(b"the plugin's request handler panicked"),
+        ),
     }
 }
 
@@ -1153,7 +1384,13 @@ fn handle_message(ctx: &ViewContext, sizing: &Sizing, page: &PageLink, msg: &str
     if msg == "maximize" {
         if sizing.resizable {
             #[cfg(target_os = "macos")]
-            if let Some((w, h)) = page.view.borrow().as_ref().and_then(|v| v.load()).and_then(|v| mac::screen_room(&v)) {
+            if let Some((w, h)) = page
+                .view
+                .borrow()
+                .as_ref()
+                .and_then(|v| v.load())
+                .and_then(|v| mac::screen_room(&v))
+            {
                 let w = (w.max(0.0) as u32).clamp(sizing.min.0, sizing.max.0);
                 let h = (h.max(0.0) as u32).clamp(sizing.min.1, sizing.max.1);
                 ctx.request_resize(w, h);
@@ -1172,7 +1409,9 @@ fn handle_message(ctx: &ViewContext, sizing: &Sizing, page: &PageLink, msg: &str
         #[cfg(target_os = "windows")]
         {
             let mut it = rest.split_ascii_whitespace();
-            if let (Some(dir), Some(Ok(code)), Some(alt)) = (it.next(), it.next().map(str::parse::<u32>), it.next()) {
+            if let (Some(dir), Some(Ok(code)), Some(alt)) =
+                (it.next(), it.next().map(str::parse::<u32>), it.next())
+            {
                 win::forward_key(page.parent.get(), dir == "down", code, alt == "1");
             }
         }
@@ -1182,7 +1421,9 @@ fn handle_message(ctx: &ViewContext, sizing: &Sizing, page: &PageLink, msg: &str
     let _ = page;
     // "resize w h": the page's own resize grip. The host decides; it answers with set_size.
     if let Some(rest) = msg.strip_prefix("resize ") {
-        let mut wh = rest.split_ascii_whitespace().filter_map(|v| v.parse::<f64>().ok());
+        let mut wh = rest
+            .split_ascii_whitespace()
+            .filter_map(|v| v.parse::<f64>().ok());
         if let (true, Some(w), Some(h)) = (sizing.resizable, wh.next(), wh.next()) {
             let w = (w.max(0.0) as u32).clamp(sizing.min.0, sizing.max.0);
             let h = (h.max(0.0) as u32).clamp(sizing.min.1, sizing.max.1);
@@ -1192,7 +1433,9 @@ fn handle_message(ctx: &ViewContext, sizing: &Sizing, page: &PageLink, msg: &str
     }
     let mut parts = msg.split_ascii_whitespace();
     let verb = parts.next();
-    let Some(index) = parts.next().and_then(|i| i.parse::<usize>().ok()) else { return };
+    let Some(index) = parts.next().and_then(|i| i.parse::<usize>().ok()) else {
+        return;
+    };
     match verb {
         Some("begin") => ctx.begin_edit(index),
         Some("end") => ctx.end_edit(index),
@@ -1224,14 +1467,25 @@ fn outcome(result: Result<(), String>) -> String {
 /// The metadata of a save request, `None` when it names none of it.
 fn save_metadata(query: &str) -> Option<Metadata> {
     let arg = |key: &str| query_arg(query, key);
-    let (category, subcategory, mood, description, author) = (arg("type"), arg("subtype"), arg("mood"), arg("description"), arg("author"));
-    if [&category, &subcategory, &mood, &description, &author].iter().all(|a| a.is_none()) {
+    let (category, subcategory, mood, description, author) = (
+        arg("type"),
+        arg("subtype"),
+        arg("mood"),
+        arg("description"),
+        arg("author"),
+    );
+    if [&category, &subcategory, &mood, &description, &author]
+        .iter()
+        .all(|a| a.is_none())
+    {
         return None;
     }
     let meta = Metadata {
         category: category.unwrap_or_default(),
         subcategory: subcategory.unwrap_or_default(),
-        tags: mood.map(|m| m.split(',').map(str::to_owned).collect()).unwrap_or_default(),
+        tags: mood
+            .map(|m| m.split(',').map(str::to_owned).collect())
+            .unwrap_or_default(),
         description: description.unwrap_or_default(),
         author: author.unwrap_or_default(),
     };
@@ -1268,7 +1522,12 @@ fn presets_json(ctx: &ViewContext) -> String {
         out.push('}');
     }
     out.push_str("],\"dir\":");
-    json_str(&mut out, &ctx.user_preset_dir().map(|d| d.display().to_string()).unwrap_or_default());
+    json_str(
+        &mut out,
+        &ctx.user_preset_dir()
+            .map(|d| d.display().to_string())
+            .unwrap_or_default(),
+    );
     out.push('}');
     out
 }
@@ -1282,11 +1541,19 @@ fn session_json(ctx: &ViewContext, out: &mut String) {
             json_str(out, &source.id());
             out.push_str(",\"name\":");
             json_str(out, &name);
-            let _ = write!(out, ",\"factory\":{},\"changed\":{changed}}}", matches!(source, Source::Factory(_)));
+            let _ = write!(
+                out,
+                ",\"factory\":{},\"changed\":{changed}}}",
+                matches!(source, Source::Factory(_))
+            );
         }
         None => out.push_str("null"),
     }
-    let _ = write!(out, ",\"learn\":{},\"cc\":[", ctx.learning().map_or(-1, |i| i as i64));
+    let _ = write!(
+        out,
+        ",\"learn\":{},\"cc\":[",
+        ctx.learning().map_or(-1, |i| i as i64)
+    );
     for (i, (cc, index)) in ctx.cc_mappings().into_iter().enumerate() {
         if i > 0 {
             out.push(',');
@@ -1308,7 +1575,11 @@ fn info_json(ctx: &ViewContext, sizing: &Sizing) -> String {
     let mut out = String::with_capacity(256 * params.len());
     let _ = write!(out, "{{\"gen\":{},", ctx.generation());
     if sizing.resizable {
-        let _ = write!(out, "\"resize\":{{\"min\":[{},{}],\"max\":[{},{}]}},", sizing.min.0, sizing.min.1, sizing.max.0, sizing.max.1);
+        let _ = write!(
+            out,
+            "\"resize\":{{\"min\":[{},{}],\"max\":[{},{}]}},",
+            sizing.min.0, sizing.min.1, sizing.max.0, sizing.max.1
+        );
     }
     if let Some(c) = ctx.controller() {
         let _ = write!(out, "\"rev\":{},", c.revision());
@@ -1330,8 +1601,16 @@ fn info_json(ctx: &ViewContext, sizing: &Sizing) -> String {
         json_str(&mut out, def.name);
         out.push_str(",\"unit\":");
         json_str(&mut out, def.unit);
-        let _ = write!(out, ",\"kind\":\"{kind}\",\"steps\":{}", def.step_count().unwrap_or(0));
-        let _ = write!(out, ",\"default\":{}", def.host_to_normalized(def.default_host_value()));
+        let _ = write!(
+            out,
+            ",\"kind\":\"{kind}\",\"steps\":{}",
+            def.step_count().unwrap_or(0)
+        );
+        let _ = write!(
+            out,
+            ",\"default\":{}",
+            def.host_to_normalized(def.default_host_value())
+        );
         if let ParamKind::Choice { options, .. } = def.kind {
             out.push_str(",\"options\":[");
             for (j, o) in options.iter().enumerate() {
@@ -1404,7 +1683,11 @@ mod tests {
         }
         fn request(&self, r: &ControllerRequest) -> ControllerResponse {
             match (r.method, r.path) {
-                ("GET", "notes") => ControllerResponse::json(format!("{{\"notes\":{:?},\"q\":{:?}}}", self.save(), r.query_arg("q").unwrap_or_default())),
+                ("GET", "notes") => ControllerResponse::json(format!(
+                    "{{\"notes\":{:?},\"q\":{:?}}}",
+                    self.save(),
+                    r.query_arg("q").unwrap_or_default()
+                )),
                 ("POST", "notes") => {
                     let _ = self.load(r.body_text().unwrap_or(""));
                     ControllerResponse::json("{\"ok\":true}")
@@ -1419,8 +1702,15 @@ mod tests {
     struct WithController(bool);
 
     impl Plugin for WithController {
-        const INFO: PluginInfo =
-            PluginInfo { id: "dev.test.webview", name: "Webview", vendor: "Test", url: "", version: "1", description: "", features: &[] };
+        const INFO: PluginInfo = PluginInfo {
+            id: "dev.test.webview",
+            name: "Webview",
+            vendor: "Test",
+            url: "",
+            version: "1",
+            description: "",
+            features: &[],
+        };
         const LAYOUT: AudioLayout = AudioLayout::INSTRUMENT_STEREO;
         fn new() -> Self {
             Self(true)
@@ -1429,15 +1719,29 @@ mod tests {
             ProcessStatus::Sleep
         }
         fn controller(&mut self, _host: HostHandle) -> Option<Arc<dyn Controller>> {
-            self.0.then(|| Arc::new(Notes(Mutex::new("C E G".into()))) as Arc<dyn Controller>)
+            self.0
+                .then(|| Arc::new(Notes(Mutex::new("C E G".into()))) as Arc<dyn Controller>)
         }
     }
 
     fn call(ctx: &ViewContext, method: &str, uri: &str, body: &[u8]) -> (u16, String, Vec<u8>) {
-        let request = Request::builder().method(method).uri(format!("apf://localhost{uri}")).body(body.to_vec()).unwrap();
-        let sizing = Sizing { resizable: true, min: (300, 200), max: (2000, 1500) };
+        let request = Request::builder()
+            .method(method)
+            .uri(format!("apf://localhost{uri}"))
+            .body(body.to_vec())
+            .unwrap();
+        let sizing = Sizing {
+            resizable: true,
+            min: (300, 200),
+            max: (2000, 1500),
+        };
         let r = serve(ctx, &sizing, &[], None, &request);
-        let mime = r.headers().get(CONTENT_TYPE).and_then(|v| v.to_str().ok()).unwrap_or("").to_owned();
+        let mime = r
+            .headers()
+            .get(CONTENT_TYPE)
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("")
+            .to_owned();
         (r.status().as_u16(), mime, r.body().to_vec())
     }
 
@@ -1446,12 +1750,18 @@ mod tests {
         let ctx = ViewContext::without_host(&mut WithController(true));
         let (status, mime, body) = call(&ctx, "GET", "/__apf/plugin/notes?q=a%20b", b"");
         assert_eq!((status, mime.as_str()), (200, "application/json"));
-        assert_eq!(String::from_utf8(body).unwrap(), r#"{"notes":"C E G","q":"a b"}"#);
+        assert_eq!(
+            String::from_utf8(body).unwrap(),
+            r#"{"notes":"C E G","q":"a b"}"#
+        );
         // A POST body arrives whole, also non-ASCII.
         let (status, _, _) = call(&ctx, "POST", "/__apf/plugin/notes", "D F# A — é".as_bytes());
         assert_eq!(status, 200);
         assert_eq!(ctx.controller().unwrap().save(), "D F# A — é");
-        assert_eq!(call(&ctx, "GET", "/__apf/plugin/bytes", b"").2, [0, 1, 2, 255]);
+        assert_eq!(
+            call(&ctx, "GET", "/__apf/plugin/bytes", b"").2,
+            [0, 1, 2, 255]
+        );
         assert_eq!(call(&ctx, "GET", "/__apf/plugin/teapot", b"").0, 418);
         assert_eq!(call(&ctx, "GET", "/__apf/plugin/nothing", b"").0, 404);
         // The revision rides along with the values, and a change of it alone is news.
@@ -1460,9 +1770,27 @@ mod tests {
         let rev = ctx.controller().unwrap().revision();
         assert!(values.contains(&format!("\"rev\":{rev},")), "{values}");
         let gen = ctx.generation();
-        assert_eq!(call(&ctx, "GET", &format!("/__apf/values?gen={gen}&rev={rev}"), b"").0, 204);
+        assert_eq!(
+            call(
+                &ctx,
+                "GET",
+                &format!("/__apf/values?gen={gen}&rev={rev}"),
+                b""
+            )
+            .0,
+            204
+        );
         call(&ctx, "POST", "/__apf/plugin/notes", b"C");
-        assert_eq!(call(&ctx, "GET", &format!("/__apf/values?gen={gen}&rev={rev}"), b"").0, 200);
+        assert_eq!(
+            call(
+                &ctx,
+                "GET",
+                &format!("/__apf/values?gen={gen}&rev={rev}"),
+                b""
+            )
+            .0,
+            200
+        );
     }
 
     /// The tests that save presets use a home folder of their own (set once, before any of
@@ -1470,7 +1798,8 @@ mod tests {
     fn test_home() -> &'static std::path::Path {
         static HOME: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
         HOME.get_or_init(|| {
-            let home = std::env::temp_dir().join(format!("apf-webview-home-{}", std::process::id()));
+            let home =
+                std::env::temp_dir().join(format!("apf-webview-home-{}", std::process::id()));
             let _ = std::fs::remove_dir_all(&home);
             std::fs::create_dir_all(&home).unwrap();
             std::env::set_var("HOME", &home);
@@ -1482,7 +1811,13 @@ mod tests {
 
     /// A factory preset of about 6 KB, like a modular patch with its metadata.
     fn big_preset(i: usize) -> String {
-        let types = [("Bass", "Sub"), ("Lead", "Saw"), ("Pad", "Warm"), ("Drums", "Kick"), ("FX", "Riser")];
+        let types = [
+            ("Bass", "Sub"),
+            ("Lead", "Saw"),
+            ("Pad", "Warm"),
+            ("Drums", "Kick"),
+            ("FX", "Riser"),
+        ];
         let (ty, sub) = types[i % types.len()];
         let modules: Vec<String> = (0..70)
             .map(|m| format!(r#"{{"id":{m},"type":"vco","x":{},"params":{{"freq":0.{i:04}{m:02},"shape":0.25,"level":0.8}}}}"#, m * 10))
@@ -1524,16 +1859,35 @@ mod tests {
         assert_eq!((status, mime.as_str()), (200, "application/json"));
         let body = String::from_utf8(body).unwrap();
         let list = apf::json::parse(&body).unwrap();
-        let Some(apf::json::Value::Arr(presets)) = list.get("presets") else { panic!("{body}") };
+        let Some(apf::json::Value::Arr(presets)) = list.get("presets") else {
+            panic!("{body}")
+        };
         assert_eq!(presets.len(), 250);
         let first = &presets[0];
-        assert_eq!(first.get("name").and_then(|v| v.as_str()), Some("Sound 000"));
-        assert_eq!(first.get("id").and_then(|v| v.as_str()), Some("factory:Sound 000"));
+        assert_eq!(
+            first.get("name").and_then(|v| v.as_str()),
+            Some("Sound 000")
+        );
+        assert_eq!(
+            first.get("id").and_then(|v| v.as_str()),
+            Some("factory:Sound 000")
+        );
         assert_eq!(first.get("type").and_then(|v| v.as_str()), Some("Bass"));
         assert_eq!(first.get("subtype").and_then(|v| v.as_str()), Some("Sub"));
-        assert_eq!(first.get("description").and_then(|v| v.as_str()), Some("Preset number 0 of a generated library"));
-        assert!(body.contains(r#""mood":["Dark","Warm"]"#), "{}", &body[..400]);
-        assert_eq!(presets[249].get("name").and_then(|v| v.as_str()), Some("Sound 249"), "the plugin's order");
+        assert_eq!(
+            first.get("description").and_then(|v| v.as_str()),
+            Some("Preset number 0 of a generated library")
+        );
+        assert!(
+            body.contains(r#""mood":["Dark","Warm"]"#),
+            "{}",
+            &body[..400]
+        );
+        assert_eq!(
+            presets[249].get("name").and_then(|v| v.as_str()),
+            Some("Sound 249"),
+            "the plugin's order"
+        );
         let warm_ms = median_ms(|| {
             call(&ctx, "GET", "/__apf/presets", b"");
         });
@@ -1543,12 +1897,22 @@ mod tests {
         assert!(dir.starts_with(home));
         std::fs::create_dir_all(dir.join("Mine")).unwrap();
         for (i, t) in texts.iter().enumerate() {
-            std::fs::write(dir.join(format!("Mine/User {i:03}.apfpreset")), t.replace("Sound ", "User ")).unwrap();
+            std::fs::write(
+                dir.join(format!("Mine/User {i:03}.apfpreset")),
+                t.replace("Sound ", "User "),
+            )
+            .unwrap();
         }
         let t = std::time::Instant::now();
         let listed = ctx.presets();
         let user_first_ms = t.elapsed().as_secs_f64() * 1000.0;
-        assert_eq!(listed.iter().filter(|p| !p.is_factory() && p.name.starts_with("User ")).count(), 250);
+        assert_eq!(
+            listed
+                .iter()
+                .filter(|p| !p.is_factory() && p.name.starts_with("User "))
+                .count(),
+            250
+        );
         let user_warm_ms = median_ms(|| {
             call(&ctx, "GET", "/__apf/presets", b"");
         });
@@ -1565,7 +1929,9 @@ mod tests {
     fn saving_a_preset_carries_its_metadata() {
         let _home = test_home();
         let ctx = ViewContext::without_host(&mut WithController(true));
-        let save = |q: &str| String::from_utf8(call(&ctx, "GET", &format!("/__apf/preset/save?{q}"), b"").2).unwrap();
+        let save = |q: &str| {
+            String::from_utf8(call(&ctx, "GET", &format!("/__apf/preset/save?{q}"), b"").2).unwrap()
+        };
         let r = save("name=My%20Sub&type=Bass&subtype=Sub&mood=Dark,%20Deep,,dark&description=Low%20and%20round&author=Me");
         assert!(r.starts_with(r#"{"ok":true,"id":"file:"#), "{r}");
         let list = String::from_utf8(call(&ctx, "GET", "/__apf/presets", b"").2).unwrap();
@@ -1576,15 +1942,37 @@ mod tests {
         // The file says it too, in the format's own keys.
         let dir = ctx.user_preset_dir().unwrap();
         let text = std::fs::read_to_string(dir.join("My Sub.apfpreset")).unwrap();
-        assert!(text.contains("\"type\": \"Bass\",\n  \"subtype\": \"Sub\",\n  \"mood\": [\"Dark\", \"Deep\"]"), "{text}");
+        assert!(
+            text.contains(
+                "\"type\": \"Bass\",\n  \"subtype\": \"Sub\",\n  \"mood\": [\"Dark\", \"Deep\"]"
+            ),
+            "{text}"
+        );
         // Overwritten without metadata: kept. With some: replaced (missing members empty).
-        assert_eq!(save("name=My%20Sub"), r#"{"ok":false,"exists":true,"error":"a preset of that name exists"}"#);
+        assert_eq!(
+            save("name=My%20Sub"),
+            r#"{"ok":false,"exists":true,"error":"a preset of that name exists"}"#
+        );
         assert!(save("name=My%20Sub&overwrite=1").contains("\"ok\":true"));
-        let p = ctx.presets().into_iter().find(|p| p.name == "My Sub").unwrap();
+        let p = ctx
+            .presets()
+            .into_iter()
+            .find(|p| p.name == "My Sub")
+            .unwrap();
         assert_eq!((p.meta.category.as_str(), p.meta.tags.len()), ("Bass", 2));
         assert!(save("name=My%20Sub&overwrite=1&mood=Warm").contains("\"ok\":true"));
-        let p = ctx.presets().into_iter().find(|p| p.name == "My Sub").unwrap();
-        assert_eq!(p.meta, Metadata { tags: vec!["Warm".into()], ..Default::default() });
+        let p = ctx
+            .presets()
+            .into_iter()
+            .find(|p| p.name == "My Sub")
+            .unwrap();
+        assert_eq!(
+            p.meta,
+            Metadata {
+                tags: vec!["Warm".into()],
+                ..Default::default()
+            }
+        );
         // A preset without any metadata lists empty members.
         assert!(save("name=Plain").contains("\"ok\":true"));
         let list = String::from_utf8(call(&ctx, "GET", "/__apf/presets", b"").2).unwrap();
@@ -1601,12 +1989,24 @@ mod tests {
         assert_eq!(call(&ctx, "GET", "/__apf/plugin/notes", b"").0, 404);
         assert_eq!(call(&ctx, "POST", "/__apf/plugin/", b"{}").0, 404);
         let gen = ctx.generation();
-        assert_eq!(call(&ctx, "GET", &format!("/__apf/values?gen={gen}"), b"").0, 204);
+        assert_eq!(
+            call(&ctx, "GET", &format!("/__apf/values?gen={gen}"), b"").0,
+            204
+        );
         // A resizable web view tells the page its limits (for apf.resize and the grip).
         let info = String::from_utf8(call(&ctx, "GET", "/__apf/info", b"").2).unwrap();
-        assert!(info.contains(r#""resize":{"min":[300,200],"max":[2000,1500]}"#), "{info}");
+        assert!(
+            info.contains(r#""resize":{"min":[300,200],"max":[2000,1500]}"#),
+            "{info}"
+        );
         let (status, _, body) = call(&ctx, "POST", "/__apf/echo", b"abc");
         assert_eq!(status, 200);
-        assert_eq!(String::from_utf8(body).unwrap(), format!("{{\"method\":\"POST\",\"length\":3,\"fnv1a\":{}}}", 0x1a47e90bu32));
+        assert_eq!(
+            String::from_utf8(body).unwrap(),
+            format!(
+                "{{\"method\":\"POST\",\"length\":3,\"fnv1a\":{}}}",
+                0x1a47e90bu32
+            )
+        );
     }
 }

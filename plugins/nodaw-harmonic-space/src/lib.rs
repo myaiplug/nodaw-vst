@@ -33,63 +33,204 @@ pub static PRODUCT: Product = Product {
 /// The parameters. Append only.
 pub const PARAMS: &[ParamDef] = &[
     ParamDef::bypass("bypass"),
-    ParamDef::float("amp", "Amp", -20.0, 10.0, 0.0).unit("dB").decimals(1).module("Amp"),
-    ParamDef::float("out_gain", "Output", -24.0, 12.0, 0.0).unit("dB").decimals(1).module("Master"),
-    ParamDef::float("mix", "Mix", 0.0, 100.0, 100.0).unit("%").decimals(0).module("Master"),
-    ParamDef::float("width", "Width", 0.0, 200.0, 100.0).unit("%").decimals(0).module("Master"),
-    ParamDef::float("hpf", "HPF", 20.0, 500.0, 20.0).unit("Hz").curve(Curve::Log).decimals(0).module("Filters"),
-    ParamDef::float("lpf", "LPF", 2000.0, 22_000.0, 22_000.0).unit("Hz").curve(Curve::Log).decimals(0).module("Filters"),
-    ParamDef::float("b1_freq", "Band 1 Freq", 20.0, 20_000.0, 60.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("b1_gain", "Band 1 Gain", -12.0, 12.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("b1_q", "Band 1 Q", 0.3, 10.0, 0.707).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("amp", "Amp", -20.0, 10.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Amp"),
+    ParamDef::float("out_gain", "Output", -24.0, 12.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Master"),
+    ParamDef::float("mix", "Mix", 0.0, 100.0, 100.0)
+        .unit("%")
+        .decimals(0)
+        .module("Master"),
+    ParamDef::float("width", "Width", 0.0, 200.0, 100.0)
+        .unit("%")
+        .decimals(0)
+        .module("Master"),
+    ParamDef::float("hpf", "HPF", 20.0, 500.0, 20.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("Filters"),
+    ParamDef::float("lpf", "LPF", 2000.0, 22_000.0, 22_000.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("Filters"),
+    ParamDef::float("b1_freq", "Band 1 Freq", 20.0, 20_000.0, 60.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("b1_gain", "Band 1 Gain", -12.0, 12.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("b1_q", "Band 1 Q", 0.3, 10.0, 0.707)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("b1_solo", "Band 1 Solo", false).module("EQ"),
     ParamDef::bool("b1_mute", "Band 1 Mute", false).module("EQ"),
-    ParamDef::float("b2_freq", "Band 2 Freq", 20.0, 20_000.0, 200.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("b2_gain", "Band 2 Gain", -12.0, 12.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("b2_q", "Band 2 Q", 0.3, 10.0, 1.0).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("b2_freq", "Band 2 Freq", 20.0, 20_000.0, 200.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("b2_gain", "Band 2 Gain", -12.0, 12.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("b2_q", "Band 2 Q", 0.3, 10.0, 1.0)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("b2_solo", "Band 2 Solo", false).module("EQ"),
     ParamDef::bool("b2_mute", "Band 2 Mute", false).module("EQ"),
-    ParamDef::float("b3_freq", "Band 3 Freq", 20.0, 20_000.0, 800.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("b3_gain", "Band 3 Gain", -12.0, 12.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("b3_q", "Band 3 Q", 0.3, 10.0, 1.0).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("b3_freq", "Band 3 Freq", 20.0, 20_000.0, 800.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("b3_gain", "Band 3 Gain", -12.0, 12.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("b3_q", "Band 3 Q", 0.3, 10.0, 1.0)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("b3_solo", "Band 3 Solo", false).module("EQ"),
     ParamDef::bool("b3_mute", "Band 3 Mute", false).module("EQ"),
-    ParamDef::float("b4_freq", "Band 4 Freq", 20.0, 20_000.0, 2000.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("b4_gain", "Band 4 Gain", -12.0, 12.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("b4_q", "Band 4 Q", 0.3, 10.0, 1.0).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("b4_freq", "Band 4 Freq", 20.0, 20_000.0, 2000.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("b4_gain", "Band 4 Gain", -12.0, 12.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("b4_q", "Band 4 Q", 0.3, 10.0, 1.0)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("b4_solo", "Band 4 Solo", false).module("EQ"),
     ParamDef::bool("b4_mute", "Band 4 Mute", false).module("EQ"),
-    ParamDef::float("b5_freq", "Band 5 Freq", 20.0, 20_000.0, 4000.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("b5_gain", "Band 5 Gain", -12.0, 12.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("b5_q", "Band 5 Q", 0.3, 10.0, 1.0).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("b5_freq", "Band 5 Freq", 20.0, 20_000.0, 4000.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("b5_gain", "Band 5 Gain", -12.0, 12.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("b5_q", "Band 5 Q", 0.3, 10.0, 1.0)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("b5_solo", "Band 5 Solo", false).module("EQ"),
     ParamDef::bool("b5_mute", "Band 5 Mute", false).module("EQ"),
-    ParamDef::float("b6_freq", "Band 6 Freq", 20.0, 20_000.0, 8000.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("b6_gain", "Band 6 Gain", -12.0, 12.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("b6_q", "Band 6 Q", 0.3, 10.0, 1.0).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("b6_freq", "Band 6 Freq", 20.0, 20_000.0, 8000.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("b6_gain", "Band 6 Gain", -12.0, 12.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("b6_q", "Band 6 Q", 0.3, 10.0, 1.0)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("b6_solo", "Band 6 Solo", false).module("EQ"),
     ParamDef::bool("b6_mute", "Band 6 Mute", false).module("EQ"),
-    ParamDef::float("b7_freq", "Band 7 Freq", 20.0, 20_000.0, 16000.0).unit("Hz").curve(Curve::Log).decimals(0).module("EQ"),
-    ParamDef::float("b7_gain", "Band 7 Gain", -12.0, 12.0, 0.0).unit("dB").decimals(1).module("EQ"),
-    ParamDef::float("b7_q", "Band 7 Q", 0.3, 10.0, 0.707).curve(Curve::Log).decimals(2).module("EQ"),
+    ParamDef::float("b7_freq", "Band 7 Freq", 20.0, 20_000.0, 16000.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("EQ"),
+    ParamDef::float("b7_gain", "Band 7 Gain", -12.0, 12.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("EQ"),
+    ParamDef::float("b7_q", "Band 7 Q", 0.3, 10.0, 0.707)
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("EQ"),
     ParamDef::bool("b7_solo", "Band 7 Solo", false).module("EQ"),
     ParamDef::bool("b7_mute", "Band 7 Mute", false).module("EQ"),
-    ParamDef::float("sub", "Sub", 0.0, 12.0, 0.0).unit("dB").decimals(1).module("Sub"),
-    ParamDef::float("sub_freq", "Sub Freq", 30.0, 160.0, 80.0).unit("Hz").curve(Curve::Log).decimals(0).module("Sub"),
-    ParamDef::float("dly_mix", "Delay", 0.0, 100.0, 0.0).unit("%").decimals(0).module("Delay"),
-    ParamDef::float("dly_time", "Delay Time", 10.0, 2000.0, 300.0).unit("ms").curve(Curve::Log).decimals(0).module("Delay"),
-    ParamDef::float("dly_fb", "Feedback", 0.0, 90.0, 30.0).unit("%").decimals(0).module("Delay"),
-    ParamDef::float("dly_tone", "Delay Tone", 1000.0, 20_000.0, 8000.0).unit("Hz").curve(Curve::Log).decimals(0).module("Delay"),
+    ParamDef::float("sub", "Sub", 0.0, 12.0, 0.0)
+        .unit("dB")
+        .decimals(1)
+        .module("Sub"),
+    ParamDef::float("sub_freq", "Sub Freq", 30.0, 160.0, 80.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("Sub"),
+    ParamDef::float("dly_mix", "Delay", 0.0, 100.0, 0.0)
+        .unit("%")
+        .decimals(0)
+        .module("Delay"),
+    ParamDef::float("dly_time", "Delay Time", 10.0, 2000.0, 300.0)
+        .unit("ms")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("Delay"),
+    ParamDef::float("dly_fb", "Feedback", 0.0, 90.0, 30.0)
+        .unit("%")
+        .decimals(0)
+        .module("Delay"),
+    ParamDef::float("dly_tone", "Delay Tone", 1000.0, 20_000.0, 8000.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("Delay"),
     ParamDef::bool("dly_pp", "Ping-Pong", false).module("Delay"),
-    ParamDef::float("rev_mix", "Reverb", 0.0, 100.0, 0.0).unit("%").decimals(0).module("Reverb"),
-    ParamDef::float("rev_decay", "Decay", 0.2, 12.0, 2.0).unit("s").curve(Curve::Log).decimals(2).module("Reverb"),
-    ParamDef::float("rev_size", "Size", 50.0, 200.0, 100.0).unit("%").decimals(0).module("Reverb"),
-    ParamDef::float("rev_pre", "Pre-Delay", 0.0, 200.0, 10.0).unit("ms").decimals(0).module("Reverb"),
-    ParamDef::float("rev_damp", "Damping", 1000.0, 20_000.0, 7000.0).unit("Hz").curve(Curve::Log).decimals(0).module("Reverb"),
-    ParamDef::float("fl_mix", "Flanger", 0.0, 100.0, 0.0).unit("%").decimals(0).module("Flanger"),
-    ParamDef::float("fl_rate", "Flanger Rate", 0.05, 5.0, 0.5).unit("Hz").curve(Curve::Log).decimals(2).module("Flanger"),
-    ParamDef::float("fl_depth", "Flanger Depth", 0.0, 100.0, 25.0).unit("%").decimals(0).module("Flanger"),
-    ParamDef::float("fl_fb", "Flanger Feedback", -90.0, 90.0, 0.0).unit("%").decimals(0).module("Flanger"),
+    ParamDef::float("rev_mix", "Reverb", 0.0, 100.0, 0.0)
+        .unit("%")
+        .decimals(0)
+        .module("Reverb"),
+    ParamDef::float("rev_decay", "Decay", 0.2, 12.0, 2.0)
+        .unit("s")
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("Reverb"),
+    ParamDef::float("rev_size", "Size", 50.0, 200.0, 100.0)
+        .unit("%")
+        .decimals(0)
+        .module("Reverb"),
+    ParamDef::float("rev_pre", "Pre-Delay", 0.0, 200.0, 10.0)
+        .unit("ms")
+        .decimals(0)
+        .module("Reverb"),
+    ParamDef::float("rev_damp", "Damping", 1000.0, 20_000.0, 7000.0)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(0)
+        .module("Reverb"),
+    ParamDef::float("fl_mix", "Flanger", 0.0, 100.0, 0.0)
+        .unit("%")
+        .decimals(0)
+        .module("Flanger"),
+    ParamDef::float("fl_rate", "Flanger Rate", 0.05, 5.0, 0.5)
+        .unit("Hz")
+        .curve(Curve::Log)
+        .decimals(2)
+        .module("Flanger"),
+    ParamDef::float("fl_depth", "Flanger Depth", 0.0, 100.0, 25.0)
+        .unit("%")
+        .decimals(0)
+        .module("Flanger"),
+    ParamDef::float("fl_fb", "Flanger Feedback", -90.0, 90.0, 0.0)
+        .unit("%")
+        .decimals(0)
+        .module("Flanger"),
 ];
 
 const BYPASS: ParamId = ParamId::of(PARAMS, "bypass");
@@ -99,11 +240,51 @@ const MIX: ParamId = ParamId::of(PARAMS, "mix");
 const WIDTH: ParamId = ParamId::of(PARAMS, "width");
 const HPF: ParamId = ParamId::of(PARAMS, "hpf");
 const LPF: ParamId = ParamId::of(PARAMS, "lpf");
-const B_FREQ: [ParamId; BANDS] = [ParamId::of(PARAMS, "b1_freq"), ParamId::of(PARAMS, "b2_freq"), ParamId::of(PARAMS, "b3_freq"), ParamId::of(PARAMS, "b4_freq"), ParamId::of(PARAMS, "b5_freq"), ParamId::of(PARAMS, "b6_freq"), ParamId::of(PARAMS, "b7_freq")];
-const B_GAIN: [ParamId; BANDS] = [ParamId::of(PARAMS, "b1_gain"), ParamId::of(PARAMS, "b2_gain"), ParamId::of(PARAMS, "b3_gain"), ParamId::of(PARAMS, "b4_gain"), ParamId::of(PARAMS, "b5_gain"), ParamId::of(PARAMS, "b6_gain"), ParamId::of(PARAMS, "b7_gain")];
-const B_Q: [ParamId; BANDS] = [ParamId::of(PARAMS, "b1_q"), ParamId::of(PARAMS, "b2_q"), ParamId::of(PARAMS, "b3_q"), ParamId::of(PARAMS, "b4_q"), ParamId::of(PARAMS, "b5_q"), ParamId::of(PARAMS, "b6_q"), ParamId::of(PARAMS, "b7_q")];
-const B_SOLO: [ParamId; BANDS] = [ParamId::of(PARAMS, "b1_solo"), ParamId::of(PARAMS, "b2_solo"), ParamId::of(PARAMS, "b3_solo"), ParamId::of(PARAMS, "b4_solo"), ParamId::of(PARAMS, "b5_solo"), ParamId::of(PARAMS, "b6_solo"), ParamId::of(PARAMS, "b7_solo")];
-const B_MUTE: [ParamId; BANDS] = [ParamId::of(PARAMS, "b1_mute"), ParamId::of(PARAMS, "b2_mute"), ParamId::of(PARAMS, "b3_mute"), ParamId::of(PARAMS, "b4_mute"), ParamId::of(PARAMS, "b5_mute"), ParamId::of(PARAMS, "b6_mute"), ParamId::of(PARAMS, "b7_mute")];
+const B_FREQ: [ParamId; BANDS] = [
+    ParamId::of(PARAMS, "b1_freq"),
+    ParamId::of(PARAMS, "b2_freq"),
+    ParamId::of(PARAMS, "b3_freq"),
+    ParamId::of(PARAMS, "b4_freq"),
+    ParamId::of(PARAMS, "b5_freq"),
+    ParamId::of(PARAMS, "b6_freq"),
+    ParamId::of(PARAMS, "b7_freq"),
+];
+const B_GAIN: [ParamId; BANDS] = [
+    ParamId::of(PARAMS, "b1_gain"),
+    ParamId::of(PARAMS, "b2_gain"),
+    ParamId::of(PARAMS, "b3_gain"),
+    ParamId::of(PARAMS, "b4_gain"),
+    ParamId::of(PARAMS, "b5_gain"),
+    ParamId::of(PARAMS, "b6_gain"),
+    ParamId::of(PARAMS, "b7_gain"),
+];
+const B_Q: [ParamId; BANDS] = [
+    ParamId::of(PARAMS, "b1_q"),
+    ParamId::of(PARAMS, "b2_q"),
+    ParamId::of(PARAMS, "b3_q"),
+    ParamId::of(PARAMS, "b4_q"),
+    ParamId::of(PARAMS, "b5_q"),
+    ParamId::of(PARAMS, "b6_q"),
+    ParamId::of(PARAMS, "b7_q"),
+];
+const B_SOLO: [ParamId; BANDS] = [
+    ParamId::of(PARAMS, "b1_solo"),
+    ParamId::of(PARAMS, "b2_solo"),
+    ParamId::of(PARAMS, "b3_solo"),
+    ParamId::of(PARAMS, "b4_solo"),
+    ParamId::of(PARAMS, "b5_solo"),
+    ParamId::of(PARAMS, "b6_solo"),
+    ParamId::of(PARAMS, "b7_solo"),
+];
+const B_MUTE: [ParamId; BANDS] = [
+    ParamId::of(PARAMS, "b1_mute"),
+    ParamId::of(PARAMS, "b2_mute"),
+    ParamId::of(PARAMS, "b3_mute"),
+    ParamId::of(PARAMS, "b4_mute"),
+    ParamId::of(PARAMS, "b5_mute"),
+    ParamId::of(PARAMS, "b6_mute"),
+    ParamId::of(PARAMS, "b7_mute"),
+];
 const SUB: ParamId = ParamId::of(PARAMS, "sub");
 const SUB_FREQ: ParamId = ParamId::of(PARAMS, "sub_freq");
 const DLY_MIX: ParamId = ParamId::of(PARAMS, "dly_mix");
@@ -122,11 +303,48 @@ const FL_DEPTH: ParamId = ParamId::of(PARAMS, "fl_depth");
 const FL_FB: ParamId = ParamId::of(PARAMS, "fl_fb");
 
 const REMOTE: &[RemotePage] = &[
-    RemotePage { section: "Space", name: "Main", params: ["amp", "hpf", "lpf", "dly_mix", "rev_mix", "sub", "fl_mix", "out_gain"] },
-    RemotePage { section: "Space", name: "EQ Gain", params: ["b1_gain", "b2_gain", "b3_gain", "b4_gain", "b5_gain", "b6_gain", "b7_gain", "mix"] },
-    RemotePage { section: "Space", name: "EQ Q", params: ["b1_q", "b2_q", "b3_q", "b4_q", "b5_q", "b6_q", "b7_q", "width"] },
-    RemotePage { section: "Space", name: "Delay & Reverb", params: ["dly_mix", "dly_time", "dly_fb", "dly_tone", "rev_mix", "rev_decay", "rev_size", "rev_damp"] },
-    RemotePage { section: "Space", name: "Flanger & Sub", params: ["fl_mix", "fl_rate", "fl_depth", "fl_fb", "sub", "sub_freq", "width", "mix"] },
+    RemotePage {
+        section: "Space",
+        name: "Main",
+        params: [
+            "amp", "hpf", "lpf", "dly_mix", "rev_mix", "sub", "fl_mix", "out_gain",
+        ],
+    },
+    RemotePage {
+        section: "Space",
+        name: "EQ Gain",
+        params: [
+            "b1_gain", "b2_gain", "b3_gain", "b4_gain", "b5_gain", "b6_gain", "b7_gain", "mix",
+        ],
+    },
+    RemotePage {
+        section: "Space",
+        name: "EQ Q",
+        params: [
+            "b1_q", "b2_q", "b3_q", "b4_q", "b5_q", "b6_q", "b7_q", "width",
+        ],
+    },
+    RemotePage {
+        section: "Space",
+        name: "Delay & Reverb",
+        params: [
+            "dly_mix",
+            "dly_time",
+            "dly_fb",
+            "dly_tone",
+            "rev_mix",
+            "rev_decay",
+            "rev_size",
+            "rev_damp",
+        ],
+    },
+    RemotePage {
+        section: "Space",
+        name: "Flanger & Sub",
+        params: [
+            "fl_mix", "fl_rate", "fl_depth", "fl_fb", "sub", "sub_freq", "width", "mix",
+        ],
+    },
 ];
 
 #[cfg(feature = "ui")]
@@ -228,7 +446,12 @@ impl Plugin for NoDawHarmonicSpace {
     ];
 
     fn new() -> Self {
-        Self { engine: Engine::new(48_000.0), core: Core::new(&PRODUCT), ext: Arc::new(LookExt::new(LOOKS, 3, 1)), tail_s: 2.0 }
+        Self {
+            engine: Engine::new(48_000.0),
+            core: Core::new(&PRODUCT),
+            ext: Arc::new(LookExt::new(LOOKS, 3, 1)),
+            tail_s: 2.0,
+        }
     }
 
     fn controller(&mut self, host: HostHandle) -> Option<Arc<dyn Controller>> {
@@ -242,7 +465,8 @@ impl Plugin for NoDawHarmonicSpace {
         let s = settings(params);
         self.engine.reset_to(&s);
         self.tail_s = Engine::tail_seconds(&s);
-        self.core.activate(config.sample_rate, self.engine.latency());
+        self.core
+            .activate(config.sample_rate, self.engine.latency());
     }
 
     fn reset(&mut self) {
@@ -258,7 +482,9 @@ impl Plugin for NoDawHarmonicSpace {
     }
 
     fn process(&mut self, audio: &mut AudioBuffer, ctx: &ProcessContext) -> ProcessStatus {
-        let Some((l, r)) = audio.stereo() else { return ProcessStatus::Error };
+        let Some((l, r)) = audio.stereo() else {
+            return ProcessStatus::Error;
+        };
         let s = settings(ctx.params);
         self.tail_s = Engine::tail_seconds(&s);
         self.core.begin(l, r);
@@ -273,7 +499,13 @@ impl Plugin for NoDawHarmonicSpace {
 
     #[cfg(feature = "ui")]
     fn view() -> Option<Box<dyn View>> {
-        Some(Box::new(WebView::new(960, 620, UI).resizable(true).size_limits((800, 520), (2600, 1700)).fit_screen((48, 96)).background(10, 11, 14)))
+        Some(Box::new(
+            WebView::new(960, 620, UI)
+                .resizable(true)
+                .size_limits((800, 520), (2600, 1700))
+                .fit_screen((48, 96))
+                .background(10, 11, 14),
+        ))
     }
 }
 

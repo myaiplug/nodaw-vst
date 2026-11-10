@@ -1122,10 +1122,8 @@ dependencies = [
  "apf-test",
  "apf-webview",
  "clap-sys",
- "hmac",
  "nodaw-dsp",
- "sha2",
- "ureq",
+ "nodaw-kit",
 ]
 
 [[package]]

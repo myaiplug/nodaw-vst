@@ -24,7 +24,10 @@ impl DelayLine {
     /// A line that can delay by up to `max_samples` samples (rounded up to at least 1).
     /// Allocates; not for the audio thread.
     pub fn new(max_samples: usize) -> Self {
-        Self { buffer: vec![0.0; max_samples.max(1) + 2], write: 0 }
+        Self {
+            buffer: vec![0.0; max_samples.max(1) + 2],
+            write: 0,
+        }
     }
 
     /// The longest delay in samples that can be asked for.
