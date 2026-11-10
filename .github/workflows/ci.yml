@@ -1,0 +1,103 @@
+name: ci
+on:
+  pull_request: {}
+  push:
+    branches: [main, "feat/**"]
+  workflow_dispatch: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: clippy }
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets --no-default-features -- -D warnings
+      - run: cargo test --workspace --no-default-features
+
+  linux-validators:
+    runs-on: ubuntu-24.04
+    needs: test
+    env:
+      CPM_SOURCE_CACHE: ${{ github.workspace }}/target/cpm-cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: clippy }
+      - uses: Swatinem/rust-cache@v2
+      - run: sudo apt-get update && sudo apt-get install -y ninja-build cmake g++ libx11-dev libxcb-util-dev libxcb-cursor-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig1-dev libfreetype-dev libgtkmm-3.0-dev libsqlite3-dev
+      - name: Build headless CLAP + VST3
+        run: ./scripts/build-linux.sh
+      - name: Build Steinberg validator and vst3-state-check (VST3 SDK from the wrapper's cache, MIT)
+        run: |
+          SDK=$(dirname "$(find "$CPM_SOURCE_CACHE" -path '*/public.sdk/source/vst/hosting/module.h' | head -1)")/../../../..
+          SDK=$(cd "$SDK" && pwd); echo "SDK=$SDK"
+          cmake -S "$SDK" -B target/vst3sdk -G Ninja -DCMAKE_BUILD_TYPE=Release -DSMTG_ENABLE_VST3_HOSTING_EXAMPLES=ON -DSMTG_ENABLE_VST3_PLUGIN_EXAMPLES=OFF -DSMTG_ENABLE_VSTGUI_SUPPORT=OFF
+          cmake --build target/vst3sdk --target validator
+          cmake -S vendor/apf/tools/vst3-state-check -B target/state-check -G Ninja -DCMAKE_BUILD_TYPE=Release -DVST3_SDK_ROOT="$SDK"
+          cmake --build target/state-check
+          echo "VST3_VALIDATOR=$(find target/vst3sdk -type f -name validator -perm -u+x | head -1)" >> "$GITHUB_ENV"
+          echo "STATE_CHECK=$(find target/state-check -type f -name vst3-state-check -perm -u+x | head -1)" >> "$GITHUB_ENV"
+      - name: Build clap-validator 0.4.1 (patched)
+        run: |
+          git clone --depth 1 --branch 0.4.1 https://github.com/free-audio/clap-validator target/clap-validator
+          git -C target/clap-validator apply "$PWD/vendor/apf/scripts/clap-validator-0.4.1-preset-deadlock.patch"
+          cargo build --release --manifest-path target/clap-validator/Cargo.toml
+          echo "CLAP_VALIDATOR=$PWD/target/clap-validator/target/release/clap-validator" >> "$GITHUB_ENV"
+      - name: Run every check
+        run: ./scripts/validate-linux.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: validator-results, path: docs/results/ }
+
+  windows:
+    runs-on: windows-2022
+    defaults: { run: { shell: bash } }
+    env:
+      CPM_SOURCE_CACHE: C:/cpm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace
+      - name: Build NoDAW Screw.vst3 + .clap (static CRT, no VC++ redistributable needed)
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+          CARGO_TARGET_DIR: target/crt-static
+        run: |
+          LIBS=$(cargo rustc --release -p nodaw-screw --lib --crate-type staticlib -- --print native-static-libs 2>&1 | tr -d '\r' | grep -o 'native-static-libs: .*' | sed 's/native-static-libs: //' | tr ' ' '\n' | grep -v '^/defaultlib' | grep -v '^$' | paste -sd';')
+          echo "native libs: $LIBS"
+          ROOT=$(cygpath -m "$PWD")
+          cmake -S vendor/apf/wrapper -B C:/b -G "Visual Studio 17 2022" -A x64 \
+            -DFETCHCONTENT_BASE_DIR=C:/b/_deps -DCPM_SOURCE_CACHE=C:/cpm \
+            -DAPF_STATICLIB="$ROOT/target/crt-static/release/nodaw_screw.lib" "-DAPF_NATIVE_LIBS=$LIBS" \
+            "-DAPF_NAME=NoDAW Screw" -DAPF_TARGET=nodaw_screw -DAPF_BUNDLE_ID=com.nodaw.screw -DAPF_CLAP_ID=com.nodaw.screw \
+            -DAPF_VERSION=0.2.0 "-DAPF_FORMATS=CLAP;VST3" -DAPF_STANDALONE=OFF \
+            -DAPF_AU_TYPE=aufx -DAPF_AU_SUBTYPE=NdSc -DAPF_AU_MANUFACTURER=NdDw -DAPF_AU_MANUFACTURER_NAME=NoDAW \
+            -DAPF_ASSET_DIR="$ROOT/dist/windows"
+          cmake --build C:/b --config Release --target nodaw_screw_all
+          find dist/windows -maxdepth 4
+          test -f "dist/windows/NoDAW Screw.vst3/Contents/x86_64-win/NoDAW Screw.vst3"
+          test -f "dist/windows/NoDAW Screw.clap"
+      - name: Steinberg VST3 validator on the Windows binary
+        run: |
+          SDK=$(dirname "$(find /c/cpm -path '*/public.sdk/source/vst/hosting/module.h' | head -1)")/../../../..
+          SDK=$(cd "$SDK" && cygpath -m "$(pwd)"); echo "SDK=$SDK"
+          cmake -S "$SDK" -B C:/v3 -G "Visual Studio 17 2022" -A x64 -DSMTG_ENABLE_VST3_HOSTING_EXAMPLES=ON -DSMTG_ENABLE_VST3_PLUGIN_EXAMPLES=OFF -DSMTG_ENABLE_VSTGUI_SUPPORT=OFF -DSMTG_CREATE_PLUGIN_LINK=OFF
+          cmake --build C:/v3 --config Release --target validator
+          V=$(find /c/v3 -name validator.exe | head -1)
+          "$V" "dist/windows/NoDAW Screw.vst3" | tee vst3-validator-windows.txt
+          grep -E "Result: [0-9]+ tests passed, 0 tests failed" vst3-validator-windows.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NoDAW-Screw-windows
+          path: |
+            dist/windows/NoDAW Screw.vst3
+            dist/windows/NoDAW Screw.clap
+            vst3-validator-windows.txt
+          if-no-files-found: error

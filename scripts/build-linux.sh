@@ -12,7 +12,7 @@ cmake -S vendor/apf/wrapper -B "$B" -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DCPM_SOURCE_CACHE="$CPM" -DFETCHCONTENT_BASE_DIR="$B/_deps" \
   -DAPF_STATICLIB="$ROOT/target/release/libnodaw_screw.a" -DAPF_NATIVE_LIBS="$LIBS" \
   -DAPF_NAME="NoDAW Screw" -DAPF_TARGET=nodaw_screw -DAPF_BUNDLE_ID=com.nodaw.screw \
-  -DAPF_CLAP_ID=com.nodaw.screw -DAPF_VERSION=0.1.0 "-DAPF_FORMATS=CLAP;VST3" -DAPF_STANDALONE=OFF \
+  -DAPF_CLAP_ID=com.nodaw.screw -DAPF_VERSION=0.2.0 "-DAPF_FORMATS=CLAP;VST3" -DAPF_STANDALONE=OFF \
   -DAPF_AU_TYPE=aufx -DAPF_AU_SUBTYPE=NdSc -DAPF_AU_MANUFACTURER=NdDw -DAPF_AU_MANUFACTURER_NAME=NoDAW \
   -DAPF_ASSET_DIR="$OUT"
 cmake --build "$B" --target nodaw_screw_all

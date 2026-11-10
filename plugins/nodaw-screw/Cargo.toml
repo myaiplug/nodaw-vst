@@ -1,7 +1,7 @@
 [package]
 name = "nodaw-screw"
 description = "NoDAW Screw: chopped-and-screwed pitch, tape wobble, reverb, chop gate and a true-peak limiter, as a CLAP/VST3 plugin"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "LicenseRef-NoDAW-Proprietary"
 publish = false
@@ -20,6 +20,11 @@ ui = ["dep:apf-webview"]
 apf = { path = "../../vendor/apf/crates/apf" }
 apf-webview = { path = "../../vendor/apf/crates/apf-webview", optional = true }
 nodaw-dsp = { path = "../../crates/nodaw-dsp" }
+# Licensing (license.rs): HMAC-SHA256 for the state file, HTTPS to Gumroad's verify API.
+# All MIT/Apache-2.0 (ureq, rustls) or Apache-2.0 AND ISC (ring); see THIRD_PARTY_LICENSES.md.
+hmac = "0.12"
+sha2 = "0.10"
+ureq = { version = "2.12", default-features = false, features = ["tls"] }
 
 [dev-dependencies]
 clap-sys = "0.5"

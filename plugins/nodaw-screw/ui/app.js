@@ -842,6 +842,60 @@
     }
     requestAnimationFrame(loop);
 
-    window.__screw = { snapshot, applySnap, undo, redo, history: H, ab, meters }; // for tests
+    /* ── trial and license (state from the plugin: license.rs) ───────────────────── */
+    const lic = { s: null, timer: 0, shownEnded: false };
+    const licBadge = $("#lic-badge"), licDlg = $("#lic"), licKey = $("#lic-key"), licBtn = $("#lic-activate"), licMsg = $("#lic-msg");
+    function licRender() {
+      const s = lic.s; if (!s) return;
+      const st = s.state, ended = st === "expired" || st === "tampered", licensed = st === "licensed";
+      licBadge.hidden = licensed;
+      licBadge.classList.toggle("ended", ended);
+      licBadge.classList.toggle("low", st === "trial" && s.days_left <= 3);
+      $(".lic-txt", licBadge).textContent = ended ? "Trial ended · Activate" : `Trial · ${s.days_left} ${s.days_left === 1 ? "day" : "days"} left`;
+      licDlg.classList.toggle("ended", ended);
+      licDlg.classList.toggle("licensed", licensed);
+      $("#lic-title").textContent = licensed ? "Activated" : ended ? "Trial ended" : `${s.days_left} ${s.days_left === 1 ? "day" : "days"} left`;
+      $("#lic-bar").style.width = licensed ? "100%" : ended ? "100%" : `${Math.max(4, (100 * s.days_left) / (s.trial_days || 14))}%`;
+      $("#lic-sub").textContent = licensed
+        ? "Every feature, for good. Thank you for supporting independent tools."
+        : ended
+          ? (st === "tampered" ? "The license file was changed, so the trial has ended. " : "") + "NoDAW Screw keeps working, but the output drops out for half a second every 45 seconds. Activate to remove it. Your sessions and presets are safe."
+          : "Every feature is unlocked during the trial. After it, the output drops out briefly every 45 seconds until you activate.";
+      $("#lic-licensed").hidden = !licensed;
+      $("#lic-who").textContent = s.email ? `Licensed to ${s.email}` : "Licensed";
+      $("#lic-keyhint").textContent = s.key_hint ? `Key ${s.key_hint}` : "";
+      $("#lic-fine").textContent = s.activation_ready === false ? "Activation opens when NoDAW Screw goes on sale." : "Your key is in the Gumroad receipt email.";
+      licBtn.disabled = !!s.busy;
+      licBtn.classList.toggle("busy", !!s.busy);
+      licBtn.textContent = s.busy ? "Checking…" : "Activate";
+      if (s.busy) { licMsg.className = "lic-msg"; licMsg.textContent = "Checking your key with Gumroad…"; }
+      else if (s.message) { licMsg.className = `lic-msg ${s.ok ? "ok" : "err"}`; licMsg.textContent = s.message; }
+      if (ended && !lic.shownEnded) { lic.shownEnded = true; licOpen(); }
+    }
+    async function licPoll() {
+      clearTimeout(lic.timer);
+      try { lic.s = await apf.plugin.get("license"); licRender(); } catch (e) { apf.log("license:", String(e)); }
+      lic.timer = setTimeout(licPoll, lic.s && lic.s.busy ? 600 : 60_000);
+    }
+    function licOpen() { licDlg.hidden = false; if (!licDlg.classList.contains("licensed")) setTimeout(() => licKey.focus(), 30); }
+    function licClose() { licDlg.hidden = true; }
+    licBadge.addEventListener("click", licOpen);
+    $("#lic-close").addEventListener("click", licClose);
+    licDlg.addEventListener("pointerdown", (e) => { if (e.target === licDlg) licClose(); });
+    licDlg.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.preventDefault(); licClose(); } e.stopPropagation(); });
+    $("#lic-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const key = licKey.value.trim();
+      if (!key) { licMsg.className = "lic-msg err"; licMsg.textContent = "Paste the license key from your Gumroad receipt."; return; }
+      try { lic.s = await apf.plugin.post("license-activate", { key }); licRender(); licPoll(); }
+      catch (err) { licMsg.className = "lic-msg err"; licMsg.textContent = (err && err.body) || "Could not start activation."; }
+    });
+    $("#lic-buy").addEventListener("click", async () => {
+      try { const r = await apf.plugin.post("license-buy", {}); if (!r.opened) { licMsg.className = "lic-msg"; licMsg.textContent = `Open ${r.url} in your browser.`; } }
+      catch (e) { apf.log("buy:", String(e)); }
+    });
+    licPoll();
+
+    window.__screw = { snapshot, applySnap, undo, redo, history: H, ab, meters, lic }; // for tests
   });
 })();
