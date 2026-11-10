@@ -56,8 +56,8 @@
 .vu b { display: block; height: 100%; width: 0; background: linear-gradient(90deg, rgb(var(--mc)), #eab308 80%, #ef4444); background-size: 3.4rem 100%; transition: width .05s linear; }
 .mod-body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: .2rem; padding: .3rem .45rem .4rem; min-height: 0; }
 .mod .k-ring { stroke: rgb(var(--mc)); filter: drop-shadow(0 0 3px rgba(var(--mc), .8)); }
-.mod .k-label { color: var(--skin-text); }
-.mod .k-value { color: var(--skin-text-hi); }
+.mod .k-label, .master .k-label { color: var(--skin-text); }
+.mod .k-value, .master .k-value { color: var(--skin-text-hi); }
 .row { display: flex; align-items: center; gap: .35rem; }
 .row.end { justify-content: flex-end; }
 .row.between { justify-content: space-between; }
