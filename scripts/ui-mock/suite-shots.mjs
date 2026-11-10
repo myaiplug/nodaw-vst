@@ -59,6 +59,12 @@ const hooks = {
     await p.click('#looks [data-look="light"]'); await sleep(500); await shot(p, "05-light-faceplate");
     await p.click('#looks [data-look="dark"]'); await sleep(300);
   },
+  "temporal-pitch-portal": async (p) => {
+    await p.click('.z-fams button:nth-child(2)'); await sleep(500); await shot(p, "04-screwai-flavors");
+    await p.click('#looks [data-look="light"]'); await sleep(600); await shot(p, "05-light");
+    await p.click('#looks [data-look="dark"]'); await sleep(300);
+    await p.click('.choice[data-choice="warp_mode"] button:nth-child(2)').catch(() => {}); await sleep(500); await shot(p, "06-tape-mode");
+  },
   "chronos-dynamic-eq": async (p) => {
     await p.click('.chip[data-i="5"]'); await sleep(500); await shot(p, "04-band-6-dynamics");
     await p.click('#looks [data-look="amber"]'); await sleep(500); await shot(p, "05-amber");

@@ -283,7 +283,29 @@ class ChronosDynamicEq(Model):
         return 10 ** (cut / 20)
 
 
-PLUGINS = {"racks": Racks, "harmonic-space": HarmonicSpace, "chronos-dynamic-eq": ChronosDynamicEq}
+class TemporalPitchPortal(Model):
+    def drift(self, t):
+        d = self.plain("drift", 0.0)
+        return d * (0.65 * math.sin(2 * math.pi * self.plain("drift_rate", 0.7) * t) + 0.35 * math.sin(t * 1.7 + 0.4))
+
+    def pitch_ratio(self):
+        t = time.time() - self.t0
+        r = 2 ** ((self.plain("pitch", 0.0) + self.drift(t) * 0.01) / 12)
+        if self.plain("warp_mode", 0) == 1: r *= self.plain("time", 100.0) / 100
+        return r
+
+    def resp_temporal_pitch_portal(self, f):
+        t = self.plain("tone", 0.0) / 100
+        r = biquad_db("lowShelf", 250, 0.7, -6 * t, f) + biquad_db("highShelf", 2500, 0.7, 6 * t, f)
+        return r + self.plain("out_gain", 0.0)
+
+    def extras(self, t, beat, kick):
+        per = [1, 2, 4, 8][int(self.plain("warp_sync", 2))]
+        echo = self.plain("echo_mix", 0.0) / 100 * (0.3 + 0.3 * kick) * self.level
+        return [echo, self.plain("pitch", 0.0) + self.drift(t) * 0.01, self.drift(t), (beat / per) % 1.0, self.pitch_ratio()]
+
+
+PLUGINS = {"racks": Racks, "harmonic-space": HarmonicSpace, "chronos-dynamic-eq": ChronosDynamicEq, "temporal-pitch-portal": TemporalPitchPortal}
 
 
 def load_plugin_model(name, fixture):

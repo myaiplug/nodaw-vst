@@ -9,7 +9,7 @@
   "use strict";
   const K = NoDAW, $ = K.$, $$ = K.$$;
   K.fitRoot(960, 620);
-  K.shell({ name: "NoDAW Temporal Pitch Portal", prod: "TEMPORAL PITCH PORTAL", version: "v0.1" });
+  K.shell({ name: "NoDAW Temporal Pitch Portal", prod: "PITCH PORTAL", version: "v0.1" });
 
   K.knobs({
     "g-portal": [
@@ -35,7 +35,7 @@
   $("#g-portal .knob[data-key=\"pitch\"]").dataset.snap = "1";
   $$("#g-portal .knob").forEach((k, i) => { if (i < 2) k.classList.add("hero"); });
   $("#c-mode").append(K.choice("warp_mode", ["Stretch", "Tape"]));
-  $("#c-sync").append(K.choice("warp_sync", ["1/4", "½ bar", "1 bar", "2 bars"]));
+  $("#c-sync").append(K.choice("warp_sync", ["1/4", "1/2", "1 BAR", "2 BAR"]));
 
   K.start({
     init: async (ctx) => {
@@ -188,7 +188,7 @@
         c.fillText(`${P("warp_mode").text.toUpperCase()} · ${P("warp_sync").text.toUpperCase()} · ${warping ? "WARPING" : "IN SYNC"}`, cx, cy + R * 1.08 + 0.5 * R2);
       }
 
-      const spec = ctx.spectrum($("#spec"), { eqAxis: false, top: 0.6, dbTop: 0, dbBot: -84, hint: "Input and output spectrum." });
+      const spec = ctx.spectrum($("#spec"), { eqAxis: false, top: 0.5, dbTop: -6, dbBot: -78, hint: "Input and output spectrum." });
       const meters = ctx.levelMeters($("#meters"), { gr: false });
       ctx.onDraw((dt) => {
         const ex = ctx.extra || [], stale = ctx.stale();
