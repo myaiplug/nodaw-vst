@@ -1,0 +1,13 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.racks",
+  "name": "Init",
+  "type": "Utility",
+  "subtype": "Default",
+  "mood": [
+    "Clean"
+  ],
+  "description": "Every module in, nothing pushed: a gentle tape touch and a safety limiter",
+  "author": "NoDAW",
+  "params": {}
+}

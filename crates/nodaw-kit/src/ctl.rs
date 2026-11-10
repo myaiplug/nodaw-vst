@@ -60,6 +60,18 @@ impl Meters {
         self.out_scope.push_stereo(out_l, out_r);
     }
 
+    /// Audio thread, before processing: the input level and scope.
+    pub fn record_in(&self, l: &[f32], r: &[f32]) {
+        self.in_meter.record(l, r);
+        self.in_scope.push_stereo(l, r);
+    }
+
+    /// Audio thread, after processing: the output level and scope.
+    pub fn record_out(&self, l: &[f32], r: &[f32]) {
+        self.out_meter.record(l, r);
+        self.out_scope.push_stereo(l, r);
+    }
+
     /// One of the plugin's own header values (`i` in 0..4; see [`CUSTOM_SLOTS`]).
     pub fn set_custom(&self, i: usize, v: f32) {
         if let Some(a) = self.custom.get(i) {
@@ -73,6 +85,50 @@ impl Meters {
 
     pub fn sample_rate(&self) -> f32 {
         f32::from_bits(self.sample_rate.load(Ordering::Relaxed))
+    }
+}
+
+/// A fixed set of f32 values shared lock-free between the audio thread and the page: per-band
+/// gain reduction, module levels, a captured spectrum.
+pub struct Slots {
+    v: Box<[AtomicU32]>,
+}
+
+impl Slots {
+    /// `n` slots at 0. Main thread.
+    pub fn new(n: usize) -> Self {
+        Self { v: (0..n).map(|_| AtomicU32::new(0)).collect() }
+    }
+    pub fn len(&self) -> usize {
+        self.v.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.v.is_empty()
+    }
+    pub fn set(&self, i: usize, x: f32) {
+        if let Some(a) = self.v.get(i) {
+            a.store(x.to_bits(), Ordering::Relaxed);
+        }
+    }
+    pub fn get(&self, i: usize) -> f32 {
+        self.v.get(i).map(|a| f32::from_bits(a.load(Ordering::Relaxed))).unwrap_or(0.0)
+    }
+    /// Keep the largest non-negative value since the last [`Slots::take`] (peak meters).
+    pub fn max(&self, i: usize, x: f32) {
+        if let Some(a) = self.v.get(i) {
+            if x.is_finite() && x > 0.0 {
+                // Non-negative floats order like their bit patterns.
+                a.fetch_max(x.to_bits(), Ordering::Relaxed);
+            }
+        }
+    }
+    /// Read and clear.
+    pub fn take(&self, i: usize) -> f32 {
+        self.v.get(i).map(|a| f32::from_bits(a.swap(0, Ordering::Relaxed))).unwrap_or(0.0)
+    }
+    /// Every value, in order.
+    pub fn read_all(&self, out: &mut Vec<f32>) {
+        out.extend(self.v.iter().map(|a| f32::from_bits(a.load(Ordering::Relaxed))));
     }
 }
 
@@ -449,6 +505,21 @@ mod tests {
         assert_eq!(v[10], 48_000.0);
         assert_eq!(v[13], 7.0);
         assert_eq!(*v.last().unwrap(), 1.0);
+    }
+
+    #[test]
+    fn slots_keep_the_peak_until_taken() {
+        let s = Slots::new(2);
+        s.max(0, 0.5);
+        s.max(0, 0.25);
+        s.max(0, f32::NAN);
+        assert_eq!(s.take(0), 0.5);
+        assert_eq!(s.take(0), 0.0);
+        s.set(1, -3.0);
+        assert_eq!(s.get(1), -3.0);
+        let mut v = Vec::new();
+        s.read_all(&mut v);
+        assert_eq!(v, vec![0.0, -3.0]);
     }
 
     #[test]

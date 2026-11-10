@@ -1,0 +1,22 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.racks",
+  "name": "Mono Bass Club",
+  "type": "Master",
+  "subtype": "Club",
+  "mood": [
+    "Solid",
+    "Tight"
+  ],
+  "description": "Everything under 180 Hz in mono, tight low end",
+  "author": "NoDAW",
+  "params": {
+    "sp_mono": 180,
+    "sp_width": 110,
+    "eq1_gain": 2,
+    "eq1_freq": 55,
+    "eq2_gain": -2,
+    "eq2_freq": 250,
+    "lim_gain": 4
+  }
+}

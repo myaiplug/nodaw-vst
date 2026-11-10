@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/nodaw-dsp",
     "crates/nodaw-kit",
+    "plugins/nodaw-racks",
     "plugins/nodaw-screw",
 ]
 exclude = ["vendor/apf"]

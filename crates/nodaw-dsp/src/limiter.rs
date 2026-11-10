@@ -100,6 +100,11 @@ impl Limiter {
         self.ceil = 10f32.powf((db - 0.3) * 0.05);
     }
 
+    /// Change the release time (no allocation; safe on the audio thread).
+    pub fn set_release_ms(&mut self, sample_rate: f64, release_ms: f32) {
+        self.rel = 1.0 - (-1.0 / (release_ms.max(0.1) as f64 / 1000.0 * sample_rate)).exp() as f32;
+    }
+
     /// Effectively switch the limiter off (a huge ceiling) while keeping its latency.
     pub fn set_off(&mut self) {
         self.ceil = 1.0e4;

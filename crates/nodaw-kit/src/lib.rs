@@ -11,6 +11,66 @@
 
 pub mod ctl;
 pub mod license;
+pub mod testing;
+
+use std::sync::atomic::Ordering;
+use std::sync::Arc;
+
+use apf::prelude::{Controller, HostHandle};
+use nodaw_dsp::meter::GainReduction;
+
+/// What every plugin instance carries besides its engine: meters for the page, the license
+/// manager, and the post-trial dropout. The audio-thread methods touch atomics only.
+pub struct Core {
+    pub meters: Arc<ctl::Meters>,
+    pub license: Arc<license::Manager>,
+    dropout: license::Dropout,
+    sr: f64,
+}
+
+impl Core {
+    /// Main thread (the plugin's `new`): loads the product's license state from disk.
+    pub fn new(product: &'static license::Product) -> Self {
+        Self::with_license(license::Manager::load_default(product))
+    }
+
+    pub fn with_license(license: Arc<license::Manager>) -> Self {
+        Self { meters: Arc::new(ctl::Meters::default()), license, dropout: license::Dropout::new(48_000.0), sr: 48_000.0 }
+    }
+
+    /// Main thread (`activate`): a trial that ran out while the session was open takes effect
+    /// here; the page reads the sample rate and latency from the meters.
+    pub fn activate(&mut self, sample_rate: f64, latency: usize) {
+        if (self.sr - sample_rate).abs() > 0.5 {
+            self.sr = sample_rate;
+            self.dropout = license::Dropout::new(sample_rate);
+        }
+        self.license.refresh(license::now_secs());
+        self.meters.sample_rate.store((sample_rate as f32).to_bits(), Ordering::Relaxed);
+        self.meters.latency.store(latency as u32, Ordering::Relaxed);
+    }
+
+    /// Main thread (`controller`): the page's controller, with the plugin's own extension.
+    pub fn controller<E: ctl::Ext>(&self, params: &'static [apf::param::ParamDef], ext: Arc<E>, host: HostHandle) -> Arc<dyn Controller> {
+        // A licensed copy whose last online check is over 30 days old asks again, off-thread.
+        self.license.maybe_recheck(license::now_secs());
+        Arc::new(ctl::KitController::new(params, self.meters.clone(), self.license.clone(), ext, Some(host)))
+    }
+
+    /// Audio thread, before processing.
+    pub fn begin(&self, l: &[f32], r: &[f32]) {
+        self.meters.record_in(l, r);
+    }
+
+    /// Audio thread, after processing: the trial dropout (one relaxed atomic load; bypassed
+    /// audio is left alone), then the output meters.
+    pub fn end(&mut self, l: &mut [f32], r: &mut [f32], bypass: bool, playing: bool, gain_reduction: f32) {
+        self.dropout.process(l, r, self.license.demo_flag() && !bypass);
+        self.meters.record_out(l, r);
+        GainReduction::record(&self.meters.gr, gain_reduction);
+        self.meters.playing.store(playing as u8, Ordering::Relaxed);
+    }
+}
 
 use apf::param::{Curve, ParamDef, ParamKind};
 

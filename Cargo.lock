@@ -1079,6 +1079,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "nodaw-racks"
+version = "0.1.0"
+dependencies = [
+ "apf",
+ "apf-test",
+ "apf-webview",
+ "clap-sys",
+ "nodaw-dsp",
+ "nodaw-kit",
+]
+
+[[package]]
 name = "nodaw-screw"
 version = "0.2.0"
 dependencies = [
