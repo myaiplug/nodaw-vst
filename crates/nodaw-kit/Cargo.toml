@@ -1,0 +1,16 @@
+[package]
+name = "nodaw-kit"
+description = "What every NoDAW plugin shares: trial and Gumroad licensing, the web view's controller (meters, spectra, A/B, license endpoints), the parameter range table"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-NoDAW-Proprietary"
+publish = false
+
+[dependencies]
+apf = { path = "../../vendor/apf/crates/apf" }
+nodaw-dsp = { path = "../nodaw-dsp" }
+# Licensing: HMAC-SHA256 for the state file, HTTPS to Gumroad's verify API.
+# All MIT/Apache-2.0 (ureq, rustls) or Apache-2.0 AND ISC (ring); see THIRD_PARTY_LICENSES.md.
+hmac = "0.12"
+sha2 = "0.10"
+ureq = { version = "2.12", default-features = false, features = ["tls"] }

@@ -1,4 +1,8 @@
 [workspace]
 resolver = "2"
-members = ["crates/nodaw-dsp", "plugins/nodaw-screw"]
+members = [
+    "crates/nodaw-dsp",
+    "crates/nodaw-kit",
+    "plugins/nodaw-screw",
+]
 exclude = ["vendor/apf"]

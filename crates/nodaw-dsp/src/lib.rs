@@ -22,4 +22,12 @@ pub mod reverb;
 pub mod util;
 pub mod wobble;
 
+// Added for the plugin suite (Racks, Harmonic Space, Chronos, Temporal Pitch Portal).
+pub mod dynamics;
+pub mod eq;
+pub mod modfx;
+pub mod sat;
+pub mod stft;
+pub mod timewarp;
+
 pub use util::{db_to_gain, gain_to_db};
