@@ -206,6 +206,7 @@ impl Weave {
     }
 
     /// A smooth spectral envelope (forward-backward one-pole across bins).
+    #[allow(clippy::needless_range_loop)]
     fn envelope(src: &[f32], out: &mut [f32]) {
         let a = 0.82f32;
         let mut y = src[0];
@@ -230,6 +231,8 @@ impl Weave {
 }
 
 impl SpectralProcessor for Weave {
+    // the bin loops index several per-bin arrays at once
+    #[allow(clippy::needless_range_loop)]
     fn process(&mut self, c: usize, mag: &mut [f32], phase: &mut [f32]) {
         let bins = self.bins;
         let hop_s = self.hop as f32 / self.sr as f32;
@@ -267,9 +270,7 @@ impl SpectralProcessor for Weave {
             }
         }
         self.freeze_amt[c] = nfa;
-        for k in 0..bins {
-            self.prev_phase[c][k] = phase[k];
-        }
+        self.prev_phase[c][..bins].copy_from_slice(&phase[..bins]);
         if self.idle() {
             return;
         }
@@ -350,13 +351,7 @@ impl SpectralProcessor for Weave {
             for k in 0..bins {
                 let sm = &mut self.smear[c][k];
                 *sm += (mag[k] - *sm) * a;
-                let alive = if dens >= 1.0 {
-                    1.0
-                } else if (self.noise.sample() * 0.5 + 0.5) < dens {
-                    1.0
-                } else {
-                    0.0
-                };
+                let alive = if dens >= 1.0 || (self.noise.sample() * 0.5 + 0.5) < dens { 1.0 } else { 0.0 };
                 let g = &mut self.gate[c][k];
                 *g += (alive - *g) * gate_a;
                 let cloud_mag = *sm * *g * comp;
@@ -642,7 +637,7 @@ mod tests {
         let sr = 48_000.0;
         let mut e = Engine::new(sr);
         let mut x = sine(48_000, 440.0, sr, 0.5);
-        x.extend(std::iter::repeat(0.0).take(96_000));
+        x.extend(std::iter::repeat_n(0.0, 96_000));
         let (mut l, mut r) = (x.clone(), x.clone());
         let clock = Clock::default();
         for (i, (a, b)) in l.chunks_mut(512).zip(r.chunks_mut(512)).enumerate() {
