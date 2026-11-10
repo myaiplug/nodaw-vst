@@ -11,4 +11,8 @@ Built on [APF](https://github.com/mihasm/apf) (MIT), vendored in `vendor/apf` wi
 
 Install (Windows, after building or from a release): copy `NoDAW Screw.vst3` folder to `C:\Program Files\Common Files\VST3\`. Needs the WebView2 runtime.
 
+Trial: 14 days full-featured, then activation with a Gumroad license key; see `docs/LICENSING.md` (two TODO constants to fill before selling).
+
+CI: `.github/workflows/ci.yml` (Linux tests + Steinberg VST3 validator + clap-validator + state check; Windows tests, build, VST3 validator, artifact `NoDAW-Screw-windows`).
+
 Status: **unreleased, untested in any DAW, unsigned.** Licence of NoDAW's own code: *all rights reserved placeholder*; owner to decide. See NOTICE and THIRD_PARTY_LICENSES.md.

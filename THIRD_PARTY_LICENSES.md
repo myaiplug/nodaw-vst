@@ -70,3 +70,19 @@ Dev tooling only (not shipped): puppeteer-core (Apache-2.0) in `scripts/ui-mock`
 Microsoft CRT/SDK headers and libs fetched by `xwin` for cross-compiling are under Microsoft's licence terms (accepted at download); the produced binary links the static CRT (`+crt-static`).
 
 Regenerate before each release: `cargo metadata --format-version 1 --filter-platform x86_64-pc-windows-msvc` and run `cargo deny check licenses` (config in vendor/apf/deny.toml).
+
+## Added with the trial / licensing code (0.2.0)
+
+Used by `plugins/nodaw-screw/src/license.rs` (HMAC-signed state file, HTTPS to Gumroad's license verify API). All permissive; none is GPL/LGPL/AGPL or non-commercial.
+
+| Crate(s) | Licence |
+|---|---|
+| ureq 2.12, url, idna, form_urlencoded, percent-encoding, base64, log, once_cell, cc, shlex, find-msvc-tools, getrandom, cfg-if, smallvec, serde, zeroize, rustls-pki-types, cpufeatures, typenum, digest, crypto-common, block-buffer, displaydoc, stable_deref_trait, utf8_iter, utf_types, idna_adapter | MIT OR Apache-2.0 |
+| hmac 0.12, sha2 0.10 (RustCrypto) | MIT OR Apache-2.0 |
+| generic-array, synstructure | MIT |
+| rustls 0.23 | Apache-2.0 OR ISC OR MIT |
+| ring 0.17 | Apache-2.0 AND ISC (keep both notices) |
+| rustls-webpki, untrusted | ISC |
+| subtle | BSD-3-Clause |
+| webpki-roots (Mozilla's CA list) | CDLA-Permissive-2.0 |
+| icu_* , litemap, tinystr, writeable, yoke, zerofrom, zerotrie, zerovec, potential_utf | Unicode-3.0 |

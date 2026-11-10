@@ -11,6 +11,8 @@ use nodaw_dsp::chop::{self, Pattern, STEPS};
 use nodaw_dsp::fft::SpectrumAnalyzer;
 use nodaw_dsp::meter::{GainReduction, LevelMeter, ScopeRing};
 
+use crate::license::{self, Manager};
+
 /// Bands the analyser sends to the page.
 pub const BANDS: usize = 160;
 /// Floats before the spectra in a frame; see [`Controller::request`] "frame".
@@ -37,10 +39,16 @@ pub struct Shared {
     pub custom: [AtomicU8; STEPS],
     /// Bumped by every edit of the controller's state.
     pub revision: AtomicU64,
+    /// Trial / license state. The audio thread only reads its atomic `demo_flag()`.
+    pub license: Arc<Manager>,
 }
 
 impl Shared {
     pub fn new() -> Self {
+        Self::with_license(Manager::load_default())
+    }
+
+    pub fn with_license(license: Arc<Manager>) -> Self {
         let s = Self {
             in_meter: LevelMeter::default(),
             out_meter: LevelMeter::default(),
@@ -53,6 +61,7 @@ impl Shared {
             latency: AtomicU32::new(0),
             custom: std::array::from_fn(|_| AtomicU8::new(2)),
             revision: AtomicU64::new(0),
+            license,
         };
         s.set_custom(&chop::PATTERNS[DEFAULT_CUSTOM].1);
         s
@@ -238,6 +247,25 @@ impl Controller for ScrewController {
                 let ab = self.ab.lock().map(|g| g.clone()).unwrap_or_else(|_| "null".into());
                 ControllerResponse::json(ab)
             }
+            "license" => {
+                let now = license::now_secs();
+                self.shared.license.maybe_recheck(now);
+                ControllerResponse::json(self.shared.license.to_json(now))
+            }
+            "license-activate" => {
+                if !r.is_post() {
+                    return ControllerResponse::new(405, "text/plain", b"POST".to_vec());
+                }
+                let key = json::parse(r.body_text().unwrap_or("")).ok().and_then(|v| v.get("key").and_then(Value::as_str).map(str::to_string)).unwrap_or_default();
+                if let Err(e) = self.shared.license.activate(&key) {
+                    return ControllerResponse::new(400, "text/plain", e.into_bytes());
+                }
+                ControllerResponse::json(self.shared.license.to_json(license::now_secs()))
+            }
+            "license-buy" => {
+                let ok = r.is_post() && license::open_buy_page();
+                ControllerResponse::json(format!("{{\"opened\":{ok},\"url\":\"{}\"}}", license::BUY_URL))
+            }
             "ranges" => ControllerResponse::json(ranges_json()),
             "patterns" => ControllerResponse::json(patterns_json()),
             _ => ControllerResponse::not_found(),
@@ -331,7 +359,8 @@ mod tests {
     use super::*;
 
     fn controller() -> ScrewController {
-        ScrewController::new(Arc::new(Shared::new()), None)
+        let lic = Manager::load(license::Store::default(), license::now_secs(), |_| license::Verdict::Unreachable("test".into()));
+        ScrewController::new(Arc::new(Shared::with_license(lic)), None)
     }
 
     fn call(c: &ScrewController, method: &str, path: &str, body: &str) -> ControllerResponse {
@@ -364,6 +393,18 @@ mod tests {
         assert!(c.load("{\"steps\": \"no\"}").is_err());
         assert_eq!(c.save(), before);
         assert_eq!(call(&c, "GET", "nothing", "").status, 404);
+    }
+
+    #[test]
+    fn the_license_endpoints_answer_without_blocking() {
+        let c = controller();
+        let r = call(&c, "GET", "license", "");
+        assert_eq!(r.status, 200);
+        let v = json::parse(std::str::from_utf8(&r.body).unwrap()).unwrap();
+        assert_eq!(v.get("state").and_then(Value::as_str), Some("trial"));
+        assert_eq!(v.get("days_left").and_then(Value::as_f64), Some(14.0));
+        assert_eq!(call(&c, "POST", "license-activate", "{\"key\":\"x\"}").status, 400);
+        assert_eq!(call(&c, "GET", "license-activate", "").status, 405);
     }
 
     #[test]
