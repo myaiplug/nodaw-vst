@@ -7,7 +7,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="${OUT:-$ROOT/dist/linux}"; B="$ROOT/target/wrapper-linux"
 CPM="${CPM_SOURCE_CACHE:-$ROOT/target/cpm-cache}"
 cd "$ROOT"
-LIBS=$(cargo rustc --release -p nodaw-screw --no-default-features --lib --crate-type staticlib -- --print native-static-libs 2>&1 | grep -o 'native-static-libs: .*' | sed 's/native-static-libs: //' | sed 's/-l//g; s/ /;/g')
+LIBS=$(cargo rustc --release -p nodaw-screw --no-default-features --lib --crate-type staticlib -- --print native-static-libs 2>&1 | grep -o 'native-static-libs: .*' | sed 's/native-static-libs: //' | tr ' ' '\n' | sed 's/^-l//' | grep -v '^$' | grep -vx 'c' | awk '!seen[$0]++' | paste -sd';')
+# (libc is linked by the compiler driver anyway; passing it again as -lc fails on some toolchains)
 cmake -S vendor/apf/wrapper -B "$B" -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DCPM_SOURCE_CACHE="$CPM" -DFETCHCONTENT_BASE_DIR="$B/_deps" \
   -DAPF_STATICLIB="$ROOT/target/release/libnodaw_screw.a" -DAPF_NATIVE_LIBS="$LIBS" \
