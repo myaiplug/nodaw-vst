@@ -12,3 +12,9 @@ Everything else in this folder is unmodified upstream, apart from the trimmed wo
 2. `apf-test`: `Instance::latency()` / `Instance::tail()` for tests.
 3. `apf-webview`: `APF_UI_DIR` and `APF_UI_INJECT_JS` environment switches only work in debug/`devtools`
    builds (upstream docs/todo.md lists this as open). Shipped plugins do not read them.
+4. `tools/vst3-state-check`: besides loading the program at two moments, it also makes the edits
+   8 blocks later. When that changes the samples, the plug-in's sound depends on when it was
+   changed: a freeze holds the moment it was engaged, and a spectral cloud smooths over seconds.
+   Restores are then compared by spectrum (1.5 dB per octave band) and with their twins (still
+   bit-identical), not sample for sample. The values, the state bytes and the
+   `--inject-stale` negative control are checked as before. (Added with Chronos Weaver.)

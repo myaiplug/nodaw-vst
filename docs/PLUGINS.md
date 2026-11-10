@@ -9,7 +9,7 @@ Common to every plugin:
 
 - **Parameters:** every control is a host parameter (automatable, visible, unique stable IDs,
   append-only lists). The only other session state is the faceplate/colourway and the A/B
-  slots. Undo/redo (Ctrl+Z / Ctrl+Shift+Z), A/B compare and copy, factory and user presets,
+  slots (and Chronos Weaver's captured snapshot). Undo/redo (Ctrl+Z / Ctrl+Shift+Z), A/B compare and copy, factory and user presets,
   MIDI learn (right-click) and typed values (click a value) come from the kit.
 - **Trial (the same as Screw, per product):** 14 days of full use from the first launch, then
   Gumroad licence activation. After the trial an unlicensed copy keeps working but goes silent
@@ -143,7 +143,9 @@ the Chain Order parameter; 24 orders), each with its own power switch, then a ma
   spectrum on the front edge, a morph track showing the knob and the live LFO position, a
   freeze badge and meters. Colourways: nebula and ice.
 - **Not implemented / limits:**
-  - The captured snapshot is not saved with the session (capture again after reloading).
+  - The captured snapshot is saved with the session (exact `f32` magnitudes, resampled if the
+    session reopens at another sample rate). Factory presets leave it alone. A frozen spectrum is
+    not saved: a session that reopens with Freeze on freezes the first real frame it gets.
   - The marketing page's "two audio sources" would need a sidechain input, which APF does not
     have yet. Here source B is the snapshot or the past.
   - There is one morph target, not four snapshot slots, and no drawable morph envelope.

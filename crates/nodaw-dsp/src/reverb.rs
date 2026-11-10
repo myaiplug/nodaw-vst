@@ -129,6 +129,15 @@ impl Reverb {
     /// The worst-case tail for the parameter ranges (for the host's tail report), in seconds.
     pub const MAX_TAIL_SECONDS: f32 = MAX_DECAY_SECONDS + MAX_PREDELAY_SECONDS;
 
+    /// Jump the delay lengths and the pre-delay to the last [`Reverb::set`] (no glide), for a
+    /// fresh start at new settings.
+    pub fn snap(&mut self) {
+        for i in 0..N {
+            self.lines[i].len = self.target_len[i];
+        }
+        self.pre_len = self.pre_target;
+    }
+
     /// Clear all state.
     pub fn reset(&mut self) {
         for l in &mut self.lines {
@@ -146,7 +155,7 @@ impl Reverb {
     #[inline]
     pub fn tick(&mut self, in_l: f32, in_r: f32) -> (f32, f32) {
         // pre-delay with a slewed length (no clicks when it moves)
-        self.pre_len += (self.pre_target - self.pre_len) * 0.0008;
+        self.pre_len = crate::util::glide(self.pre_len, self.pre_target, 0.0008);
         self.pre[0].push(in_l);
         self.pre[1].push(in_r);
         let (pl, pr) = if self.pre_len < 1.0 {
@@ -169,7 +178,7 @@ impl Reverb {
         let mut out = [0.0f32; N];
         for i in 0..N {
             let l = &mut self.lines[i];
-            l.len += (self.target_len[i] - l.len) * 0.0004;
+            l.len = crate::util::glide(l.len, self.target_len[i], 0.0004);
             l.lfo += l.lfo_inc;
             l.lfo -= l.lfo.floor();
             let m = (2.0 * std::f32::consts::PI * l.lfo).sin() * (0.00028 * self.sr);

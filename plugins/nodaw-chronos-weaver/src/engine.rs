@@ -123,6 +123,8 @@ pub struct BlockInfo {
     pub freeze: f32,
     /// A snapshot is held.
     pub has_snapshot: bool,
+    /// A capture finished in this block (the snapshot is new: save it with the session).
+    pub captured: bool,
     /// B's spectrum in coarse log bands, dB.
     pub b_db: [f32; B_BANDS],
 }
@@ -149,6 +151,14 @@ struct Weave {
     env_b: Vec<f32>,
     freeze_amt: [f32; 2],
     noise: Noise,
+    // frames seen per channel since the engine was made (never reset: the cloud's random
+    // numbers depend on the frame, not on how long the effect has been running)
+    fcount: [u64; 2],
+    // frames since the last reset (the first ones are only partly filled), and whether the
+    // frozen spectrum holds a real frame yet (a freeze engaged in silence, or in the first
+    // frames after a reset, keeps taking frames until the signal is there)
+    warm: [usize; 2],
+    fz_live: [bool; 2],
     // settings of the current block
     s: Settings,
     morph: f32,
@@ -184,6 +194,9 @@ impl Weave {
             env_b: v(),
             freeze_amt: [0.0, 0.0],
             noise: Noise::new(0x51ce_b00c),
+            fcount: [0, 0],
+            warm: [0, 0],
+            fz_live: [false, false],
             s: Settings::default(),
             morph: 0.0,
             capturing: false,
@@ -201,6 +214,8 @@ impl Weave {
             self.gate[c].fill(1.0);
             self.freeze_amt[c] = 0.0;
             self.wpos[c] = 0;
+            self.warm[c] = 0;
+            self.fz_live[c] = false;
         }
         // the snapshot is kept: it is the user's capture
     }
@@ -237,6 +252,8 @@ impl SpectralProcessor for Weave {
         let bins = self.bins;
         let hop_s = self.hop as f32 / self.sr as f32;
         // remember the live spectrum (for Past and the snapshot)
+        let fno = self.fcount[c];
+        self.fcount[c] = fno.wrapping_add(1);
         let w = self.wpos[c];
         self.past[c][w * bins..(w + 1) * bins].copy_from_slice(mag);
         self.wpos[c] = (w + 1) % self.frames;
@@ -260,7 +277,18 @@ impl SpectralProcessor for Weave {
         } else {
             (fa - step).max(0.0)
         };
+        let warm = self.warm[c] >= 4;
+        if !warm {
+            self.warm[c] += 1;
+        }
         if fa <= 0.0 && nfa > 0.0 {
+            self.fz_live[c] = false;
+        }
+        if nfa > 0.0 && !self.fz_live[c] {
+            // a full frame with signal in it (-80 dBFS): from then on the freeze holds it
+            let full = 0.25 * (2 * (bins - 1)) as f32;
+            let peak = mag[..bins].iter().fold(0.0f32, |m, v| m.max(*v));
+            self.fz_live[c] = warm && peak > full * 1.0e-4;
             for k in 0..bins {
                 self.frozen[c][k] = mag[k];
                 self.fphase[c][k] = phase[k];
@@ -348,10 +376,17 @@ impl SpectralProcessor for Weave {
             let sc = self.s.scatter * PI;
             // density gating keeps the energy: the live bins are boosted by 1/sqrt(density)
             let comp = 1.0 / dens.sqrt();
+            // this frame's random numbers: a function of the frame and the channel alone
+            let h = (fno ^ ((c as u64) << 62)).wrapping_mul(0x9e37_79b9_7f4a_7c15);
+            self.noise = Noise::new((h >> 32) as u32 ^ h as u32);
             for k in 0..bins {
                 let sm = &mut self.smear[c][k];
                 *sm += (mag[k] - *sm) * a;
-                let alive = if dens >= 1.0 || (self.noise.sample() * 0.5 + 0.5) < dens { 1.0 } else { 0.0 };
+                let alive = if dens >= 1.0 || (self.noise.sample() * 0.5 + 0.5) < dens {
+                    1.0
+                } else {
+                    0.0
+                };
                 let g = &mut self.gate[c][k];
                 *g += (alive - *g) * gate_a;
                 let cloud_mag = *sm * *g * comp;
@@ -437,6 +472,64 @@ impl Engine {
         self.weave.has_snap
     }
 
+    /// Bins per channel of the snapshot at this engine's FFT size.
+    pub fn snapshot_bins(&self) -> usize {
+        self.weave.bins
+    }
+
+    /// The held snapshot's magnitudes (left, right), if there is one.
+    pub fn snapshot(&self) -> Option<(&[f32], &[f32])> {
+        let w = &self.weave;
+        w.has_snap.then(|| (&w.snap[0][..], &w.snap[1][..]))
+    }
+
+    /// Hold a snapshot restored with the session: `get(ch, k)` gives the magnitude of bin `k`
+    /// (0 ..= `bins - 1`) of a snapshot taken at `sample_rate` with `bins` bins per channel; it
+    /// is resampled to this engine's bins by frequency (and scaled for the FFT size) when they
+    /// differ. A capture button held on in the restored values does not capture again.
+    pub fn restore_snapshot(
+        &mut self,
+        sample_rate: f64,
+        bins: usize,
+        capture_on: bool,
+        get: impl Fn(usize, usize) -> f32,
+    ) {
+        let w = &mut self.weave;
+        let nb = w.bins;
+        let same = bins == nb && (sample_rate - w.sr).abs() < 0.5;
+        // bin spacing ratio and magnitude scale (an FFT's magnitudes grow with its size)
+        let ratio = (w.sr / ((nb - 1) * 2) as f64) / (sample_rate / ((bins - 1) * 2) as f64);
+        let scale = (nb - 1) as f32 / (bins - 1) as f32;
+        for c in 0..2 {
+            for k in 0..nb {
+                w.snap[c][k] = if same {
+                    get(c, k)
+                } else {
+                    let x = k as f64 * ratio;
+                    let i = x.floor() as usize;
+                    if i + 1 >= bins {
+                        get(c, bins - 1) * scale
+                    } else {
+                        let f = (x - i as f64) as f32;
+                        (get(c, i) + (get(c, i + 1) - get(c, i)) * f) * scale
+                    }
+                };
+            }
+            w.snap_count[c] = SNAP_FRAMES;
+        }
+        w.has_snap = true;
+        w.capturing = false;
+        self.last_capture = capture_on;
+    }
+
+    /// Forget the snapshot (a restored session without one). A capture button held on in the
+    /// restored values does not capture again.
+    pub fn forget_snapshot(&mut self, capture_on: bool) {
+        self.clear_snapshot();
+        self.weave.capturing = false;
+        self.last_capture = capture_on;
+    }
+
     /// Forget the snapshot.
     pub fn clear_snapshot(&mut self) {
         self.weave.has_snap = false;
@@ -500,9 +593,11 @@ impl Engine {
             self.weave.capturing = true;
         }
         self.last_capture = s.capture;
+        let mut captured = false;
         if self.weave.capturing && self.weave.snap_count.iter().all(|c| *c >= SNAP_FRAMES) {
             self.weave.capturing = false;
             self.weave.has_snap = true;
+            captured = true;
         }
         self.weave.s = *s;
         self.weave.morph = morph;
@@ -583,6 +678,7 @@ impl Engine {
             morph,
             freeze: 0.5 * (w.freeze_amt[0] + w.freeze_amt[1]),
             has_snapshot: w.has_snap,
+            captured,
             b_db,
         }
     }

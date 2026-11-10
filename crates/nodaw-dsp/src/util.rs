@@ -45,6 +45,19 @@ impl Noise {
     }
 }
 
+/// One step of a one-pole glide from `cur` towards `target` (`c` the step fraction). It lands on
+/// the target once the step falls below the value's resolution, rather than stalling short of
+/// it at a point that depends on where it came from.
+#[inline]
+pub fn glide(cur: f32, target: f32, c: f32) -> f32 {
+    let next = cur + (target - cur) * c;
+    if next == cur {
+        target
+    } else {
+        next
+    }
+}
+
 /// A one-pole smoother with separate attack (rising) and release (falling) times.
 #[derive(Debug, Clone)]
 pub struct Smooth {
@@ -82,15 +95,38 @@ impl Smooth {
         } else {
             self.down
         };
-        self.value += (target - self.value) * c;
-        if (target - self.value).abs() < 3.0e-5 {
-            self.value = target;
-        }
+        let next = self.value + (target - self.value) * c;
+        // Close enough, or the step fell below the value's resolution (large values, such as a
+        // gain of +30 dB or a delay in samples, stall short of the target at a point that
+        // depends on where they came from): land on the target, so a value sounds the same
+        // whatever its history (a restored session as it was saved).
+        self.value = if next == self.value || (target - next).abs() < 3.0e-5 {
+            target
+        } else {
+            next
+        };
         self.value
     }
     /// The current value.
     pub fn value(&self) -> f32 {
         self.value
+    }
+}
+
+#[cfg(test)]
+mod smooth_tests {
+    use super::Smooth;
+
+    #[test]
+    fn large_values_land_on_the_target_whatever_their_history() {
+        for (from, to) in [(1.0f32, 31.62), (0.0, 480.0), (900.0, 17.5), (2.0, 1000.0)] {
+            let mut s = Smooth::new(from, 48_000.0, 20.0, 20.0);
+            let mut n = 0;
+            while s.tick(to) != to {
+                n += 1;
+                assert!(n < 48_000, "{from} -> {to} stalls at {}", s.value());
+            }
+        }
     }
 }
 

@@ -307,7 +307,15 @@ impl Engine {
         let solo_t = if any_solo { 1.0 } else { 0.0 };
         let fb_t = s.delay_fb.clamp(0.0, 0.9);
         if self.fresh {
+            // Everything starts at this block's settings, whether they came before or after
+            // activation (a session restored before setupProcessing sounds as one restored
+            // after it): the filters, the delay time and the reverb's lengths too.
             self.fresh = false;
+            for b in self.all_filters() {
+                b.reset();
+            }
+            self.delay.reset(s.delay_s);
+            self.reverb.snap();
             self.amp.reset(amp_t);
             self.out.reset(out_t);
             self.mix.reset(s.mix);

@@ -1,10 +1,11 @@
 //! NoDAW Chronos Weaver (CLAP and VST3): spectral morphing between the live signal and a second
 //! spectrum (a captured snapshot, or the signal's own past) as a blend or a cross-synthesis, a
 //! spectral freeze, a granular cloud and a tempo-synced morph LFO. Every control is a host
-//! parameter; the faceplate and the A/B slots are the only other session state. The captured
-//! snapshot lives in memory (capture it again after reloading a session). See `docs/PLUGINS.md`.
+//! parameter; the other session state is the faceplate, the A/B slots and the captured
+//! snapshot (saved with the session, see [`snap`]). See `docs/PLUGINS.md`.
 
 pub mod engine;
+pub mod snap;
 
 use std::sync::Arc;
 
@@ -12,6 +13,7 @@ use apf::prelude::*;
 use nodaw_kit::ctl::LookExt;
 use nodaw_kit::license::Product;
 use nodaw_kit::Core;
+use snap::{SnapStore, WeaverExt};
 
 use engine::{Clock, Engine, MorphMode, Settings, Shape, Source, B_BANDS};
 
@@ -152,8 +154,10 @@ pub const VALUES: usize = 3 + B_BANDS;
 pub struct NoDawChronosWeaver {
     engine: Engine,
     core: Core,
-    ext: Arc<LookExt>,
+    ext: Arc<WeaverExt>,
     tail_s: f32,
+    // the store's restore count last taken in (None: take whatever it holds at the next block)
+    seen_restore: Option<u64>,
 }
 
 fn lfo_beats(i: usize, bar: f64) -> f64 {
@@ -234,8 +238,12 @@ impl Plugin for NoDawChronosWeaver {
         Self {
             engine: Engine::new(48_000.0),
             core: Core::new(&PRODUCT),
-            ext: Arc::new(LookExt::new(LOOKS, 0, VALUES)),
+            ext: Arc::new(WeaverExt {
+                look: LookExt::new(LOOKS, 0, VALUES),
+                snap: Arc::new(SnapStore::default()),
+            }),
             tail_s: 0.5,
+            seen_restore: None,
         }
     }
 
@@ -246,6 +254,8 @@ impl Plugin for NoDawChronosWeaver {
     fn activate(&mut self, config: &ProcessConfig, params: &Params) {
         if (self.engine.sample_rate() - config.sample_rate).abs() > 0.5 {
             self.engine = Engine::new(config.sample_rate);
+            // the new engine has no snapshot: take the one the session holds
+            self.seen_restore = None;
         }
         self.engine.reset();
         let s = settings(params, 4.0);
@@ -283,16 +293,36 @@ impl Plugin for NoDawChronosWeaver {
             playing: t.playing,
             tempo: t.tempo,
         };
+        // A restored session's snapshot (or its absence), or the held one for a new engine.
+        let store = &*self.ext.snap;
+        let restored = store.restored();
+        if self.seen_restore != Some(restored) {
+            let fresh_engine = self.seen_restore.is_none();
+            self.seen_restore = Some(restored);
+            match store.held() {
+                Some((sr, bins)) => self
+                    .engine
+                    .restore_snapshot(sr, bins, s.capture, |c, k| store.get(c, k)),
+                None if !fresh_engine => self.engine.forget_snapshot(s.capture),
+                None => {}
+            }
+        }
         self.core.begin(l, r);
         let info = self.engine.process(l, r, &s, &clock);
+        if info.captured {
+            if let Some((a, b)) = self.engine.snapshot() {
+                self.ext.snap.publish(self.engine.sample_rate(), a, b);
+            }
+        }
         self.core.end(l, r, s.bypass, t.playing, 1.0);
-        self.ext.values.set(0, info.morph);
-        self.ext.values.set(1, info.freeze);
+        self.ext.look.values.set(0, info.morph);
+        self.ext.look.values.set(1, info.freeze);
         self.ext
+            .look
             .values
             .set(2, if info.has_snapshot { 1.0 } else { 0.0 });
         for (j, v) in info.b_db.iter().enumerate() {
-            self.ext.values.set(3 + j, *v);
+            self.ext.look.values.set(3 + j, *v);
         }
         ProcessStatus::Continue
     }

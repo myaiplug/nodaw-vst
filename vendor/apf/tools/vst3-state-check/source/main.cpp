@@ -30,7 +30,8 @@
 //     the two are bit-identical.
 // What can be asked is measured first: a second instance given A's history (the same samples,
 // unless the sound has random sources: then twins compare by spectrum, 0.2 dB), and the
-// program loaded at two moments (the same samples, unless the load time matters).
+// program loaded (and the edits made) at two moments (the same samples, unless the load time
+// matters).
 // No audio device is opened; everything renders offline in this process. An effect (a main audio
 // input, and the Fx category or no event input) gets a test signal on that input: a sine in every
 // octave band, its phase set by the absolute sample position alone. Instruments get silence.
@@ -953,6 +954,24 @@ int main(int argc, char* argv[])
         Audio later = programmed(12, nullptr, nullptr);
         float dl = maxDiff(programSound, later);
         timeFree = exact && dl <= 1e-5f;
+        // The same edits made 8 blocks later: a sound that remembers when it was changed (a
+        // freeze that holds the moment it was engaged, smoothing over seconds) cannot be
+        // restored to A's samples either, only to A's sound.
+        if (timeFree && stateFile.empty())
+        {
+            auto u = make();
+            start(*u);
+            u->renderUntil(kProgramAt);
+            selectProgram(*u, cat, program);
+            u->renderUntil(kEditAt + 8);
+            for (auto& e : theEdits) u->set(e.first, e.second);
+            u->renderUntil(kNotesAt);
+            Audio edited = u->render(kNoteBlocks, kNotes);
+            u->render(kOffBlocks, kNotesOff);
+            float de = maxDiff(reference, edited);
+            std::printf("the edits made 8 blocks later: largest sample difference %.3g\n", de);
+            timeFree = de <= 1e-5f;
+        }
         if (stateFile.empty())
         {
             std::printf("the edits change the sound by %.2f dB (bands), largest sample difference %.3g\n",
