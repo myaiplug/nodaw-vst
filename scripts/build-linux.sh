@@ -10,7 +10,7 @@ cd "$ROOT"
 LIBS=$(cargo rustc --color never --release -p nodaw-screw --no-default-features --lib --crate-type staticlib -- --print native-static-libs 2>&1 | grep -o 'native-static-libs: .*' | sed 's/native-static-libs: //' | tr ' ' '\n' | sed 's/^-l//' | grep -v '^$' | awk '!seen[$0]++' | paste -sd';')
 # (--color never: in CI cargo colours the note, and the escape codes would end up in the last library name)
 echo "native libs: $LIBS"
-cmake -S vendor/apf/wrapper -B "$B" -G Ninja -DCMAKE_BUILD_TYPE=Release \
+cmake -S vendor/apf/wrapper -B "$B" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
   -DCPM_SOURCE_CACHE="$CPM" -DFETCHCONTENT_BASE_DIR="$B/_deps" \
   -DAPF_STATICLIB="$ROOT/target/release/libnodaw_screw.a" -DAPF_NATIVE_LIBS="$LIBS" \
   -DAPF_NAME="NoDAW Screw" -DAPF_TARGET=nodaw_screw -DAPF_BUNDLE_ID=com.nodaw.screw \
