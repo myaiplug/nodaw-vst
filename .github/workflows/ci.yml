@@ -32,9 +32,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: sudo apt-get update && sudo apt-get install -y ninja-build cmake g++ libx11-dev libxcb-util-dev libxcb-cursor-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig1-dev libfreetype-dev libgtkmm-3.0-dev libsqlite3-dev
       - name: Build headless CLAP + VST3
-        run: |
-          ld --verbose | grep -o 'SEARCH_DIR("[^"]*")' | head -5; ls -la /usr/lib/x86_64-linux-gnu/libc.so* || true
-          ./scripts/build-linux.sh || { CC=clang CXX=clang++ OUT=dist/linux ./scripts/build-linux.sh; }
+        run: ./scripts/build-linux.sh
       - name: Build Steinberg validator and vst3-state-check (VST3 SDK from the wrapper's cache, MIT)
         run: |
           SDK=$(dirname "$(find "$CPM_SOURCE_CACHE" -path '*/public.sdk/source/vst/hosting/module.h' | head -1)")/../../../..
@@ -72,7 +70,7 @@ jobs:
           RUSTFLAGS: -C target-feature=+crt-static
           CARGO_TARGET_DIR: target/crt-static
         run: |
-          LIBS=$(cargo rustc --release -p nodaw-screw --lib --crate-type staticlib -- --print native-static-libs 2>&1 | tr -d '\r' | grep -o 'native-static-libs: .*' | sed 's/native-static-libs: //' | tr ' ' '\n' | grep -v '^/defaultlib' | grep -v '^$' | paste -sd';')
+          LIBS=$(cargo rustc --color never --release -p nodaw-screw --lib --crate-type staticlib -- --print native-static-libs 2>&1 | tr -d '\r' | grep -o 'native-static-libs: .*' | sed 's/native-static-libs: //' | tr ' ' '\n' | grep -v '^/defaultlib' | grep -v '^$' | paste -sd';')
           echo "native libs: $LIBS"
           ROOT=$(cygpath -m "$PWD")
           cmake -S vendor/apf/wrapper -B C:/b -G "Visual Studio 17 2022" -A x64 \

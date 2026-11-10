@@ -13,7 +13,7 @@ CPM="${CPM_SOURCE_CACHE:-$ROOT/target/cpm-cache}"
 cd "$ROOT"
 # crt-static for every crate (ring's C code too), so the CRT matches the wrapper's /MT.
 export RUSTFLAGS="${RUSTFLAGS:-} -C target-feature=+crt-static"
-LIBS=$(cargo xwin rustc --release --target x86_64-pc-windows-msvc -p nodaw-screw --lib --crate-type staticlib -- --print native-static-libs 2>&1 | grep -o 'native-static-libs: .*' | sed 's/native-static-libs: //' | tr ' ' '\n' | grep -v '^/defaultlib' | grep -v '^$' | paste -sd';')
+LIBS=$(cargo xwin rustc --color never --release --target x86_64-pc-windows-msvc -p nodaw-screw --lib --crate-type staticlib -- --print native-static-libs 2>&1 | grep -o 'native-static-libs: .*' | sed 's/native-static-libs: //' | tr ' ' '\n' | grep -v '^/defaultlib' | grep -v '^$' | paste -sd';')
 echo "native libs: $LIBS"
 cmake -S vendor/apf/wrapper -B "$B" -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_TOOLCHAIN_FILE="$XC/cmake/clang-cl/x86_64-pc-windows-msvc-toolchain.cmake" \
