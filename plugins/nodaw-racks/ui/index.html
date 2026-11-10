@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NoDAW Racks</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- apf.js is served by the framework: window.apf, and it binds every data-param* element. -->
+<script src="/__apf/apf.js"></script>
+<link rel="stylesheet" href="kit.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app" class="app skin-cobalt">
+  <main class="main">
+    <section class="display" id="display">
+      <canvas id="spec" aria-label="Spectrum analyzer with the EQ curve: drag a band's node to move it, scroll for Q"></canvas>
+      <div class="legend">
+        <span class="lg lg-in"><i></i>Input</span>
+        <span class="lg lg-out"><i></i>Output</span>
+        <span class="lg lg-eq"><i></i>EQ</span>
+        <button type="button" id="tilt" class="lg-btn" title="Spectrum slope (compensates the natural roll-off)">3 dB/oct</button>
+      </div>
+      <div class="chain" id="chain" title="Signal flow. Drag the module headers below to reorder.">
+        <select data-param="order" aria-label="Chain order" id="order-sel"></select>
+      </div>
+      <div class="skins" id="skins" role="group" aria-label="Hardware skin">
+        <button type="button" data-skin="cobalt" title="Cobalt powder coat"></button>
+        <button type="button" data-skin="obsidian" title="Obsidian leather"></button>
+        <button type="button" data-skin="silver" title="Brushed silver"></button>
+        <button type="button" data-skin="plastic" title="Matte black plastic"></button>
+      </div>
+    </section>
+    <aside class="meters" aria-label="Level meters"><canvas id="meters"></canvas></aside>
+  </main>
+
+  <section class="rack" id="rack">
+    <div class="mod" data-mod="0" style="--mc: 37, 99, 235">
+      <header class="mod-head"><span class="grip" title="Drag to reorder">⋮⋮</span><span class="mod-pwr" data-pill="sat_on"></span><h3>Saturator</h3><i class="vu"><b></b></i></header>
+      <div class="mod-body">
+        <div class="row" id="sat-curve"></div>
+        <div class="grid g3" id="g-sat"></div>
+        <div class="row end" id="sat-auto"></div>
+      </div>
+    </div>
+    <div class="mod" data-mod="1" style="--mc: 6, 182, 212">
+      <header class="mod-head"><span class="grip" title="Drag to reorder">⋮⋮</span><span class="mod-pwr" data-pill="eq_on"></span><h3>7-Band EQ</h3><i class="vu"><b></b></i></header>
+      <div class="mod-body">
+        <div class="tabs" id="eq-tabs" role="tablist" aria-label="EQ band"></div>
+        <div id="eq-bands"></div>
+      </div>
+    </div>
+    <div class="mod" data-mod="2" style="--mc: 168, 85, 247">
+      <header class="mod-head"><span class="grip" title="Drag to reorder">⋮⋮</span><span class="mod-pwr" data-pill="sp_on"></span><h3>Spatial</h3><i class="vu"><b></b></i></header>
+      <div class="mod-body">
+        <div class="grid g3 tight" id="g-sp"></div>
+        <div class="corr" title="Stereo correlation: +1 mono, 0 wide, -1 out of phase"><span>−1</span><i id="corr"><b></b></i><span>+1</span></div>
+      </div>
+    </div>
+    <div class="mod" data-mod="3" style="--mc: 34, 197, 94">
+      <header class="mod-head"><span class="grip" title="Drag to reorder">⋮⋮</span><span class="mod-pwr" data-pill="lim_on"></span><h3>Reactor</h3><i class="vu"><b></b></i></header>
+      <div class="mod-body">
+        <div class="grid g3" id="g-lim"></div>
+        <div class="row between"><span id="lim-adapt"></span><span class="gr-read" id="gr-read">GR 0.0 dB</span></div>
+      </div>
+    </div>
+    <div class="master">
+      <h3>Master</h3>
+      <div class="grid g1" id="g-master"></div>
+    </div>
+  </section>
+</div>
+<script src="kit.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.racks",
+  "name": "Air And Weight",
+  "type": "Mix Bus",
+  "subtype": "Tone",
+  "mood": [
+    "Bright",
+    "Deep"
+  ],
+  "description": "Low shelf weight and an airy top",
+  "author": "NoDAW",
+  "params": {
+    "eq1_gain": 3,
+    "eq1_freq": 75,
+    "eq7_gain": 4,
+    "eq7_freq": 14000,
+    "eq3_gain": -1.5,
+    "eq3_freq": 450,
+    "sat_drive": 5
+  }
+}

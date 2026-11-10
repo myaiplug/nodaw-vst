@@ -1,0 +1,22 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-dynamic-eq",
+  "name": "Vocal De-Esser",
+  "type": "Vocal",
+  "subtype": "De-Ess",
+  "mood": [
+    "Smooth"
+  ],
+  "description": "A narrow 6.5 kHz band that only cuts on the S sounds",
+  "author": "NoDAW",
+  "params": {
+    "b6_freq": 6500,
+    "b6_q": 2.5,
+    "b6_mode": "Compress",
+    "b6_thresh": -30,
+    "b6_ratio": 6,
+    "b6_range": 9,
+    "b6_attack": 0.5,
+    "b6_release": 60
+  }
+}

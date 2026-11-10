@@ -1,0 +1,29 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Ping-Pong Hook",
+  "type": "Space",
+  "subtype": "Space",
+  "mood": [
+    "Wide",
+    "Wet"
+  ],
+  "description": "Long ~0.6 s echo bouncing left and right, and a big reverb for hooks.",
+  "author": "NoDAW",
+  "params": {
+    "hpf": 125.6,
+    "lpf": 19600,
+    "dly_mix": 55,
+    "dly_time": 595,
+    "rev_mix": 30.0,
+    "out_gain": -3.03,
+    "b1_gain": -0.96,
+    "b2_gain": -0.96,
+    "b3_gain": -0.48,
+    "b4_gain": 0.96,
+    "b5_gain": 1.44,
+    "b6_gain": 1.44,
+    "b7_gain": 1.44,
+    "dly_pp": true
+  }
+}

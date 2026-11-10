@@ -1,0 +1,17 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Mane Hold Time",
+  "type": "ScrewAI Flavors",
+  "subtype": "Slowed",
+  "mood": [
+    "Subtle"
+  ],
+  "description": "Subtle slow: 85 % time, -2 st",
+  "author": "NoDAW",
+  "params": {
+    "time": 85,
+    "pitch": -2.0,
+    "tone": -10
+  }
+}

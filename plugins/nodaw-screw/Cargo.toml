@@ -1,0 +1,37 @@
+[package]
+name = "nodaw-screw"
+description = "NoDAW Screw: chopped-and-screwed pitch, tape wobble, reverb, chop gate and a true-peak limiter, as a CLAP/VST3 plugin"
+version = "0.2.0"
+edition = "2021"
+license = "LicenseRef-NoDAW-Proprietary"
+publish = false
+
+[lib]
+# staticlib: linked into the VST3/CLAP/AU wrappers by CMake; rlib: for the tests.
+crate-type = ["staticlib", "rlib"]
+
+[features]
+default = ["ui"]
+# The web view (WebView2 on Windows, WKWebView on macOS). Off for the headless Linux build that
+# the validators run against: Linux has no web view in APF yet.
+ui = ["dep:apf-webview"]
+
+[dependencies]
+apf = { path = "../../vendor/apf/crates/apf" }
+apf-webview = { path = "../../vendor/apf/crates/apf-webview", optional = true }
+nodaw-dsp = { path = "../../crates/nodaw-dsp" }
+# the trial and license code shared by every NoDAW plugin
+nodaw-kit = { path = "../../crates/nodaw-kit" }
+
+[dev-dependencies]
+clap-sys = "0.5"
+apf-test = { path = "../../vendor/apf/crates/apf-test" }
+
+# Read by the build scripts: how the plugin is packaged.
+[package.metadata.apf]
+name = "NoDAW Screw"
+bundle-id = "com.nodaw.screw"
+au-type = "aufx"
+au-subtype = "NdSc"
+au-manufacturer = "NdDw"
+au-manufacturer-name = "NoDAW"

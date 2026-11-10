@@ -1,0 +1,31 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.racks",
+  "name": "Tube Vocal",
+  "type": "Vocal",
+  "subtype": "Lead",
+  "mood": [
+    "Present",
+    "Warm"
+  ],
+  "description": "Tube colour, mud cut, presence and air for a lead vocal",
+  "author": "NoDAW",
+  "params": {
+    "sat_curve": "Tube",
+    "sat_drive": 10,
+    "eq1_type": "Low Cut",
+    "eq1_freq": 90,
+    "eq1_q": 0.7,
+    "eq3_gain": -3,
+    "eq3_freq": 320,
+    "eq3_q": 1.4,
+    "eq5_gain": 2.5,
+    "eq5_freq": 3200,
+    "eq5_q": 1.1,
+    "eq7_gain": 3,
+    "eq7_freq": 12000,
+    "sp_width": 90,
+    "lim_gain": 3,
+    "lim_ceiling": -1
+  }
+}

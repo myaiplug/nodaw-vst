@@ -1,0 +1,21 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-weaver",
+  "name": "Ghost Pad",
+  "type": "Freeze",
+  "subtype": "Hold",
+  "mood": [
+    "Dark",
+    "Wide"
+  ],
+  "description": "A long freeze under the dry signal",
+  "author": "NoDAW",
+  "params": {
+    "freeze": true,
+    "sustain": 90,
+    "cloud": 55,
+    "grain": 900,
+    "scatter": 20,
+    "mix": 45
+  }
+}

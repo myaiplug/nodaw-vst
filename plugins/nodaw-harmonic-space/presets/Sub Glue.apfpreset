@@ -1,0 +1,24 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Sub Glue",
+  "type": "Low end",
+  "subtype": "Low end",
+  "mood": [
+    "Warm"
+  ],
+  "description": "Moderate sub with a touch of 60/200 Hz and a tiny short echo to glue.",
+  "author": "NoDAW",
+  "params": {
+    "hpf": 34.4,
+    "lpf": 16000,
+    "dly_mix": 4,
+    "dly_time": 136,
+    "sub": 3.5,
+    "out_gain": -1.45,
+    "b1_gain": 1.2,
+    "b2_gain": 0.96,
+    "b2_q": 0.88,
+    "b3_gain": -0.48
+  }
+}

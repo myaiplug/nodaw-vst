@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/nodaw-dsp",
+    "crates/nodaw-kit",
+    "plugins/nodaw-racks",
+    "plugins/nodaw-harmonic-space",
+    "plugins/nodaw-chronos-dynamic-eq",
+    "plugins/nodaw-temporal-pitch-portal",
+    "plugins/nodaw-chronos-weaver",
+    "plugins/nodaw-screw",
+]
+exclude = ["vendor/apf"]

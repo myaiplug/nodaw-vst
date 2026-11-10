@@ -1,0 +1,41 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-dynamic-eq",
+  "name": "Podcast Voice",
+  "type": "Voice",
+  "subtype": "Spoken",
+  "mood": [
+    "Clear",
+    "Warm"
+  ],
+  "description": "Proximity control, a presence lift that rides with the voice and a de-esser",
+  "author": "NoDAW",
+  "params": {
+    "b1_freq": 110,
+    "b1_mode": "Compress",
+    "b1_thresh": -24,
+    "b1_ratio": 3,
+    "b1_range": 6,
+    "b1_attack": 15,
+    "b1_release": 200,
+    "b3_gain": -2,
+    "b3_freq": 350,
+    "b3_q": 1.2,
+    "b5_freq": 3000,
+    "b5_q": 1,
+    "b5_mode": "Expand",
+    "b5_thresh": -34,
+    "b5_ratio": 2,
+    "b5_range": 3,
+    "b5_attack": 10,
+    "b5_release": 150,
+    "b6_freq": 7000,
+    "b6_q": 2.2,
+    "b6_mode": "Compress",
+    "b6_thresh": -30,
+    "b6_ratio": 5,
+    "b6_range": 8,
+    "b6_attack": 0.5,
+    "b6_release": 60
+  }
+}

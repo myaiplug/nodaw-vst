@@ -1,0 +1,21 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Octave Echo Down",
+  "type": "Warp Zones",
+  "subtype": "Down",
+  "mood": [
+    "Huge",
+    "Wet"
+  ],
+  "description": "An octave down with a long dark echo",
+  "author": "NoDAW",
+  "params": {
+    "pitch": -12.0,
+    "tone": -35,
+    "echo_mix": 35,
+    "echo_time": 600,
+    "echo_fb": 55,
+    "mix": 70
+  }
+}

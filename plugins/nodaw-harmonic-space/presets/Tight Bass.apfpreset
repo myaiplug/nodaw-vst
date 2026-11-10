@@ -1,0 +1,23 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Tight Bass",
+  "type": "Low end",
+  "subtype": "Low end",
+  "mood": [
+    "Tight"
+  ],
+  "description": "HPF ~68 Hz, controlled sub, mud cut at 200/800 Hz. No effects.",
+  "author": "NoDAW",
+  "params": {
+    "hpf": 68.0,
+    "lpf": 11000,
+    "sub": 2.0,
+    "b1_gain": 0.48,
+    "b2_gain": -2.4,
+    "b2_q": 1.46,
+    "b3_gain": -1.44,
+    "b3_q": 1.27,
+    "b4_gain": 0.48
+  }
+}

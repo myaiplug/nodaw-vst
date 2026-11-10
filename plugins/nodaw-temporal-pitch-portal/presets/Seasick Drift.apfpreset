@@ -1,0 +1,21 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Seasick Drift",
+  "type": "ScrewAI Flavors",
+  "subtype": "Wobble",
+  "mood": [
+    "Wobbly",
+    "Lo-Fi"
+  ],
+  "description": "Pitch stays put but wanders: 35 cents of drift at 1.3 Hz",
+  "author": "NoDAW",
+  "params": {
+    "drift": 35.0,
+    "drift_rate": 1.3,
+    "tone": -20,
+    "echo_mix": 10,
+    "echo_time": 320,
+    "echo_fb": 25
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Dark Hall",
+  "type": "Space",
+  "subtype": "Space",
+  "mood": [
+    "Dark",
+    "Huge"
+  ],
+  "description": "Big reverb wash with the top cut at ~6 kHz and less air.",
+  "author": "NoDAW",
+  "params": {
+    "hpf": 106.4,
+    "lpf": 6000,
+    "dly_mix": 10,
+    "dly_time": 190,
+    "rev_mix": 56.7,
+    "out_gain": -2.22,
+    "b1_gain": -0.48,
+    "b2_gain": -0.48,
+    "b4_gain": -0.48,
+    "b5_gain": -1.44,
+    "b6_gain": -2.88,
+    "b7_gain": -3.84
+  }
+}

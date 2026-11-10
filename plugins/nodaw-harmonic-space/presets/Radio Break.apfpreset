@@ -1,0 +1,30 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Radio Break",
+  "type": "Character",
+  "subtype": "Character",
+  "mood": [
+    "Lo-Fi",
+    "Narrow"
+  ],
+  "description": "Band-limited radio (~260 Hz-4.4 kHz), hot mids, amp pushed with output trimmed.",
+  "author": "NoDAW",
+  "params": {
+    "amp": 6.57,
+    "hpf": 260.0,
+    "lpf": 4400,
+    "rev_mix": 4.0,
+    "out_gain": -5.71,
+    "b1_gain": -3.6,
+    "b2_gain": -1.92,
+    "b2_q": 1.17,
+    "b3_gain": 3.36,
+    "b3_q": 1.27,
+    "b4_gain": 2.88,
+    "b4_q": 1.17,
+    "b5_gain": 0.48,
+    "b6_gain": -2.4,
+    "b7_gain": -2.88
+  }
+}

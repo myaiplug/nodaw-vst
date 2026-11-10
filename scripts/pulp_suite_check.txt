@@ -1,0 +1,52 @@
+# Bundled plugins: the first run finds every NoDAW plugin in dist/PULP/Plugins, loads each as an
+# effect on its own track, processes audio through them and opens and captures each window
+# (WebView2). Copied into pulp/scripts/ by CI, so the paths are relative to pulp/scripts.
+wait 500
+vstwait
+vstlist
+new demo
+vstfx 1 0 Screw
+vstfx 2 0 Racks
+vstfx 3 0 Harmonic
+vstfx 4 0 Dynamic
+vstfx 5 0 Portal
+vstfx 6 0 Weaver
+vstinfo 1 0
+vstinfo 2 0
+vstinfo 3 0
+vstinfo 4 0
+vstinfo 5 0
+vstinfo 6 0
+play
+wait 4000
+stop
+vstopen 1 0
+wait 6000
+vstwin
+vstshot ../out/bundle/screw-window.png
+vstclose
+vstopen 2 0
+wait 6000
+vstshot ../out/bundle/racks-window.png
+vstclose
+vstopen 3 0
+wait 6000
+vstshot ../out/bundle/harmonic-space-window.png
+vstclose
+vstopen 4 0
+wait 6000
+vstshot ../out/bundle/chronos-dynamic-eq-window.png
+vstclose
+vstopen 5 0
+wait 6000
+vstshot ../out/bundle/temporal-pitch-portal-window.png
+vstclose
+vstopen 6 0
+wait 6000
+vstshot ../out/bundle/chronos-weaver-window.png
+vstclose
+show mixer
+move mixer 40 60 1400 700
+wait 400
+shot main ../out/bundle/mixer-with-nodaw-plugins.png
+quit

@@ -1,0 +1,17 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Tape Half-Time",
+  "type": "Warp Zones",
+  "subtype": "Tape",
+  "mood": [
+    "Vintage"
+  ],
+  "description": "Half-time on a varispeed tape: an octave down, every bar",
+  "author": "NoDAW",
+  "params": {
+    "time": 50,
+    "warp_mode": "Tape",
+    "tone": -15
+  }
+}

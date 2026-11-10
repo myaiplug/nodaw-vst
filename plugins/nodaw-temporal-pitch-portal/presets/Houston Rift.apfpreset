@@ -1,0 +1,20 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Houston Rift",
+  "type": "ScrewAI Flavors",
+  "subtype": "Screwed",
+  "mood": [
+    "Classic"
+  ],
+  "description": "The classic screw: 75 % time, -4 st",
+  "author": "NoDAW",
+  "params": {
+    "time": 75,
+    "pitch": -4.0,
+    "tone": -30,
+    "drift": 4.0,
+    "drift_rate": 0.2,
+    "glide": 200
+  }
+}

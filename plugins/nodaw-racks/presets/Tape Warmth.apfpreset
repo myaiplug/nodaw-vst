@@ -1,0 +1,23 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.racks",
+  "name": "Tape Warmth",
+  "type": "Character",
+  "subtype": "Tape",
+  "mood": [
+    "Warm",
+    "Vintage"
+  ],
+  "description": "Pushed tape with rounded highs",
+  "author": "NoDAW",
+  "params": {
+    "sat_curve": "Tape",
+    "sat_drive": 15,
+    "sat_tone": -2.5,
+    "sat_mix": 85,
+    "eq6_gain": -1.5,
+    "eq6_freq": 6500,
+    "eq6_q": 0.7,
+    "lim_on": false
+  }
+}

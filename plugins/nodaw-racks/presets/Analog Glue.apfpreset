@@ -1,0 +1,25 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.racks",
+  "name": "Analog Glue",
+  "type": "Mix Bus",
+  "subtype": "Glue",
+  "mood": [
+    "Warm",
+    "Cohesive"
+  ],
+  "description": "Tape drive, a little low-end weight and air, limiter just kissing",
+  "author": "NoDAW",
+  "params": {
+    "sat_curve": "Tape",
+    "sat_drive": 9,
+    "sat_tone": 0.5,
+    "eq1_gain": 1.5,
+    "eq1_freq": 70,
+    "eq7_gain": 1.5,
+    "eq7_freq": 11000,
+    "lim_gain": 2,
+    "lim_ceiling": -0.8,
+    "lim_release": 180
+  }
+}

@@ -1,0 +1,146 @@
+name: ci
+on:
+  pull_request: {}
+  push:
+    branches: [main, "feat/**"]
+  workflow_dispatch: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: clippy }
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets --no-default-features -- -D warnings
+      - run: cargo test --workspace --no-default-features
+
+  linux-validators:
+    runs-on: ubuntu-24.04
+    needs: test
+    env:
+      CPM_SOURCE_CACHE: ${{ github.workspace }}/target/cpm-cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: clippy }
+      - uses: Swatinem/rust-cache@v2
+      - run: sudo apt-get update && sudo apt-get install -y ninja-build cmake g++ libx11-dev libxcb-util-dev libxcb-cursor-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig1-dev libfreetype-dev libgtkmm-3.0-dev libsqlite3-dev
+      - name: Build headless CLAP + VST3
+        run: ./scripts/build-linux.sh
+      - name: Build Steinberg validator and vst3-state-check (VST3 SDK from the wrapper's cache, MIT)
+        run: |
+          SDK=$(dirname "$(find "$CPM_SOURCE_CACHE" -path '*/public.sdk/source/vst/hosting/module.h' | head -1)")/../../../..
+          SDK=$(cd "$SDK" && pwd); echo "SDK=$SDK"
+          cmake -S "$SDK" -B target/vst3sdk -G Ninja -DCMAKE_BUILD_TYPE=Release -DSMTG_ENABLE_VST3_HOSTING_EXAMPLES=ON -DSMTG_ENABLE_VST3_PLUGIN_EXAMPLES=OFF -DSMTG_ENABLE_VSTGUI_SUPPORT=OFF
+          cmake --build target/vst3sdk --target validator
+          cmake -S vendor/apf/tools/vst3-state-check -B target/state-check -G Ninja -DCMAKE_BUILD_TYPE=Release -DVST3_SDK_ROOT="$SDK"
+          cmake --build target/state-check
+          echo "VST3_VALIDATOR=$(find target/vst3sdk -type f -name validator -perm -u+x | head -1)" >> "$GITHUB_ENV"
+          echo "STATE_CHECK=$(find target/state-check -type f -name vst3-state-check -perm -u+x | head -1)" >> "$GITHUB_ENV"
+      - name: Build clap-validator 0.4.1 (patched)
+        run: |
+          git clone --depth 1 --branch 0.4.1 https://github.com/free-audio/clap-validator target/clap-validator
+          git -C target/clap-validator apply "$PWD/vendor/apf/scripts/clap-validator-0.4.1-preset-deadlock.patch"
+          cargo build --release --manifest-path target/clap-validator/Cargo.toml
+          echo "CLAP_VALIDATOR=$PWD/target/clap-validator/target/release/clap-validator" >> "$GITHUB_ENV"
+      - name: Run every check
+        run: ./scripts/validate-linux.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: validator-results, path: docs/results/ }
+
+  windows:
+    runs-on: windows-2022
+    defaults: { run: { shell: bash } }
+    env:
+      CPM_SOURCE_CACHE: C:/cpm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace
+      - name: Build every plugin's .vst3 + .clap (static CRT, no VC++ redistributable needed)
+        run: ./scripts/build-windows-ci.sh
+      - name: Steinberg VST3 validator on every Windows binary
+        run: |
+          SDK=$(dirname "$(find /c/cpm -path '*/public.sdk/source/vst/hosting/module.h' | head -1)")/../../../..
+          SDK=$(cd "$SDK" && cygpath -m "$(pwd)"); echo "SDK=$SDK"
+          cmake -S "$SDK" -B C:/v3 -G "Visual Studio 17 2022" -A x64 -DSMTG_ENABLE_VST3_HOSTING_EXAMPLES=ON -DSMTG_ENABLE_VST3_PLUGIN_EXAMPLES=OFF -DSMTG_ENABLE_VSTGUI_SUPPORT=OFF -DSMTG_CREATE_PLUGIN_LINK=OFF
+          cmake --build C:/v3 --config Release --target validator
+          V=$(find /c/v3 -name validator.exe | head -1)
+          mkdir -p validator-windows; fail=0
+          for b in dist/windows/pkg/*.vst3; do
+            n=$(basename "$b" .vst3)
+            "$V" "$b" > "validator-windows/$n.txt" 2>&1 || true
+            if grep -qE "Result: [0-9]+ tests passed, 0 tests failed" "validator-windows/$n.txt"; then echo "$n: $(grep -E 'Result:' "validator-windows/$n.txt" | tail -1)"; else echo "$n: FAILED"; tail -40 "validator-windows/$n.txt"; fail=1; fi
+          done
+          exit $fail
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NoDAW-plugins-windows
+          path: |
+            dist/windows/pkg
+            validator-windows
+          if-no-files-found: error
+
+  # PULP (AGPL-3.0, public: github.com/myaiplug/pulp-daw-public) with every NoDAW plugin in its
+  # bundled Plugins folder. Built here, in the private repo, so the closed plugin binary never goes into the
+  # public repo: PULP's source is only checked out and built; the plugins stay separate programs
+  # that PULP loads at run time.
+  pulp-bundle:
+    runs-on: windows-2022
+    needs: windows
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: myaiplug/pulp-daw-public
+          ref: nodaw/luxury-ui
+          path: pulp
+      - name: Build PULP (app only)
+        shell: cmd
+        working-directory: pulp
+        run: call build.bat app
+      - uses: actions/download-artifact@v4
+        with: { name: NoDAW-plugins-windows, path: nodaw }
+      - name: Bundle every NoDAW plugin into dist/PULP/Plugins
+        shell: bash
+        run: |
+          mkdir -p pulp/dist/PULP/Plugins
+          find nodaw -maxdepth 5 -type d -name 'NoDAW *.vst3' -print0 | while IFS= read -r -d '' b; do cp -r "$b" pulp/dist/PULP/Plugins/; done
+          find pulp/dist/PULP/Plugins -maxdepth 4
+          grep -v '^#' scripts/plugins.txt | tr -d '\r' | cut -d'|' -f2 | while IFS= read -r n; do
+            [ -n "$n" ] || continue
+            test -f "pulp/dist/PULP/Plugins/$n.vst3/Contents/x86_64-win/$n.vst3" || { echo "missing $n"; exit 1; }
+          done
+          cp scripts/pulp_suite_check.txt pulp/scripts/nodaw_suite_check.txt
+      - name: First run finds, loads and opens every NoDAW plugin
+        shell: pwsh
+        working-directory: pulp
+        run: |
+          New-Item -ItemType Directory -Force out/bundle | Out-Null
+          $p = Start-Process -FilePath dist/PULP/PULP.exe -ArgumentList '--no-audio','--size','1600x900','--script','scripts/nodaw_suite_check.txt','--log','out/bundle/check.log','--data-dir','out/bundledata' -PassThru
+          if (-not $p.WaitForExit(600000)) { $p.Kill(); Write-Host "timed out" }
+          Get-ChildItem out/bundle
+          Get-Content out/bundle/check.log
+          $log = Get-Content out/bundle/check.log -Raw
+          $names = Get-Content ../scripts/plugins.txt | Where-Object { $_ -notmatch '^#' -and $_.Trim() } | ForEach-Object { $_.Split('|')[1] }
+          foreach ($n in $names) {
+            if ($log -notmatch [regex]::Escape("$n | NoDAW | effect")) { throw "PULP did not find $n in its Plugins folder" }
+            if ($log -notmatch [regex]::Escape("vst: $n")) { throw "PULP did not load $n" }
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: pulp-bundle-check, path: pulp/out/bundle }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PULP-with-NoDAW-plugins-windows
+          path: pulp/dist/PULP
+          if-no-files-found: error

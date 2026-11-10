@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" class="look-nebula">
+<head>
+<meta charset="utf-8">
+<title>NoDAW Chronos Weaver</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- apf.js is served by the framework: window.apf, and it binds every data-param* element. -->
+<script src="/__apf/apf.js"></script>
+<link rel="stylesheet" href="kit.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app" class="app">
+  <nav class="strip" aria-label="Presets by family">
+    <span class="st-title">Weaves</span>
+    <div class="st-fams" id="st-fams" role="tablist"></div>
+    <div class="st-list" id="st-list"></div>
+    <div class="looks" id="looks" role="group" aria-label="Colourway">
+      <button type="button" data-look="nebula" title="Nebula"><i></i></button>
+      <button type="button" data-look="ice" title="Ice"><i></i></button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <section class="stage">
+      <canvas id="w3d" aria-label="3D spectrum: frequency across, time into the screen, level up. Drag to orbit, double-click to reset the view"></canvas>
+      <div class="legend">
+        <span class="lg lg-out"><i></i>Output</span>
+        <span class="lg lg-b"><i></i>Source B</span>
+        <span class="b-state" id="b-state">B · past 500 ms</span>
+      </div>
+      <div class="frz" id="frz" hidden>❄ FROZEN</div>
+      <div class="mtrack" aria-label="Morph position">
+        <span class="mt-a">A</span>
+        <div class="mt-bar"><i class="mt-fill" id="mt-fill"></i><b class="mt-live" id="mt-live"></b></div>
+        <span class="mt-b">B</span>
+        <span class="mt-v" id="mt-v">0%</span>
+      </div>
+    </section>
+    <aside class="panel side"><canvas id="meters"></canvas></aside>
+  </main>
+
+  <section class="ctrl">
+    <div class="panel cc morph-c"><h3>Morph</h3>
+      <div class="m-body"><div id="g-morph"></div>
+        <div class="m-opts"><span class="o-l">Mode</span><div id="c-mode"></div><span class="o-l">Source B</span><div id="c-src"></div><div class="cap" id="cap"></div></div>
+      </div>
+    </div>
+    <div class="panel cc"><h3>Freeze</h3><div class="f-body"><div id="frz-btn"></div><div id="g-freeze"></div></div></div>
+    <div class="panel cc"><h3>Cloud</h3><div class="grid g4" id="g-cloud"></div></div>
+    <div class="panel cc"><h3>LFO</h3><div class="l-body"><div id="g-lfo"></div><div class="l-opts"><div id="c-sync"></div><div id="c-shape"></div></div></div></div>
+    <div class="panel cc"><h3>Master</h3><div class="grid g2" id="g-master"></div></div>
+  </section>
+</div>
+<script src="kit.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
