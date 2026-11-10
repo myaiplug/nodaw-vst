@@ -59,6 +59,16 @@ const hooks = {
     await p.click('#looks [data-look="light"]'); await sleep(500); await shot(p, "05-light-faceplate");
     await p.click('#looks [data-look="dark"]'); await sleep(300);
   },
+  "chronos-weaver": async (p) => {
+    const box = await (await p.$("#w3d")).boundingBox();
+    await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await p.mouse.down();
+    await p.mouse.move(box.x + box.width / 2 + 120, box.y + box.height / 2 - 40, { steps: 8 }); await p.mouse.up(); await sleep(600);
+    await shot(p, "04-orbit-3d");
+    await p.click('.pill[data-key="freeze"]'); await sleep(700); await shot(p, "05-frozen");
+    await p.click('.pill[data-key="freeze"]'); await sleep(200);
+    await p.click('#looks [data-look="ice"]'); await sleep(600); await shot(p, "06-ice");
+    await p.click('#looks [data-look="nebula"]'); await sleep(300);
+  },
   "temporal-pitch-portal": async (p) => {
     await p.click('.z-fams button:nth-child(2)'); await sleep(500); await shot(p, "04-screwai-flavors");
     await p.click('#looks [data-look="light"]'); await sleep(600); await shot(p, "05-light");

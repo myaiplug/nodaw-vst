@@ -4,3 +4,4 @@ nodaw-racks|NoDAW Racks|nodaw_racks|com.nodaw.racks|0.1.0|NdRk|Diode Crunch Drum
 nodaw-harmonic-space|NoDAW Harmonic Space|nodaw_harmonic_space|com.nodaw.harmonic-space|0.1.0|NdHs|Dark Hall|Harmonic
 nodaw-chronos-dynamic-eq|NoDAW Chronos Dynamic EQ|nodaw_chronos_dynamic_eq|com.nodaw.chronos-dynamic-eq|0.1.0|NdDq|Vocal De-Esser|Dynamic
 nodaw-temporal-pitch-portal|NoDAW Temporal Pitch Portal|nodaw_temporal_pitch_portal|com.nodaw.temporal-pitch-portal|0.1.0|NdTp|Houston Rift|Portal
+nodaw-chronos-weaver|NoDAW Chronos Weaver|nodaw_chronos_weaver|com.nodaw.chronos-weaver|0.1.0|NdCw|Granular Haze|Weaver

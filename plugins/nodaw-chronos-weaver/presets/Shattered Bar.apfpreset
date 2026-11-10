@@ -1,0 +1,23 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-weaver",
+  "name": "Shattered Bar",
+  "type": "Cloud",
+  "subtype": "Rhythmic",
+  "mood": [
+    "Glitchy"
+  ],
+  "description": "Ramp LFO on a morph to the past with sparse grains",
+  "author": "NoDAW",
+  "params": {
+    "morph": 40,
+    "weave": 500,
+    "cloud": 60,
+    "grain": 60,
+    "density": 35,
+    "scatter": 60,
+    "lfo_depth": 80,
+    "lfo_sync": "1/2",
+    "lfo_shape": "Ramp"
+  }
+}

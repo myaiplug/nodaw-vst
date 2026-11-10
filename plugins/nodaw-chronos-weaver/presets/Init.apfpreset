@@ -1,0 +1,13 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-weaver",
+  "name": "Init",
+  "type": "Utility",
+  "subtype": "Default",
+  "mood": [
+    "Clean"
+  ],
+  "description": "Straight through: no morph, no freeze, no cloud",
+  "author": "NoDAW",
+  "params": {}
+}

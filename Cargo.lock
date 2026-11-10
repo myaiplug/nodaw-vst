@@ -1076,6 +1076,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "nodaw-chronos-weaver"
+version = "0.1.0"
+dependencies = [
+ "apf",
+ "apf-test",
+ "apf-webview",
+ "clap-sys",
+ "nodaw-dsp",
+ "nodaw-kit",
+]
+
+[[package]]
 name = "nodaw-dsp"
 version = "0.1.0"
 

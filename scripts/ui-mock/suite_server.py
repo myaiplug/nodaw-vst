@@ -305,7 +305,33 @@ class TemporalPitchPortal(Model):
         return [echo, self.plain("pitch", 0.0) + self.drift(t) * 0.01, self.drift(t), (beat / per) % 1.0, self.pitch_ratio()]
 
 
-PLUGINS = {"racks": Racks, "harmonic-space": HarmonicSpace, "chronos-dynamic-eq": ChronosDynamicEq, "temporal-pitch-portal": TemporalPitchPortal}
+class ChronosWeaver(Model):
+    def morph_now(self, t):
+        m = self.plain("morph", 0.0) / 100
+        d = self.plain("lfo_depth", 0.0) / 100
+        if d > 0 and int(self.plain("lfo_sync", 3)) > 0: m += 0.5 * d * math.sin(t * 2.2)
+        return min(1.0, max(0.0, m))
+
+    def resp_chronos_weaver(self, f):
+        t = time.time() - self.t0
+        r = self.plain("out_gain", 0.0)
+        m = self.morph_now(t)
+        r += m * 6 * math.sin(math.log2(f / 30) * 1.7 + t * 0.6)
+        if self.plain("freeze", False): r += 3 * math.sin(math.log2(f) * 5)
+        return r
+
+    def extras(self, t, beat, kick):
+        snap = self.plain("source", 0) == 1 and getattr(self, "snapped", False)
+        if self.plain("capture", False): self.snapped = True
+        b = []
+        for j in range(32):
+            f = 20 * 1000 ** ((j + 0.5) / 32)
+            b.append(self.music(f, j * 5, t - 0.5, (t - 0.5) * 2, kick) + 6 + 4 * math.sin(j * 0.7))
+        fr = 1.0 if self.plain("freeze", False) else 0.0
+        return [self.morph_now(t), fr, 1.0 if snap else 0.0] + b
+
+
+PLUGINS = {"racks": Racks, "harmonic-space": HarmonicSpace, "chronos-dynamic-eq": ChronosDynamicEq, "temporal-pitch-portal": TemporalPitchPortal, "chronos-weaver": ChronosWeaver}
 
 
 def load_plugin_model(name, fixture):

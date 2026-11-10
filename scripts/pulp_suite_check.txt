@@ -10,11 +10,13 @@ vstfx 2 0 Racks
 vstfx 3 0 Harmonic
 vstfx 4 0 Dynamic
 vstfx 5 0 Portal
+vstfx 6 0 Weaver
 vstinfo 1 0
 vstinfo 2 0
 vstinfo 3 0
 vstinfo 4 0
 vstinfo 5 0
+vstinfo 6 0
 play
 wait 4000
 stop
@@ -38,6 +40,10 @@ vstclose
 vstopen 5 0
 wait 6000
 vstshot ../out/bundle/temporal-pitch-portal-window.png
+vstclose
+vstopen 6 0
+wait 6000
+vstshot ../out/bundle/chronos-weaver-window.png
 vstclose
 show mixer
 move mixer 40 60 1400 700

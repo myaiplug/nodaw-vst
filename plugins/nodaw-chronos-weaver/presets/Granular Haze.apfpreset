@@ -1,0 +1,19 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-weaver",
+  "name": "Granular Haze",
+  "type": "Cloud",
+  "subtype": "Grains",
+  "mood": [
+    "Hazy",
+    "Soft"
+  ],
+  "description": "Medium grains at 60 % density",
+  "author": "NoDAW",
+  "params": {
+    "cloud": 80,
+    "grain": 180,
+    "density": 60,
+    "scatter": 30
+  }
+}

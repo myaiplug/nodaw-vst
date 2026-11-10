@@ -1,0 +1,20 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-weaver",
+  "name": "Infinite Drone",
+  "type": "Freeze",
+  "subtype": "Hold",
+  "mood": [
+    "Huge",
+    "Static"
+  ],
+  "description": "Freeze held forever with a slow cloud: press Freeze on a chord",
+  "author": "NoDAW",
+  "params": {
+    "freeze": true,
+    "sustain": 100,
+    "cloud": 30,
+    "grain": 600,
+    "mix": 85
+  }
+}

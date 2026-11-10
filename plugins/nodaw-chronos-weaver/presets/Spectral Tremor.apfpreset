@@ -1,0 +1,18 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-weaver",
+  "name": "Spectral Tremor",
+  "type": "Morph",
+  "subtype": "Past",
+  "mood": [
+    "Rhythmic"
+  ],
+  "description": "Fast synced morph against 20 ms ago: a spectral tremolo",
+  "author": "NoDAW",
+  "params": {
+    "morph": 50,
+    "weave": 20,
+    "lfo_depth": 100,
+    "lfo_sync": "1/4"
+  }
+}
