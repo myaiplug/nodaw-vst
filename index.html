@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoDAW Screw · NoDAW plugin line (preview)</title>
+<meta name="description" content="NoDAW Screw: a real-time chopped and screwed effect, VST3 + CLAP for Windows x64. Unreleased preview from NoDAW Labs.">
+<meta property="og:title" content="NoDAW Screw · NoDAW plugin line (preview)">
+<meta property="og:description" content="Real-time chopped and screwed: pitch, wow, chop gate, reverb, width and a true-peak limiter. VST3 + CLAP, Windows x64. In development.">
+<meta property="og:image" content="https://myaiplug.github.io/nodaw-vst/assets/screw-12-1440x900.webp">
+<meta name="theme-color" content="#0b0912">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0912;--panel:#14111d;--line:#2a2338;--ink:#ece8f6;--mute:#9a91b0;--violet:#a78bfa;--violet2:#7c3aed;--pink:#e879f9;--green:#4ade80;--amber:#fbbf24}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{font-family:"Space Grotesk",system-ui,sans-serif;color:var(--ink);background:
+ radial-gradient(1200px 600px at 80% -10%,rgba(124,58,237,.28),transparent 60%),
+ radial-gradient(900px 500px at -10% 30%,rgba(232,121,249,.12),transparent 60%),var(--bg);line-height:1.5;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.07;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:40px 40px;mask-image:linear-gradient(#000,transparent 80%)}
+.mono{font-family:"JetBrains Mono",monospace}
+.wrap{max-width:1240px;margin:0 auto;padding:0 28px}
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--line)}
+.brand{font-family:"Bebas Neue";font-size:30px;letter-spacing:2px}
+.brand span{font-family:"JetBrains Mono";font-size:11px;letter-spacing:4px;color:var(--violet);margin-left:10px}
+.pill{font-family:"JetBrains Mono";font-size:11px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--line);border-radius:99px;padding:7px 14px;color:var(--mute);display:inline-flex;gap:8px;align-items:center}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.hero{display:grid;grid-template-columns:1fr 1.25fr;gap:44px;align-items:center;padding:56px 0 40px}
+h1{font-family:"Bebas Neue";font-size:clamp(64px,9vw,128px);line-height:.88;letter-spacing:1px}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{font-size:19px;color:#cfc8e2;margin:20px 0 26px;max-width:520px}
+.specs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;max-width:520px}
+.specs div{background:var(--panel);padding:14px 16px}
+.specs b{display:block;font-family:"JetBrains Mono";font-size:20px;color:var(--ink)}
+.specs small{font-family:"JetBrains Mono";font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mute)}
+.cta{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+.btn{font-family:"JetBrains Mono";font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:13px 20px;border-radius:10px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--panel)}
+.btn.primary{background:linear-gradient(135deg,var(--violet2),#a21caf);border-color:transparent;box-shadow:0 10px 40px -10px rgba(167,139,250,.7)}
+.shot{position:relative;border-radius:16px;padding:1px;background:linear-gradient(140deg,rgba(167,139,250,.7),rgba(42,35,56,.6) 40%,rgba(232,121,249,.5))}
+.shot img{display:block;width:100%;border-radius:15px}
+.shot:after{content:"";position:absolute;inset:-30px;z-index:-1;background:radial-gradient(closest-side,rgba(124,58,237,.35),transparent);filter:blur(20px)}
+.tag{position:absolute;left:14px;bottom:-14px;background:#0f0c17;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-family:"JetBrains Mono";font-size:11px;color:var(--mute)}
+section{padding:46px 0;border-top:1px solid var(--line)}
+.kicker{font-family:"JetBrains Mono";font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--violet);margin-bottom:10px}
+h2{font-family:"Bebas Neue";font-size:clamp(40px,5vw,62px);line-height:.95;letter-spacing:1px;margin-bottom:22px}
+.chain{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:28px}
+.chain span{font-family:"JetBrains Mono";font-size:12.5px;padding:9px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--line)}
+.chain s{text-decoration:none;color:var(--violet)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:linear-gradient(180deg,#17131f,#110e18);border:1px solid var(--line);border-radius:14px;padding:18px;overflow:hidden}
+.card img{width:100%;border-radius:9px;border:1px solid var(--line);display:block;margin-bottom:14px}
+.card h3{font-size:17px;margin-bottom:6px}
+.card p{color:var(--mute);font-size:14.5px}
+.feat{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.feat .card h3{font-family:"JetBrains Mono";font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--violet)}
+.suite{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.suite .card{padding:12px}
+.suite .card img{margin-bottom:10px}
+.suite h3{font-size:15px}
+.suite p{font-size:13px}
+.status{display:grid;grid-template-columns:1.1fr 1fr;gap:20px}
+.list{list-style:none;display:grid;gap:10px}
+.list li{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;gap:12px;font-size:15px}
+.list li b{font-family:"JetBrains Mono";font-size:11px;letter-spacing:1px;text-transform:uppercase;min-width:84px;padding-top:2px}
+.ok b{color:var(--green)} .no b{color:var(--amber)}
+footer{border-top:1px solid var(--line);padding:26px 0 40px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:var(--mute);font-size:13px}
+footer a{color:var(--ink)}
+@media (max-width:980px){.hero,.status{grid-template-columns:1fr}.grid3,.feat{grid-template-columns:1fr 1fr}.suite{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.grid3,.feat,.suite{grid-template-columns:1fr}.specs{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav><div class="brand">NODAW<span>PLUGIN LINE</span></div><div class="pill"><i></i>In development · not for sale yet</div></nav>
+
+<header class="hero">
+ <div>
+  <div class="kicker">NoDAW Screw · VST3 + CLAP · Windows x64</div>
+  <h1>Slow it.<br><em>Screw it.</em><br>Live.</h1>
+  <p class="lede">A real-time chopped &amp; screwed effect for your DAW: pitch down, tape wobble, a chop gate you draw, lush reverb and stereo width, held under a true-peak limiter. Built by NoDAW Labs, the team behind HalfScrew.</p>
+  <div class="specs">
+   <div><b>21</b><small>Automatable params</small></div>
+   <div><b>12</b><small>Factory presets</small></div>
+   <div><b>±12 st</b><small>Pitch range</small></div>
+   <div><b>32 ms</b><small>Latency @ 48 kHz</small></div>
+   <div><b>160</b><small>Spectrum bands</small></div>
+   <div><b>4K</b><small>Resizable UI</small></div>
+  </div>
+  <div class="cta">
+   <a class="btn primary" href="https://myaiplug.github.io/halfscrew/">Try HalfScrew in your browser</a>
+   <a class="btn" href="https://github.com/myaiplug/nodaw-vst">GitHub</a>
+  </div>
+ </div>
+ <div class="shot"><img src="assets/screw-12-1440x900.webp" alt="NoDAW Screw plugin UI with spectrum, chop steps, Screw, Tone and Space, and Output sections" width="1440" height="900"><div class="tag">UI preview · mock host, synthetic spectrum</div></div>
+</header>
+
+<section>
+ <div class="kicker">Signal flow</div>
+ <h2>One chain. Every move a host parameter.</h2>
+ <div class="chain">
+  <span>Input</span><s>→</s><span>Pitch (SOLA varispeed)</span><s>→</s><span>Wow &amp; flutter</span><s>→</s><span>Lowpass</span><s>→</s><span>Warmth 150 Hz shelf</span><s>→</s><span>Chop gate</span><s>→</s><span>Reverb (parallel)</span><s>→</s><span>M/S width</span><s>→</s><span>Mix vs delay-matched dry</span><s>→</s><span>True-peak limiter</span>
+ </div>
+ <div class="grid3">
+  <div class="card"><img src="assets/screw-04-chop-pattern.webp" alt="Chop pattern steps" loading="lazy"><h3>Draw the chop</h3><p>Click and drag the step gate, pick a rate, set the depth. Your custom pattern saves with the session.</p></div>
+  <div class="card"><img src="assets/screw-08-analyzer-cursor-readout.webp" alt="Spectrum analyzer with cursor readout" loading="lazy"><h3>See what you hear</h3><p>160-band input/output spectrum at 60 fps with peak hold and a cursor frequency/dB readout, plus in/out and limiter meters.</p></div>
+  <div class="card"><img src="assets/screw-03-preset-browser.webp" alt="Preset browser" loading="lazy"><h3>Presets, A/B, undo</h3><p>12 factory presets, save your own, A/B compare, undo/redo, and right-click MIDI learn on any knob.</p></div>
+ </div>
+</section>
+
+<section>
+ <div class="kicker">Built for sessions</div>
+ <h2>Engineered, not just styled.</h2>
+ <div class="feat">
+  <div class="card"><h3>Latency reported</h3><p>Pitch, wobble and limiter latency is reported to the host, and the dry path is delay-matched so Mix at 0% stays phase-aligned.</p></div>
+  <div class="card"><h3>Real-time safe</h3><p>No allocation or locks in the audio callback. Buffers are sized up front; denormals are guarded.</p></div>
+  <div class="card"><h3>Sessions restore</h3><p>Smoothers snap on load, so a saved session opens at exactly the sound you left.</p></div>
+  <div class="card"><h3>Validated</h3><p>On the Linux headless build: Steinberg VST3 validator 47/47 passed; clap-validator 36 passed, 0 failed, 8 skipped.</p></div>
+ </div>
+</section>
+
+<section>
+ <div class="kicker">The wider line · also in development</div>
+ <h2>Five more on the same stack.</h2>
+ <div class="suite">
+  <div class="card"><img src="assets/racks.webp" alt="NoDAW Racks" loading="lazy"><h3>Racks</h3><p>Modular channel rack: four modules in a reorderable chain, then a master section.</p></div>
+  <div class="card"><img src="assets/harmonic-space.webp" alt="NoDAW Harmonic Space" loading="lazy"><h3>Harmonic Space</h3><p>Amp, 7-band EQ, sub shelf, filters and three parallel returns.</p></div>
+  <div class="card"><img src="assets/chronos-dynamic-eq.webp" alt="NoDAW Chronos Dynamic EQ" loading="lazy"><h3>Chronos Dynamic EQ</h3><p>Seven bands, each with its own dynamics mode.</p></div>
+  <div class="card"><img src="assets/temporal-pitch-portal.webp" alt="NoDAW Temporal Pitch Portal" loading="lazy"><h3>Temporal Pitch Portal</h3><p>Tempo-synced time warp with independent pitch shift.</p></div>
+  <div class="card"><img src="assets/chronos-weaver.webp" alt="NoDAW Chronos Weaver" loading="lazy"><h3>Chronos Weaver</h3><p>Spectral morph, freeze and cloud with a 3D spectrum view.</p></div>
+ </div>
+</section>
+
+<section>
+ <div class="kicker">Straight talk</div>
+ <h2>Where it stands today.</h2>
+ <div class="status">
+  <ul class="list">
+   <li class="ok"><b>Built</b>VST3 + CLAP for Windows x64, with a Linux headless build for CI tests and validators.</li>
+   <li class="ok"><b>Planned</b>14-day full-featured trial, then activation with a license key.</li>
+   <li class="no"><b>Not yet</b>Unreleased and not for sale. No price has been set.</li>
+   <li class="no"><b>Not yet</b>Not tested in a real DAW or on a Windows run. Installers are unsigned.</li>
+   <li class="no"><b>Heads up</b>Screenshots come from the plugin UI in a mock host with synthetic spectrum data.</li>
+  </ul>
+  <div class="shot"><img src="assets/screw-01-default-960x600.webp" alt="NoDAW Screw default view" loading="lazy" width="960" height="600"></div>
+ </div>
+</section>
+
+<footer><div>© NoDAW Labs · <a href="https://nodaw-labs-hub.vercel.app/">NoDAW Labs hub</a> · <a href="https://myaiplug.github.io/halfscrew/">HalfScrew</a></div><div class="mono">nodaw-vst · preview page</div></footer>
+</div>
+</body>
+</html>
