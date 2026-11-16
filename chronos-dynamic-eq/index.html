@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" style="--acc:#fbbf24;--acc2:#f472b6">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoDAW Chronos Dynamic EQ · browser demo (preview, unreleased)</title>
+<meta name="description" content="Try NoDAW Chronos Dynamic EQ in your browser: the plugin's DSP engine ported to Web Audio, with all 89 parameters and 12 factory presets. Unreleased preview from NoDAW Labs, not for sale.">
+<meta property="og:title" content="NoDAW Chronos Dynamic EQ · browser demo (preview)">
+<meta property="og:description" content="Seven bands in series. Each is a Bell, Low Shelf or High Shelf with its own dynamics: static, compress when the band goes over the threshold, or expand to lift it.">
+<meta property="og:image" content="https://myaiplug.github.io/nodaw-vst/assets/chronos-dynamic-eq-hero.webp">
+<meta name="theme-color" content="#0b0912">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/demo.css">
+</head>
+<body>
+<div class="wrap">
+<nav><a class="brand" href="../">NODAW<span>CHRONOS DYNAMIC EQ</span></a><div class="navr"><a class="back" href="../">← All six plugins</a><div class="pill"><i></i>Preview · unreleased · not for sale</div></div></nav>
+
+<header class="hero">
+ <div>
+  <div class="kicker">NoDAW Chronos Dynamic EQ · seven dynamic bands</div>
+  <h1>EQ that moves<br><em>only when it should.</em></h1>
+  <p class="lede">Seven bands in series. Each is a Bell, Low Shelf or High Shelf with its own dynamics: static, compress when the band goes over the threshold, or expand to lift it.</p>
+  <div class="specs"><div><b>89</b><small>Automatable params</small></div><div><b>12</b><small>Factory presets</small></div><div><b>0 ms</b><small>Latency</small></div><div><b>7</b><small>Bands</small></div><div><b>±24 dB</b><small>Gain range</small></div><div><b>0.1–18</b><small>Q range</small></div></div>
+  <div class="cta"><a class="btn primary" href="#try">▶ Try the browser demo</a><a class="btn" href="#inside">What’s ported</a></div>
+ </div>
+ <div class="shot"><img src="../assets/chronos-dynamic-eq-hero.webp" alt="NoDAW Chronos Dynamic EQ plugin UI" width="1440" height="900"><div class="tag">Plugin UI preview · mock host</div></div>
+</header>
+
+<section id="try">
+ <div class="honest"><b>Browser demo</b><span>The plugin’s DSP engine, ported line by line from its Rust source to a Web Audio AudioWorklet. It really processes the audio you hear. It is not bit-identical to the plugin, and the plugin adds its own UI, analyser and DAW integration.</span></div>
+ <div class="console" id="demo" data-plugin="chronos-dynamic-eq" data-proc="nodaw-chronos-dynamic-eq" data-preset="Kick Punch">
+  <div class="in">
+   <div class="top">
+    <div class="screen">
+     <canvas id="spec" aria-label="Spectrum: input and output"></canvas>
+     <div class="legend"><span><i style="background:rgba(220,214,236,.6)"></i>Input</span><span><i style="background:var(--acc)"></i>Output</span></div>
+     <div class="readout"></div>
+     <canvas class="wave" aria-label="Waveform: click to jump"></canvas>
+     <div class="steps" aria-label="Chop steps"></div>
+    </div>
+    <div class="side">
+     <div class="box transport"><button class="btn play" type="button">▶ Play</button>
+      <div class="ab" style="grid-column:1/-1"><button class="a sel" type="button">A · Effect</button><button class="b" type="button">B · Bypass</button></div></div>
+     <div class="box"><span class="lbl">Factory preset</span><select id="preset" aria-label="Factory preset"></select><div class="pdesc"></div></div>
+     <div class="box"><span class="lbl">Source</span><div class="srcrow"><div class="srcname">Loading demo loop…</div><div><span class="lbl" style="margin:0 0 4px">BPM</span><input id="bpm" type="number" min="40" max="240" step="1" value="90" aria-label="Tempo in BPM"></div></div>
+      <div class="transport" style="margin-top:8px"><button class="btn load" type="button">Load file</button><button class="btn usedemo" type="button">Demo loop</button></div>
+      <input id="file" type="file" accept="audio/*" hidden><div class="hint bpmhint" style="display:none">Set BPM to your track’s tempo for synced effects.</div></div>
+     <div class="box"><span class="lbl">Output</span><div class="meter"><span>L</span><div class="bar l"><i></i><b></b></div><span>R</span><div class="bar r"><i></i><b></b></div><div class="mval">peak — dBFS</div></div></div>
+     <button class="btn exp" type="button">⤓ Export WAV</button>
+    </div>
+   </div>
+   <div class="ctls"></div>
+   <p class="hint">Watch the DYN readout top-right: it is each band’s live dynamic gain in dB. Drop any audio file on this panel to use your own. Double-click a slider to reset it. Space plays and stops. Export renders offline with the current settings.</p>
+   <div class="err" role="alert"></div>
+  </div>
+ </div>
+</section>
+
+<section id="inside">
+ <div class="kicker">In this demo vs the plugin</div>
+ <h2>What’s <em>real</em> here.</h2>
+ <div class="split">
+  <ul class="list">
+   <li><b>Ported</b><span>The engine: all seven bands with Static, Compress and Expand modes, threshold, ratio, range, attack, release and per-band Solo, plus the global Dynamics amount and master section.</span></li>
+   <li><b>Params</b><span>All 88 parameters plus bypass, with the plugin’s own ranges, units and curves (89 host parameters in the plugin).</span></li>
+   <li><b>Presets</b><span>All 12 factory presets, by name and value, read from the plugin’s preset files.</span></li>
+   <li><b>A/B</b><span>Bypass uses the engine’s own crossfade to the latency-delayed dry signal, so the switch never clicks.</span></li>
+  </ul>
+  <ul class="list">
+   <li class="no"><b>Plugin only</b><span>The plugin’s analyser with per-band gain-reduction display (here the live band gains show as numbers top-right)</span></li><li class="no"><b>Plugin only</b><span>DAW automation, MIDI learn, undo/redo, A/B slots and user presets</span></li>
+   <li class="no"><b>Limits</b><span>There is no linear-phase mode. The bands are minimum-phase only.</span></li>
+   <li class="no"><b>Status</b><span>The Chronos Dynamic EQ plugin (VST3 + CLAP, Windows x64) is in development: unreleased, not for sale, no price yet.</span></li>
+  </ul>
+ </div>
+</section>
+
+<section>
+ <div class="kicker">Signal flow</div>
+ <h2>Chronos Dynamic EQ, <em>stage by stage.</em></h2>
+ <div class="chain"><span>Input</span><s>→</s><span>Band 1</span><s>→</s><span>Band 2</span><s>→</s><span>…</span><s>→</s><span>Band 7</span><s>→</s><span>Dynamics amount</span><s>→</s><span>Mix</span><s>→</s><span>Output</span></div>
+ <div class="grid3"><div class="card"><img src="../assets/chronos-dynamic-eq-04-band-6-dynamics.webp" alt="NoDAW Chronos Dynamic EQ: Per-band dynamics" loading="lazy" width="960" height="600"><h3>Per-band dynamics</h3><p>Threshold, Ratio, Range up to 24 dB, Attack and Release on every band, with node rings showing each band’s live gain.</p></div><div class="card"><img src="../assets/chronos-dynamic-eq-06-band-1-solo.webp" alt="NoDAW Chronos Dynamic EQ: Solo any band" loading="lazy" width="960" height="600"><h3>Solo any band</h3><p>Audition a band on its own. An idle band is bit-transparent, and gain changes are zipper-free.</p></div><div class="card"><img src="../assets/chronos-dynamic-eq-07-preset-resonance-hunter.webp" alt="NoDAW Chronos Dynamic EQ: See the move" loading="lazy" width="960" height="600"><h3>See the move</h3><p>The live curve, the dashed static curve, a threshold marker and band chips with ring meters. The GR meter shows the deepest cut.</p></div></div>
+ <div class="feat"><div class="card"><h3>Master</h3><p>Input, Output, Mix and a Dynamics amount from 0 to 200 % that scales every band’s range, capped at 24 dB.</p></div><div class="card"><h3>How a band works</h3><p>Each band is x + (G−1)·F(x), so a band that is doing nothing passes audio untouched.</p></div><div class="card"><h3>Zero latency</h3><p>The bands are minimum-phase IIR filters, so nothing is added to your session delay.</p></div></div>
+</section>
+
+<section>
+ <div class="kicker">The NoDAW plugin line · browser demos</div>
+ <h2>Try the <em>other five.</em></h2>
+ <div class="others"><a href="../screw/" style="--acc:#a78bfa"><img src="../assets/screw-01-default-960x600.webp" alt="NoDAW Screw" loading="lazy" width="960" height="600"><b>Screw</b><small>Chopped & screwed</small></a><a href="../racks/" style="--acc:#60a5fa"><img src="../assets/racks-hero.webp" alt="NoDAW Racks" loading="lazy" width="960" height="600"><b>Racks</b><small>Modular channel rack</small></a><a href="../harmonic-space/" style="--acc:#22d3ee"><img src="../assets/harmonic-space-hero.webp" alt="NoDAW Harmonic Space" loading="lazy" width="960" height="600"><b>Harmonic Space</b><small>Spectral Space Designer</small></a><a href="../temporal-pitch-portal/" style="--acc:#e879f9"><img src="../assets/temporal-pitch-portal-hero.webp" alt="NoDAW Temporal Pitch Portal" loading="lazy" width="960" height="600"><b>Temporal Pitch Portal</b><small>Tempo-synced time warp</small></a><a href="../chronos-weaver/" style="--acc:#c084fc"><img src="../assets/chronos-weaver-hero.webp" alt="NoDAW Chronos Weaver" loading="lazy" width="960" height="600"><b>Chronos Weaver</b><small>Spectral morph, freeze & cloud</small></a></div>
+</section>
+
+<footer><div>© NoDAW Labs · <a href="../">NoDAW plugin line</a> · <a href="https://nodaw-labs-hub.vercel.app/">NoDAW Labs hub</a></div><div class="mono">Demo loop synthesised in code · no samples · preview page</div></footer>
+</div>
+<script type="module" src="../shared/demo.js"></script>
+</body>
+</html>

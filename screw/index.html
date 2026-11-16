@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en" style="--acc:#a78bfa;--acc2:#e879f9">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoDAW Screw · browser demo (preview, unreleased)</title>
+<meta name="description" content="Try NoDAW Screw in your browser: the plugin's DSP engine ported to Web Audio, with all 21 parameters and 12 factory presets. Unreleased preview from NoDAW Labs, not for sale.">
+<meta property="og:title" content="NoDAW Screw · browser demo (preview)">
+<meta property="og:description" content="A real-time chopped &amp;amp; screwed effect for your DAW: pitch down, tape wobble, a chop gate you draw, lush reverb and stereo width, held under a true-peak limiter. Built by NoDAW Labs, the team behind HalfScrew.">
+<meta property="og:image" content="https://myaiplug.github.io/nodaw-vst/assets/screw-12-1440x900.webp">
+<meta name="theme-color" content="#0b0912">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/demo.css">
+</head>
+<body>
+<div class="wrap">
+<nav><a class="brand" href="../">NODAW<span>SCREW</span></a><div class="navr"><a class="back" href="../">← All six plugins</a><div class="pill"><i></i>Preview · unreleased · not for sale</div></div></nav>
+
+<header class="hero">
+ <div>
+  <div class="kicker">NoDAW Screw · VST3 + CLAP · Windows x64</div>
+  <h1>Slow it.<br><em>Screw it.</em><br>Live.</h1>
+  <p class="lede">A real-time chopped &amp; screwed effect for your DAW: pitch down, tape wobble, a chop gate you draw, lush reverb and stereo width, held under a true-peak limiter. Built by NoDAW Labs, the team behind HalfScrew.</p>
+  <div class="specs">
+   <div><b>21</b><small>Automatable params</small></div>
+   <div><b>12</b><small>Factory presets</small></div>
+   <div><b>±12 st</b><small>Pitch range</small></div>
+   <div><b>32 ms</b><small>Latency @ 48 kHz</small></div>
+   <div><b>160</b><small>Spectrum bands</small></div>
+   <div><b>4K</b><small>Resizable UI</small></div>
+  </div>
+  <div class="cta"><a class="btn primary" href="#try">▶ Try the browser demo</a><a class="btn" href="#inside">What’s ported</a></div>
+ </div>
+ <div class="shot"><img src="../assets/screw-12-1440x900.webp" alt="NoDAW Screw plugin UI" width="1440" height="900"><div class="tag">Plugin UI preview · mock host</div></div>
+</header>
+
+<section id="try">
+ <div class="honest"><b>Browser demo</b><span>The plugin’s DSP engine, ported line by line from its Rust source to a Web Audio AudioWorklet. It really processes the audio you hear. It is not bit-identical to the plugin, and the plugin adds its own UI, analyser and DAW integration.</span></div>
+ <div class="console" id="demo" data-plugin="screw" data-proc="nodaw-screw" data-preset="Classic Screw">
+  <div class="in">
+   <div class="top">
+    <div class="screen">
+     <canvas id="spec" aria-label="Spectrum: input and output"></canvas>
+     <div class="legend"><span><i style="background:rgba(220,214,236,.6)"></i>Input</span><span><i style="background:var(--acc)"></i>Output</span></div>
+     <div class="readout"></div>
+     <canvas class="wave" aria-label="Waveform: click to jump"></canvas>
+     <div class="steps" aria-label="Chop steps"></div>
+    </div>
+    <div class="side">
+     <div class="box transport"><button class="btn play" type="button">▶ Play</button>
+      <div class="ab" style="grid-column:1/-1"><button class="a sel" type="button">A · Effect</button><button class="b" type="button">B · Bypass</button></div></div>
+     <div class="box"><span class="lbl">Factory preset</span><select id="preset" aria-label="Factory preset"></select><div class="pdesc"></div></div>
+     <div class="box"><span class="lbl">Source</span><div class="srcrow"><div class="srcname">Loading demo loop…</div><div><span class="lbl" style="margin:0 0 4px">BPM</span><input id="bpm" type="number" min="40" max="240" step="1" value="90" aria-label="Tempo in BPM"></div></div>
+      <div class="transport" style="margin-top:8px"><button class="btn load" type="button">Load file</button><button class="btn usedemo" type="button">Demo loop</button></div>
+      <input id="file" type="file" accept="audio/*" hidden><div class="hint bpmhint" style="display:none">Set BPM to your track’s tempo for synced effects.</div></div>
+     <div class="box"><span class="lbl">Output</span><div class="meter"><span>L</span><div class="bar l"><i></i><b></b></div><span>R</span><div class="bar r"><i></i><b></b></div><div class="mval">peak — dBFS</div></div></div>
+     <button class="btn exp" type="button">⤓ Export WAV</button>
+    </div>
+   </div>
+   <div class="ctls"></div>
+   <p class="hint">Click the 16 steps under the waveform to draw your own chop. The gate follows the BPM field. Drop any audio file on this panel to use your own. Double-click a slider to reset it. Space plays and stops. Export renders offline with the current settings.</p>
+   <div class="err" role="alert"></div>
+  </div>
+ </div>
+</section>
+
+<section id="inside">
+ <div class="kicker">In this demo vs the plugin</div>
+ <h2>What’s <em>real</em> here.</h2>
+ <div class="split">
+  <ul class="list">
+   <li><b>Ported</b><span>The engine: pitch (SOLA varispeed), wow &amp; flutter, lowpass, warmth shelf, the 16-step chop gate (all 8 patterns plus your own drawn pattern), the FDN reverb, M/S width, the delay-matched mix and the true-peak limiter.</span></li>
+   <li><b>Params</b><span>All 20 parameters plus bypass, with the plugin’s own ranges, units and curves (21 host parameters in the plugin).</span></li>
+   <li><b>Presets</b><span>All 12 factory presets, by name and value, read from the plugin’s preset files.</span></li>
+   <li><b>A/B</b><span>Bypass uses the engine’s own crossfade to the latency-delayed dry signal, so the switch never clicks.</span></li>
+  </ul>
+  <ul class="list">
+   <li class="no"><b>Plugin only</b><span>The plugin’s own UI, 160-band analyser and in/out/limiter meters (this page draws a simpler spectrum and meter)</span></li><li class="no"><b>Plugin only</b><span>Host tempo sync for the chop gate (here it follows the BPM field)</span></li><li class="no"><b>Plugin only</b><span>DAW automation, MIDI learn, undo/redo, A/B slots and user presets</span></li>
+   
+   <li class="no"><b>Status</b><span>The Screw plugin (VST3 + CLAP, Windows x64) is in development: unreleased, not for sale, no price yet.</span></li>
+  </ul>
+ </div>
+</section>
+
+<section>
+ <div class="kicker">Signal flow</div>
+ <h2>Screw, <em>stage by stage.</em></h2>
+ <div class="chain">
+  <span>Input</span><s>→</s><span>Pitch (SOLA varispeed)</span><s>→</s><span>Wow &amp; flutter</span><s>→</s><span>Lowpass</span><s>→</s><span>Warmth 150 Hz shelf</span><s>→</s><span>Chop gate</span><s>→</s><span>Reverb (parallel)</span><s>→</s><span>M/S width</span><s>→</s><span>Mix vs delay-matched dry</span><s>→</s><span>True-peak limiter</span>
+ </div>
+ <div class="grid3">
+  <div class="card"><img src="../assets/screw-04-chop-pattern.webp" alt="Chop pattern steps" loading="lazy"><h3>Draw the chop</h3><p>Click and drag the step gate, pick a rate, set the depth. Your custom pattern saves with the session.</p></div>
+  <div class="card"><img src="../assets/screw-08-analyzer-cursor-readout.webp" alt="Spectrum analyzer with cursor readout" loading="lazy"><h3>See what you hear</h3><p>160-band input/output spectrum at 60 fps with peak hold and a cursor frequency/dB readout, plus in/out and limiter meters.</p></div>
+  <div class="card"><img src="../assets/screw-03-preset-browser.webp" alt="Preset browser" loading="lazy"><h3>Presets, A/B, undo</h3><p>12 factory presets, save your own, A/B compare, undo/redo, and right-click MIDI learn on any knob.</p></div>
+ </div>
+ <div class="feat">
+  <div class="card"><h3>Latency reported</h3><p>Pitch, wobble and limiter latency is reported to the host, and the dry path is delay-matched so Mix at 0% stays phase-aligned.</p></div>
+  <div class="card"><h3>Real-time safe</h3><p>No allocation or locks in the audio callback. Buffers are sized up front; denormals are guarded.</p></div>
+  <div class="card"><h3>Sessions restore</h3><p>Smoothers snap on load, so a saved session opens at exactly the sound you left.</p></div>
+  <div class="card"><h3>Validated</h3><p>On the Linux headless build: Steinberg VST3 validator 47/47 passed; clap-validator 36 passed, 0 failed, 8 skipped.</p></div>
+ </div>
+</section>
+
+<section>
+ <div class="kicker">The NoDAW plugin line · browser demos</div>
+ <h2>Try the <em>other five.</em></h2>
+ <div class="others"><a href="../racks/" style="--acc:#60a5fa"><img src="../assets/racks-hero.webp" alt="NoDAW Racks" loading="lazy" width="960" height="600"><b>Racks</b><small>Modular channel rack</small></a><a href="../harmonic-space/" style="--acc:#22d3ee"><img src="../assets/harmonic-space-hero.webp" alt="NoDAW Harmonic Space" loading="lazy" width="960" height="600"><b>Harmonic Space</b><small>Spectral Space Designer</small></a><a href="../chronos-dynamic-eq/" style="--acc:#fbbf24"><img src="../assets/chronos-dynamic-eq-hero.webp" alt="NoDAW Chronos Dynamic EQ" loading="lazy" width="960" height="600"><b>Chronos Dynamic EQ</b><small>Seven dynamic bands</small></a><a href="../temporal-pitch-portal/" style="--acc:#e879f9"><img src="../assets/temporal-pitch-portal-hero.webp" alt="NoDAW Temporal Pitch Portal" loading="lazy" width="960" height="600"><b>Temporal Pitch Portal</b><small>Tempo-synced time warp</small></a><a href="../chronos-weaver/" style="--acc:#c084fc"><img src="../assets/chronos-weaver-hero.webp" alt="NoDAW Chronos Weaver" loading="lazy" width="960" height="600"><b>Chronos Weaver</b><small>Spectral morph, freeze & cloud</small></a></div>
+</section>
+
+<footer><div>© NoDAW Labs · <a href="../">NoDAW plugin line</a> · <a href="https://nodaw-labs-hub.vercel.app/">NoDAW Labs hub</a></div><div class="mono">Demo loop synthesised in code · no samples · preview page</div></footer>
+</div>
+<script type="module" src="../shared/demo.js"></script>
+</body>
+</html>

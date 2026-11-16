@@ -9,6 +9,7 @@
 <meta property="og:description" content="Real-time chopped and screwed: pitch, wow, chop gate, reverb, width and a true-peak limiter. VST3 + CLAP, Windows x64. In development.">
 <meta property="og:image" content="https://myaiplug.github.io/nodaw-vst/assets/screw-12-1440x900.webp">
 <meta name="theme-color" content="#0b0912">
+<link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -92,6 +93,9 @@ img{height:auto;max-width:100%}
 .note b{font-family:"JetBrains Mono";font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--amber);margin-right:8px}
 @media (max-width:980px){.idx{grid-template-columns:repeat(3,1fr)}.phero,.plug.flip .phero{grid-template-columns:1fr}.plug.flip .phero>.shot{order:0}.facts{grid-template-columns:1fr 1fr}}
 @media (max-width:560px){.idx{grid-template-columns:1fr 1fr}.facts{grid-template-columns:1fr}}
+.idx .try{display:block;margin-top:8px;font-family:"JetBrains Mono";font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--acc,var(--violet))}
+.plug .btn.primary.demo{background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 80%,#000),color-mix(in srgb,var(--acc2) 70%,#000));box-shadow:0 10px 40px -12px var(--acc)}
+.plug .cta{margin-top:20px}
 </style>
 </head>
 <body>
@@ -112,7 +116,8 @@ img{height:auto;max-width:100%}
    <div><b>4K</b><small>Resizable UI</small></div>
   </div>
   <div class="cta">
-   <a class="btn primary" href="https://myaiplug.github.io/halfscrew/">Try HalfScrew in your browser</a>
+   <a class="btn primary" href="screw/">▶ Try the Screw browser demo</a>
+   <a class="btn" href="https://myaiplug.github.io/halfscrew/">HalfScrew in your browser</a>
    <a class="btn" href="https://github.com/myaiplug/nodaw-vst">GitHub</a>
   </div>
  </div>
@@ -147,7 +152,7 @@ img{height:auto;max-width:100%}
  <div class="kicker">The NoDAW plugin line · all six in development</div>
  <h2>Six plugins. One stack.</h2>
  <p class="lede" style="max-width:820px;margin-top:-6px">Every plugin is CLAP + VST3 in Rust with a WebView UI. Every control is an automatable host parameter, with undo/redo, A/B compare, factory and user presets, right-click MIDI learn and typed values. Latency is constant and reported exactly, and the audio callback never allocates or locks.</p>
- <div class="idx"><a href="#screw"><img src="assets/screw-01-default-960x600.webp" alt="NoDAW Screw" loading="lazy"><b>Screw</b><small>Chopped &amp; screwed</small></a><a href="#racks"><img src="assets/racks-hero.webp" alt="NoDAW Racks" loading="lazy"><b>Racks</b><small>modular channel rack</small></a><a href="#harmonic-space"><img src="assets/harmonic-space-hero.webp" alt="NoDAW Harmonic Space" loading="lazy"><b>Harmonic Space</b><small>the Spectral Space Designer as a plugin</small></a><a href="#chronos-dynamic-eq"><img src="assets/chronos-dynamic-eq-hero.webp" alt="NoDAW Chronos Dynamic EQ" loading="lazy"><b>Chronos Dynamic EQ</b><small>seven dynamic bands</small></a><a href="#temporal-pitch-portal"><img src="assets/temporal-pitch-portal-hero.webp" alt="NoDAW Temporal Pitch Portal" loading="lazy"><b>Temporal Pitch Portal</b><small>tempo-synced time warp</small></a><a href="#chronos-weaver"><img src="assets/chronos-weaver-hero.webp" alt="NoDAW Chronos Weaver" loading="lazy"><b>Chronos Weaver</b><small>spectral morph, freeze and cloud</small></a></div>
+ <div class="idx"><a href="screw/"><img src="assets/screw-01-default-960x600.webp" alt="NoDAW Screw" loading="lazy"><b>Screw</b><small>Chopped &amp; screwed</small><span class="try">▶ Try the browser demo</span></a><a href="racks/"><img src="assets/racks-hero.webp" alt="NoDAW Racks" loading="lazy"><b>Racks</b><small>modular channel rack</small><span class="try">▶ Try the browser demo</span></a><a href="harmonic-space/"><img src="assets/harmonic-space-hero.webp" alt="NoDAW Harmonic Space" loading="lazy"><b>Harmonic Space</b><small>the Spectral Space Designer as a plugin</small><span class="try">▶ Try the browser demo</span></a><a href="chronos-dynamic-eq/"><img src="assets/chronos-dynamic-eq-hero.webp" alt="NoDAW Chronos Dynamic EQ" loading="lazy"><b>Chronos Dynamic EQ</b><small>seven dynamic bands</small><span class="try">▶ Try the browser demo</span></a><a href="temporal-pitch-portal/"><img src="assets/temporal-pitch-portal-hero.webp" alt="NoDAW Temporal Pitch Portal" loading="lazy"><b>Temporal Pitch Portal</b><small>tempo-synced time warp</small><span class="try">▶ Try the browser demo</span></a><a href="chronos-weaver/"><img src="assets/chronos-weaver-hero.webp" alt="NoDAW Chronos Weaver" loading="lazy"><b>Chronos Weaver</b><small>spectral morph, freeze and cloud</small><span class="try">▶ Try the browser demo</span></a></div>
 </section>
 <section class="plug flip" id="racks" style="--acc:#60a5fa;--acc2:#a78bfa;--gx:15%">
  <div class="phero">
@@ -156,6 +161,7 @@ img{height:auto;max-width:100%}
    <h2>Four modules.<br><em>Any order.</em></h2>
    <p class="lede">A modular channel strip: Saturator, 7-band EQ, Spatial and Reactor in a chain you reorder by dragging the module headers, each with its own power switch, then a master section.</p>
    <div class="specs"><div><b>54</b><small>Automatable params</small></div><div><b>12</b><small>Factory presets</small></div><div><b>2.3 ms</b><small>Latency @ 48 kHz</small></div><div><b>24</b><small>Chain orders</small></div><div><b>4</b><small>Modules</small></div><div><b>4</b><small>Skins</small></div></div>
+   <div class="cta"><a class="btn primary demo" href="racks/">▶ Try the browser demo</a><a class="btn" href="racks/#inside">What the demo runs</a></div>
   </div>
   <div class="shot"><img src="assets/racks-hero.webp" alt="NoDAW Racks plugin UI" loading="lazy" width="1440" height="900"><div class="tag">UI preview · mock host, synthetic spectrum</div></div>
  </div>
@@ -171,6 +177,7 @@ img{height:auto;max-width:100%}
    <h2>Twenty Space Recipes.<br><em>In your DAW.</em></h2>
    <p class="lede">Amp, a 7-band EQ, sub shelf and filters feed three parallel returns: a ping-pong delay, an FDN reverb and a stereo flanger. The 20 Space Recipes from the browser prototype are the factory presets.</p>
    <div class="specs"><div><b>58</b><small>Automatable params</small></div><div><b>21</b><small>Factory presets</small></div><div><b>0 ms</b><small>Latency</small></div><div><b>7</b><small>EQ bands</small></div><div><b>3</b><small>Parallel returns</small></div><div><b>2</b><small>Faceplates</small></div></div>
+   <div class="cta"><a class="btn primary demo" href="harmonic-space/">▶ Try the browser demo</a><a class="btn" href="harmonic-space/#inside">What the demo runs</a></div>
   </div>
   <div class="shot"><img src="assets/harmonic-space-hero.webp" alt="NoDAW Harmonic Space plugin UI" loading="lazy" width="1440" height="900"><div class="tag">UI preview · mock host, synthetic spectrum</div></div>
  </div>
@@ -186,6 +193,7 @@ img{height:auto;max-width:100%}
    <h2>EQ that moves<br><em>only when it should.</em></h2>
    <p class="lede">Seven bands in series. Each is a Bell, Low Shelf or High Shelf with its own dynamics: static, compress when the band goes over the threshold, or expand to lift it.</p>
    <div class="specs"><div><b>89</b><small>Automatable params</small></div><div><b>12</b><small>Factory presets</small></div><div><b>0 ms</b><small>Latency</small></div><div><b>7</b><small>Bands</small></div><div><b>±24 dB</b><small>Gain range</small></div><div><b>0.1–18</b><small>Q range</small></div></div>
+   <div class="cta"><a class="btn primary demo" href="chronos-dynamic-eq/">▶ Try the browser demo</a><a class="btn" href="chronos-dynamic-eq/#inside">What the demo runs</a></div>
   </div>
   <div class="shot"><img src="assets/chronos-dynamic-eq-hero.webp" alt="NoDAW Chronos Dynamic EQ plugin UI" loading="lazy" width="1440" height="900"><div class="tag">UI preview · mock host, synthetic spectrum</div></div>
  </div>
@@ -201,6 +209,7 @@ img{height:auto;max-width:100%}
    <h2>Bend time.<br><em>Pitch stays yours.</em></h2>
    <p class="lede">A time warp synced to your host tempo, from half-time at 50 % to double speed at 200 %, with a pitch bend of ±12 semitones that is independent of time.</p>
    <div class="specs"><div><b>14</b><small>Automatable params</small></div><div><b>14</b><small>Factory presets</small></div><div><b>69 ms</b><small>Latency @ 48 kHz</small></div><div><b>50–200%</b><small>Time shift</small></div><div><b>±12 st</b><small>Pitch bend</small></div><div><b>20</b><small>History steps</small></div></div>
+   <div class="cta"><a class="btn primary demo" href="temporal-pitch-portal/">▶ Try the browser demo</a><a class="btn" href="temporal-pitch-portal/#inside">What the demo runs</a></div>
   </div>
   <div class="shot"><img src="assets/temporal-pitch-portal-hero.webp" alt="NoDAW Temporal Pitch Portal plugin UI" loading="lazy" width="1440" height="900"><div class="tag">UI preview · mock host, synthetic spectrum</div></div>
  </div>
@@ -216,6 +225,7 @@ img{height:auto;max-width:100%}
    <h2>Weave the spectrum<br><em>through time.</em></h2>
    <p class="lede">Morph your signal toward its own past or a captured snapshot, freeze a moment and sustain it, or smear it into a spectral cloud, all shown on a 3D spectrum you can orbit.</p>
    <div class="specs"><div><b>17</b><small>Automatable params</small></div><div><b>12</b><small>Factory presets</small></div><div><b>43 ms</b><small>Latency @ 48 kHz</small></div><div><b>20–2000</b><small>Weave ms</small></div><div><b>75%</b><small>STFT overlap</small></div><div><b>2</b><small>Colourways</small></div></div>
+   <div class="cta"><a class="btn primary demo" href="chronos-weaver/">▶ Try the browser demo</a><a class="btn" href="chronos-weaver/#inside">What the demo runs</a></div>
   </div>
   <div class="shot"><img src="assets/chronos-weaver-hero.webp" alt="NoDAW Chronos Weaver plugin UI" loading="lazy" width="1440" height="900"><div class="tag">UI preview · mock host, synthetic spectrum</div></div>
  </div>
