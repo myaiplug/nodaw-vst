@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoDAW plugin line · Screw, Racks, Harmonic Space, Chronos and more (preview)</title>
+<meta name="description" content="The NoDAW plugin line: Screw, Racks, Harmonic Space, Chronos Dynamic EQ, Temporal Pitch Portal and Chronos Weaver. VST3 + CLAP for Windows x64. Unreleased preview from NoDAW Labs.">
+<meta property="og:title" content="NoDAW Screw · NoDAW plugin line (preview)">
+<meta property="og:description" content="Real-time chopped and screwed: pitch, wow, chop gate, reverb, width and a true-peak limiter. VST3 + CLAP, Windows x64. In development.">
+<meta property="og:image" content="https://myaiplug.github.io/nodaw-vst/assets/screw-12-1440x900.webp">
+<meta name="theme-color" content="#0b0912">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0912;--panel:#14111d;--line:#2a2338;--ink:#ece8f6;--mute:#9a91b0;--violet:#a78bfa;--violet2:#7c3aed;--pink:#e879f9;--green:#4ade80;--amber:#fbbf24}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{font-family:"Space Grotesk",system-ui,sans-serif;color:var(--ink);background:
+ radial-gradient(1200px 600px at 80% -10%,rgba(124,58,237,.28),transparent 60%),
+ radial-gradient(900px 500px at -10% 30%,rgba(232,121,249,.12),transparent 60%),var(--bg);line-height:1.5;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.07;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:40px 40px;mask-image:linear-gradient(#000,transparent 80%)}
+.mono{font-family:"JetBrains Mono",monospace}
+.wrap{max-width:1240px;margin:0 auto;padding:0 28px}
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--line)}
+.brand{font-family:"Bebas Neue";font-size:30px;letter-spacing:2px}
+.brand span{font-family:"JetBrains Mono";font-size:11px;letter-spacing:4px;color:var(--violet);margin-left:10px}
+.pill{font-family:"JetBrains Mono";font-size:11px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--line);border-radius:99px;padding:7px 14px;color:var(--mute);display:inline-flex;gap:8px;align-items:center}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.hero{display:grid;grid-template-columns:1fr 1.25fr;gap:44px;align-items:center;padding:56px 0 40px}
+h1{font-family:"Bebas Neue";font-size:clamp(64px,9vw,128px);line-height:.88;letter-spacing:1px}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{font-size:19px;color:#cfc8e2;margin:20px 0 26px;max-width:520px}
+.specs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;max-width:520px}
+.specs div{background:var(--panel);padding:14px 16px}
+.specs b{display:block;font-family:"JetBrains Mono";font-size:20px;color:var(--ink)}
+.specs small{font-family:"JetBrains Mono";font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mute)}
+.cta{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+.btn{font-family:"JetBrains Mono";font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:13px 20px;border-radius:10px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--panel)}
+.btn.primary{background:linear-gradient(135deg,var(--violet2),#a21caf);border-color:transparent;box-shadow:0 10px 40px -10px rgba(167,139,250,.7)}
+.shot{position:relative;border-radius:16px;padding:1px;background:linear-gradient(140deg,rgba(167,139,250,.7),rgba(42,35,56,.6) 40%,rgba(232,121,249,.5))}
+.shot img{display:block;width:100%;border-radius:15px}
+.shot:after{content:"";position:absolute;inset:-30px;z-index:-1;background:radial-gradient(closest-side,rgba(124,58,237,.35),transparent);filter:blur(20px)}
+.tag{position:absolute;left:14px;bottom:-14px;background:#0f0c17;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-family:"JetBrains Mono";font-size:11px;color:var(--mute)}
+section{padding:46px 0;border-top:1px solid var(--line)}
+.kicker{font-family:"JetBrains Mono";font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--violet);margin-bottom:10px}
+h2{font-family:"Bebas Neue";font-size:clamp(40px,5vw,62px);line-height:.95;letter-spacing:1px;margin-bottom:22px}
+.chain{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:28px}
+.chain span{font-family:"JetBrains Mono";font-size:12.5px;padding:9px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--line)}
+.chain s{text-decoration:none;color:var(--violet)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:linear-gradient(180deg,#17131f,#110e18);border:1px solid var(--line);border-radius:14px;padding:18px;overflow:hidden}
+.card img{width:100%;border-radius:9px;border:1px solid var(--line);display:block;margin-bottom:14px}
+.card h3{font-size:17px;margin-bottom:6px}
+.card p{color:var(--mute);font-size:14.5px}
+.feat{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.feat .card h3{font-family:"JetBrains Mono";font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--violet)}
+.suite{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.suite .card{padding:12px}
+.suite .card img{margin-bottom:10px}
+.suite h3{font-size:15px}
+.suite p{font-size:13px}
+.status{display:grid;grid-template-columns:1.1fr 1fr;gap:20px}
+.list{list-style:none;display:grid;gap:10px}
+.list li{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;gap:12px;font-size:15px}
+.list li b{font-family:"JetBrains Mono";font-size:11px;letter-spacing:1px;text-transform:uppercase;min-width:84px;padding-top:2px}
+.ok b{color:var(--green)} .no b{color:var(--amber)}
+footer{border-top:1px solid var(--line);padding:26px 0 40px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:var(--mute);font-size:13px}
+footer a{color:var(--ink)}
+@media (max-width:980px){.hero,.status{grid-template-columns:1fr}.grid3,.feat{grid-template-columns:1fr 1fr}.suite{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.grid3,.feat,.suite{grid-template-columns:1fr}.specs{grid-template-columns:1fr 1fr}}
+
+img{height:auto;max-width:100%}
+.idx{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.idx a{display:block;text-decoration:none;color:var(--ink);background:linear-gradient(180deg,#17131f,#110e18);border:1px solid var(--line);border-radius:12px;padding:10px;transition:border-color .2s,transform .2s}
+.idx a:hover{border-color:var(--acc,var(--violet));transform:translateY(-2px)}
+.idx img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block;margin-bottom:8px}
+.idx b{display:block;font-size:14px}.idx small{font-family:"JetBrains Mono";font-size:10.5px;letter-spacing:1px;color:var(--mute);text-transform:uppercase}
+.plug{--acc:var(--violet);--acc2:var(--pink);position:relative}
+.plug:before{content:"";position:absolute;inset:0 -28px;z-index:-1;background:radial-gradient(700px 360px at var(--gx,85%) 20%,color-mix(in srgb,var(--acc) 22%,transparent),transparent 70%);pointer-events:none}
+.plug .kicker{color:var(--acc)}
+.plug h2 em{font-style:normal;background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.plug .shot{background:linear-gradient(140deg,color-mix(in srgb,var(--acc) 75%,transparent),rgba(42,35,56,.6) 40%,color-mix(in srgb,var(--acc2) 55%,transparent))}
+.plug .shot:after{background:radial-gradient(closest-side,color-mix(in srgb,var(--acc) 35%,transparent),transparent)}
+.plug .chain s{color:var(--acc)}
+.plug .feat .card h3{color:var(--acc)}
+.phero{display:grid;grid-template-columns:1fr 1.3fr;gap:40px;align-items:center;margin-bottom:34px}
+.plug.flip .phero{grid-template-columns:1.3fr 1fr}.plug.flip .phero>.shot{order:-1}
+.plug .lede{margin:6px 0 22px}
+.plug .specs{max-width:none}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+.note{margin-top:16px;border:1px dashed color-mix(in srgb,var(--amber) 55%,transparent);border-radius:12px;padding:12px 16px;color:#e9dcb8;font-size:14.5px;background:rgba(251,191,36,.05)}
+.note b{font-family:"JetBrains Mono";font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--amber);margin-right:8px}
+@media (max-width:980px){.idx{grid-template-columns:repeat(3,1fr)}.phero,.plug.flip .phero{grid-template-columns:1fr}.plug.flip .phero>.shot{order:0}.facts{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.idx{grid-template-columns:1fr 1fr}.facts{grid-template-columns:1fr}}
+.idx .try{display:block;margin-top:8px;font-family:"JetBrains Mono";font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--acc,var(--violet))}
+.plug .btn.primary.demo{background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 80%,#000),color-mix(in srgb,var(--acc2) 70%,#000));box-shadow:0 10px 40px -12px var(--acc)}
+.plug .cta{margin-top:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav><div class="brand">NODAW<span>PLUGIN LINE</span></div><div class="pill"><i></i>In development · not for sale yet</div></nav>
+
+<header class="hero" id="screw">
+ <div>
+  <div class="kicker">NoDAW Screw · VST3 + CLAP · Windows x64</div>
+  <h1>Slow it.<br><em>Screw it.</em><br>Live.</h1>
+  <p class="lede">A real-time chopped &amp; screwed effect for your DAW: pitch down, tape wobble, a chop gate you draw, lush reverb and stereo width, held under a true-peak limiter. Built by NoDAW Labs, the team behind HalfScrew.</p>
+  <div class="specs">
+   <div><b>21</b><small>Automatable params</small></div>
+   <div><b>12</b><small>Factory presets</small></div>
+   <div><b>±12 st</b><small>Pitch range</small></div>
+   <div><b>32 ms</b><small>Latency @ 48 kHz</small></div>
+   <div><b>160</b><small>Spectrum bands</small></div>
+   <div><b>4K</b><small>Resizable UI</small></div>
+  </div>
+  <div class="cta">
+   <a class="btn primary" href="screw/">▶ Try the Screw browser demo</a>
+   <a class="btn" href="https://myaiplug.github.io/halfscrew/">HalfScrew in your browser</a>
+   <a class="btn" href="https://github.com/myaiplug/nodaw-vst">GitHub</a>
+  </div>
+ </div>
+ <div class="shot"><img src="assets/screw-12-1440x900.webp" alt="NoDAW Screw plugin UI with spectrum, chop steps, Screw, Tone and Space, and Output sections" width="1440" height="900"><div class="tag">UI preview · mock host, synthetic spectrum</div></div>
+</header>
+
+<section>
+ <div class="kicker">Signal flow</div>
+ <h2>One chain. Every move a host parameter.</h2>
+ <div class="chain">
+  <span>Input</span><s>→</s><span>Pitch (SOLA varispeed)</span><s>→</s><span>Wow &amp; flutter</span><s>→</s><span>Lowpass</span><s>→</s><span>Warmth 150 Hz shelf</span><s>→</s><span>Chop gate</span><s>→</s><span>Reverb (parallel)</span><s>→</s><span>M/S width</span><s>→</s><span>Mix vs delay-matched dry</span><s>→</s><span>True-peak limiter</span>
+ </div>
+ <div class="grid3">
+  <div class="card"><img src="assets/screw-04-chop-pattern.webp" alt="Chop pattern steps" loading="lazy"><h3>Draw the chop</h3><p>Click and drag the step gate, pick a rate, set the depth. Your custom pattern saves with the session.</p></div>
+  <div class="card"><img src="assets/screw-08-analyzer-cursor-readout.webp" alt="Spectrum analyzer with cursor readout" loading="lazy"><h3>See what you hear</h3><p>160-band input/output spectrum at 60 fps with peak hold and a cursor frequency/dB readout, plus in/out and limiter meters.</p></div>
+  <div class="card"><img src="assets/screw-03-preset-browser.webp" alt="Preset browser" loading="lazy"><h3>Presets, A/B, undo</h3><p>12 factory presets, save your own, A/B compare, undo/redo, and right-click MIDI learn on any knob.</p></div>
+ </div>
+</section>
+
+<section>
+ <div class="kicker">Built for sessions</div>
+ <h2>Engineered, not just styled.</h2>
+ <div class="feat">
+  <div class="card"><h3>Latency reported</h3><p>Pitch, wobble and limiter latency is reported to the host, and the dry path is delay-matched so Mix at 0% stays phase-aligned.</p></div>
+  <div class="card"><h3>Real-time safe</h3><p>No allocation or locks in the audio callback. Buffers are sized up front; denormals are guarded.</p></div>
+  <div class="card"><h3>Sessions restore</h3><p>Smoothers snap on load, so a saved session opens at exactly the sound you left.</p></div>
+  <div class="card"><h3>Validated</h3><p>On the Linux headless build: Steinberg VST3 validator 47/47 passed; clap-validator 36 passed, 0 failed, 8 skipped.</p></div>
+ </div>
+</section>
+
+<section id="line">
+ <div class="kicker">The NoDAW plugin line · all six in development</div>
+ <h2>Six plugins. One stack.</h2>
+ <p class="lede" style="max-width:820px;margin-top:-6px">Every plugin is CLAP + VST3 in Rust with a WebView UI. Every control is an automatable host parameter, with undo/redo, A/B compare, factory and user presets, right-click MIDI learn and typed values. Latency is constant and reported exactly, and the audio callback never allocates or locks.</p>
+ <div class="idx"><a href="screw/"><img src="assets/screw-01-default-960x600.webp" alt="NoDAW Screw" loading="lazy"><b>Screw</b><small>Chopped &amp; screwed</small><span class="try">▶ Try the browser demo</span></a><a href="racks/"><img src="assets/racks-hero.webp" alt="NoDAW Racks" loading="lazy"><b>Racks</b><small>modular channel rack</small><span class="try">▶ Try the browser demo</span></a><a href="harmonic-space/"><img src="assets/harmonic-space-hero.webp" alt="NoDAW Harmonic Space" loading="lazy"><b>Harmonic Space</b><small>the Spectral Space Designer as a plugin</small><span class="try">▶ Try the browser demo</span></a><a href="chronos-dynamic-eq/"><img src="assets/chronos-dynamic-eq-hero.webp" alt="NoDAW Chronos Dynamic EQ" loading="lazy"><b>Chronos Dynamic EQ</b><small>seven dynamic bands</small><span class="try">▶ Try the browser demo</span></a><a href="temporal-pitch-portal/"><img src="assets/temporal-pitch-portal-hero.webp" alt="NoDAW Temporal Pitch Portal" loading="lazy"><b>Temporal Pitch Portal</b><small>tempo-synced time warp</small><span class="try">▶ Try the browser demo</span></a><a href="chronos-weaver/"><img src="assets/chronos-weaver-hero.webp" alt="NoDAW Chronos Weaver" loading="lazy"><b>Chronos Weaver</b><small>spectral morph, freeze and cloud</small><span class="try">▶ Try the browser demo</span></a></div>
+</section>
+<section class="plug flip" id="racks" style="--acc:#60a5fa;--acc2:#a78bfa;--gx:15%">
+ <div class="phero">
+  <div>
+   <div class="kicker">NoDAW Racks · modular channel rack</div>
+   <h2>Four modules.<br><em>Any order.</em></h2>
+   <p class="lede">A modular channel strip: Saturator, 7-band EQ, Spatial and Reactor in a chain you reorder by dragging the module headers, each with its own power switch, then a master section.</p>
+   <div class="specs"><div><b>54</b><small>Automatable params</small></div><div><b>12</b><small>Factory presets</small></div><div><b>2.3 ms</b><small>Latency @ 48 kHz</small></div><div><b>24</b><small>Chain orders</small></div><div><b>4</b><small>Modules</small></div><div><b>4</b><small>Skins</small></div></div>
+   <div class="cta"><a class="btn primary demo" href="racks/">▶ Try the browser demo</a><a class="btn" href="racks/#inside">What the demo runs</a></div>
+  </div>
+  <div class="shot"><img src="assets/racks-hero.webp" alt="NoDAW Racks plugin UI" loading="lazy" width="1440" height="900"><div class="tag">UI preview · mock host, synthetic spectrum</div></div>
+ </div>
+ <div class="chain"><span>Input</span><s>→</s><span>Saturator</span><s>→</s><span>7-band EQ</span><s>→</s><span>Spatial</span><s>→</s><span>Reactor limiter</span><s>→</s><span>Mix</span><s>→</s><span>Output</span></div>
+ <div class="grid3"><div class="card"><img src="assets/racks-04-eq-band-select.webp" alt="NoDAW Racks: Drag the EQ on the analyser" loading="lazy" width="960" height="600"><h3>Drag the EQ on the analyser</h3><p>Seven bands: bands 1 and 7 switch between shelf and 12 dB/oct cut, the rest are bells. Drag the nodes on the spectrum.</p></div><div class="card"><img src="assets/racks-07-preset-diode-crunch-drums.webp" alt="NoDAW Racks: Tape, Tube or Diode" loading="lazy" width="960" height="600"><h3>Tape, Tube or Diode</h3><p>The Saturator has three curves with 2× oversampling, plus Drive, Tone, Sat Mix and Auto Gain.</p></div><div class="card"><img src="assets/racks-05-skin-silver.webp" alt="NoDAW Racks: Four skins" loading="lazy" width="960" height="600"><h3>Four skins</h3><p>Cobalt, obsidian, silver and plastic, with a spectrum, the EQ curve, in/out meters and gain reduction.</p></div></div>
+ <div class="facts feat"><div class="card"><h3>Spatial</h3><p>Width, Haas, Pan, Mid and Side gain, and Mono Bass below a set frequency, with a correlation meter.</p></div><div class="card"><h3>Reactor</h3><p>A limiter with a fixed 1.5 ms lookahead and true-peak detection: Push, Ceiling, Release and Adaptive release.</p></div><div class="card"><h3>Master</h3><p>Input, Mix and Output, with bypass and mix sample-aligned to the latency-delayed dry signal.</p></div></div>
+ 
+</section>
+<section class="plug" id="harmonic-space" style="--acc:#22d3ee;--acc2:#a78bfa;--gx:85%">
+ <div class="phero">
+  <div>
+   <div class="kicker">NoDAW Harmonic Space · the Spectral Space Designer as a plugin</div>
+   <h2>Twenty Space Recipes.<br><em>In your DAW.</em></h2>
+   <p class="lede">Amp, a 7-band EQ, sub shelf and filters feed three parallel returns: a ping-pong delay, an FDN reverb and a stereo flanger. The 20 Space Recipes from the browser prototype are the factory presets.</p>
+   <div class="specs"><div><b>58</b><small>Automatable params</small></div><div><b>21</b><small>Factory presets</small></div><div><b>0 ms</b><small>Latency</small></div><div><b>7</b><small>EQ bands</small></div><div><b>3</b><small>Parallel returns</small></div><div><b>2</b><small>Faceplates</small></div></div>
+   <div class="cta"><a class="btn primary demo" href="harmonic-space/">▶ Try the browser demo</a><a class="btn" href="harmonic-space/#inside">What the demo runs</a></div>
+  </div>
+  <div class="shot"><img src="assets/harmonic-space-hero.webp" alt="NoDAW Harmonic Space plugin UI" loading="lazy" width="1440" height="900"><div class="tag">UI preview · mock host, synthetic spectrum</div></div>
+ </div>
+ <div class="chain"><span>Amp</span><s>→</s><span>7-band EQ</span><s>→</s><span>Sub shelf</span><s>→</s><span>HPF / LPF</span><s>→</s><span>Delay · Reverb · Flanger</span><s>→</s><span>Width</span><s>→</s><span>Output</span><s>→</s><span>Mix</span></div>
+ <div class="grid3"><div class="card"><img src="assets/harmonic-space-04-band-solo.webp" alt="NoDAW Harmonic Space: Band Solo and Mute" loading="lazy" width="960" height="600"><h3>Band Solo and Mute</h3><p>Solo auditions a band’s region with a crossfaded band-pass (or low/high-pass on the shelves). Mute takes the band to −36 dB.</p></div><div class="card"><img src="assets/harmonic-space-07-preset-ping-pong-hook.webp" alt="NoDAW Harmonic Space: Recipes by family" loading="lazy" width="960" height="600"><h3>Recipes by family</h3><p>Presets are grouped as Vocals, Low end, Space, Character and Fix-it, converted with the prototype’s own knob mappings.</p></div><div class="card"><img src="assets/harmonic-space-05-light-faceplate.webp" alt="NoDAW Harmonic Space: Dark or brushed aluminium" loading="lazy" width="960" height="600"><h3>Dark or brushed aluminium</h3><p>The analyser shows the whole shape with a node per band plus the filter nodes, effect activity LEDs and a correlation meter.</p></div></div>
+ <div class="facts feat"><div class="card"><h3>EQ</h3><p>60 Hz low shelf, five bells and a 16 kHz high shelf, then 12 dB/oct high- and low-pass.</p></div><div class="card"><h3>Reverb</h3><p>An FDN reverb with decay, size, pre-delay and damping.</p></div><div class="card"><h3>Delay</h3><p>A feedback delay with tone and ping-pong, alongside a stereo flanger.</p></div></div>
+ 
+</section>
+<section class="plug flip" id="chronos-dynamic-eq" style="--acc:#fbbf24;--acc2:#f472b6;--gx:15%">
+ <div class="phero">
+  <div>
+   <div class="kicker">NoDAW Chronos Dynamic EQ · seven dynamic bands</div>
+   <h2>EQ that moves<br><em>only when it should.</em></h2>
+   <p class="lede">Seven bands in series. Each is a Bell, Low Shelf or High Shelf with its own dynamics: static, compress when the band goes over the threshold, or expand to lift it.</p>
+   <div class="specs"><div><b>89</b><small>Automatable params</small></div><div><b>12</b><small>Factory presets</small></div><div><b>0 ms</b><small>Latency</small></div><div><b>7</b><small>Bands</small></div><div><b>±24 dB</b><small>Gain range</small></div><div><b>0.1–18</b><small>Q range</small></div></div>
+   <div class="cta"><a class="btn primary demo" href="chronos-dynamic-eq/">▶ Try the browser demo</a><a class="btn" href="chronos-dynamic-eq/#inside">What the demo runs</a></div>
+  </div>
+  <div class="shot"><img src="assets/chronos-dynamic-eq-hero.webp" alt="NoDAW Chronos Dynamic EQ plugin UI" loading="lazy" width="1440" height="900"><div class="tag">UI preview · mock host, synthetic spectrum</div></div>
+ </div>
+ <div class="chain"><span>Input</span><s>→</s><span>Band 1</span><s>→</s><span>Band 2</span><s>→</s><span>…</span><s>→</s><span>Band 7</span><s>→</s><span>Dynamics amount</span><s>→</s><span>Mix</span><s>→</s><span>Output</span></div>
+ <div class="grid3"><div class="card"><img src="assets/chronos-dynamic-eq-04-band-6-dynamics.webp" alt="NoDAW Chronos Dynamic EQ: Per-band dynamics" loading="lazy" width="960" height="600"><h3>Per-band dynamics</h3><p>Threshold, Ratio, Range up to 24 dB, Attack and Release on every band, with node rings showing each band’s live gain.</p></div><div class="card"><img src="assets/chronos-dynamic-eq-06-band-1-solo.webp" alt="NoDAW Chronos Dynamic EQ: Solo any band" loading="lazy" width="960" height="600"><h3>Solo any band</h3><p>Audition a band on its own. An idle band is bit-transparent, and gain changes are zipper-free.</p></div><div class="card"><img src="assets/chronos-dynamic-eq-07-preset-resonance-hunter.webp" alt="NoDAW Chronos Dynamic EQ: See the move" loading="lazy" width="960" height="600"><h3>See the move</h3><p>The live curve, the dashed static curve, a threshold marker and band chips with ring meters. The GR meter shows the deepest cut.</p></div></div>
+ <div class="facts feat"><div class="card"><h3>Master</h3><p>Input, Output, Mix and a Dynamics amount from 0 to 200 % that scales every band’s range, capped at 24 dB.</p></div><div class="card"><h3>How a band works</h3><p>Each band is x + (G−1)·F(x), so a band that is doing nothing passes audio untouched.</p></div><div class="card"><h3>Zero latency</h3><p>The bands are minimum-phase IIR filters, so nothing is added to your session delay.</p></div></div>
+ <div class="note"><b>Limits</b>There is no linear-phase mode. The bands are minimum-phase only.</div>
+</section>
+<section class="plug" id="temporal-pitch-portal" style="--acc:#e879f9;--acc2:#818cf8;--gx:85%">
+ <div class="phero">
+  <div>
+   <div class="kicker">NoDAW Temporal Pitch Portal · tempo-synced time warp</div>
+   <h2>Bend time.<br><em>Pitch stays yours.</em></h2>
+   <p class="lede">A time warp synced to your host tempo, from half-time at 50 % to double speed at 200 %, with a pitch bend of ±12 semitones that is independent of time.</p>
+   <div class="specs"><div><b>14</b><small>Automatable params</small></div><div><b>14</b><small>Factory presets</small></div><div><b>69 ms</b><small>Latency @ 48 kHz</small></div><div><b>50–200%</b><small>Time shift</small></div><div><b>±12 st</b><small>Pitch bend</small></div><div><b>20</b><small>History steps</small></div></div>
+   <div class="cta"><a class="btn primary demo" href="temporal-pitch-portal/">▶ Try the browser demo</a><a class="btn" href="temporal-pitch-portal/#inside">What the demo runs</a></div>
+  </div>
+  <div class="shot"><img src="assets/temporal-pitch-portal-hero.webp" alt="NoDAW Temporal Pitch Portal plugin UI" loading="lazy" width="1440" height="900"><div class="tag">UI preview · mock host, synthetic spectrum</div></div>
+ </div>
+ <div class="chain"><span>Time Shift (Stretch or Tape)</span><s>→</s><span>Pitch Bend + Glide</span><s>→</s><span>Drift</span><s>→</s><span>Tone tilt</span><s>→</s><span>Echo return</span><s>→</s><span>Mix</span><s>→</s><span>Output</span></div>
+ <div class="grid3"><div class="card"><img src="assets/temporal-pitch-portal-06-tape-mode.webp" alt="NoDAW Temporal Pitch Portal: Stretch or Tape" loading="lazy" width="960" height="600"><h3>Stretch or Tape</h3><p>Stretch keeps the pitch with WSOLA grains aligned by cross-correlation. Tape bends pitch with the speed, like a varispeed deck.</p></div><div class="card"><img src="assets/temporal-pitch-portal-04-screwai-flavors.webp" alt="NoDAW Temporal Pitch Portal: Warp Zones and ScrewAI Flavors" loading="lazy" width="960" height="600"><h3>Warp Zones and ScrewAI Flavors</h3><p>14 presets: the prototype’s 5 Warp Zones and 5 ScrewAI Flavors, plus extras. Here time and pitch are independent.</p></div><div class="card"><img src="assets/temporal-pitch-portal-07-preset-zero-gravity.webp" alt="NoDAW Temporal Pitch Portal: A portal that reads the engine" loading="lazy" width="960" height="600"><h3>A portal that reads the engine</h3><p>The rings turn with time and warp with pitch. The Dimensional Coordinates show the pitch actually applied, temporal pull, drift and speed ripple.</p></div></div>
+ <div class="facts feat"><div class="card"><h3>Sync periods</h3><p>Time warps inside each period of 1/4, ½ bar, 1 bar or 2 bars. The longest period is 4 s; longer bars are clamped.</p></div><div class="card"><h3>Effects</h3><p>Drift is a wandering micro-pitch with its own rate, Tone is a tilt, and Echo is a return on the shifted signal.</p></div><div class="card"><h3>Dimensional History</h3><p>A bubble per edit: click one to go back. The last 20 are kept. Dark or light look.</p></div></div>
+ <div class="note"><b>Limits</b>A plugin can’t change your host’s timeline, so time is warped inside each sync period.</div>
+</section>
+<section class="plug flip" id="chronos-weaver" style="--acc:#c084fc;--acc2:#38bdf8;--gx:15%">
+ <div class="phero">
+  <div>
+   <div class="kicker">NoDAW Chronos Weaver · spectral morph, freeze and cloud</div>
+   <h2>Weave the spectrum<br><em>through time.</em></h2>
+   <p class="lede">Morph your signal toward its own past or a captured snapshot, freeze a moment and sustain it, or smear it into a spectral cloud, all shown on a 3D spectrum you can orbit.</p>
+   <div class="specs"><div><b>17</b><small>Automatable params</small></div><div><b>12</b><small>Factory presets</small></div><div><b>43 ms</b><small>Latency @ 48 kHz</small></div><div><b>20–2000</b><small>Weave ms</small></div><div><b>75%</b><small>STFT overlap</small></div><div><b>2</b><small>Colourways</small></div></div>
+   <div class="cta"><a class="btn primary demo" href="chronos-weaver/">▶ Try the browser demo</a><a class="btn" href="chronos-weaver/#inside">What the demo runs</a></div>
+  </div>
+  <div class="shot"><img src="assets/chronos-weaver-hero.webp" alt="NoDAW Chronos Weaver plugin UI" loading="lazy" width="1440" height="900"><div class="tag">UI preview · mock host, synthetic spectrum</div></div>
+ </div>
+ <div class="chain"><span>STFT (Hann, 75 %)</span><s>→</s><span>Morph A→B</span><s>→</s><span>Freeze</span><s>→</s><span>Cloud</span><s>→</s><span>Morph LFO</span><s>→</s><span>Mix</span><s>→</s><span>Output</span></div>
+ <div class="grid3"><div class="card"><img src="assets/chronos-weaver-04-orbit-3d.webp" alt="NoDAW Chronos Weaver: Drag to orbit" loading="lazy" width="960" height="600"><h3>Drag to orbit</h3><p>A 3D spectrum of frequency, time and level, with source B on the front edge and a morph track showing the knob and live LFO.</p></div><div class="card"><img src="assets/chronos-weaver-05-frozen.webp" alt="NoDAW Chronos Weaver: Freeze" loading="lazy" width="960" height="600"><h3>Freeze</h3><p>Capture the spectrum and sustain it with phase-vocoder phase advance, from about 1 s to infinite.</p></div><div class="card"><img src="assets/chronos-weaver-06-ice.webp" alt="NoDAW Chronos Weaver: Nebula or ice" loading="lazy" width="960" height="600"><h3>Nebula or ice</h3><p>Two colourways. Cloud smears each bin in time (Grain 5–2000 ms), gated by Density and phase-scattered.</p></div></div>
+ <div class="facts feat"><div class="card"><h3>Source B</h3><p>Past is the signal’s own spectrum Weave ms ago. Snapshot is a capture you take with Capture B, saved with the session.</p></div><div class="card"><h3>Blend or Cross</h3><p>Blend is a log-magnitude morph. Cross puts B’s spectral envelope on A’s fine structure.</p></div><div class="card"><h3>Morph LFO</h3><p>Depth, tempo sync from ¼ to 4 bars, and sine, triangle or ramp shapes.</p></div></div>
+ <div class="note"><b>Limits</b>No sidechain input yet, so source B is the snapshot or the past. One morph target, not four slots. Latency is 4096 samples above 50 kHz.</div>
+</section>
+
+<section>
+ <div class="kicker">Straight talk</div>
+ <h2>Where all six stand today.</h2>
+ <div class="status">
+  <ul class="list">
+   <li class="ok"><b>Built</b>VST3 + CLAP for Windows x64, with a Linux headless build for CI tests and validators.</li>
+   <li class="no"><b>Validated</b>Published validator results so far cover Screw only. The other five run the same kit and test suite, but their validator logs are not published yet.</li>
+   <li class="ok"><b>Planned</b>14-day full-featured trial per plugin, then activation with a license key.</li>
+   <li class="no"><b>Not yet</b>Unreleased and not for sale. No price has been set.</li>
+   <li class="no"><b>Not yet</b>Not tested in a real DAW or on a Windows run. Installers are unsigned.</li>
+   <li class="no"><b>Heads up</b>Screenshots come from the plugin UI in a mock host with synthetic spectrum data.</li>
+  </ul>
+  <div class="shot"><img src="assets/screw-01-default-960x600.webp" alt="NoDAW Screw default view" loading="lazy" width="960" height="600"></div>
+ </div>
+</section>
+
+<footer><div>© NoDAW Labs · <a href="https://nodaw-labs-hub.vercel.app/">NoDAW Labs hub</a> · <a href="https://myaiplug.github.io/halfscrew/">HalfScrew</a></div><div class="mono">nodaw-vst · preview page</div></footer>
+</div>
+</body>
+</html>

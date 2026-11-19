@@ -1,4 +1,6 @@
-# NoDAW VST (private)
+# NoDAW VST
+
+Product page: https://myaiplug.github.io/nodaw-vst/ (served from `index.html` and the plugin folders on `main`).
 
 NoDAW's plugin line. First plugin: **NoDAW Screw** (chopped & screwed / slowed + reverb effect), CLAP + VST3 on Windows x64 (Linux headless build for CI).
 Built on [APF](https://github.com/mihasm/apf) (MIT), vendored in `vendor/apf` with a small patch.

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" style="--acc:#e879f9;--acc2:#818cf8">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoDAW Temporal Pitch Portal · browser demo (preview, unreleased)</title>
+<meta name="description" content="Try NoDAW Temporal Pitch Portal in your browser: the plugin's DSP engine ported to Web Audio, with all 14 parameters and 14 factory presets. Unreleased preview from NoDAW Labs, not for sale.">
+<meta property="og:title" content="NoDAW Temporal Pitch Portal · browser demo (preview)">
+<meta property="og:description" content="A time warp synced to your host tempo, from half-time at 50 % to double speed at 200 %, with a pitch bend of ±12 semitones that is independent of time.">
+<meta property="og:image" content="https://myaiplug.github.io/nodaw-vst/assets/temporal-pitch-portal-hero.webp">
+<meta name="theme-color" content="#0b0912">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/demo.css">
+</head>
+<body>
+<div class="wrap">
+<nav><a class="brand" href="../">NODAW<span>TEMPORAL PITCH PORTAL</span></a><div class="navr"><a class="back" href="../">← All six plugins</a><div class="pill"><i></i>Preview · unreleased · not for sale</div></div></nav>
+
+<header class="hero">
+ <div>
+  <div class="kicker">NoDAW Temporal Pitch Portal · tempo-synced time warp</div>
+  <h1>Bend time.<br><em>Pitch stays yours.</em></h1>
+  <p class="lede">A time warp synced to your host tempo, from half-time at 50 % to double speed at 200 %, with a pitch bend of ±12 semitones that is independent of time.</p>
+  <div class="specs"><div><b>14</b><small>Automatable params</small></div><div><b>14</b><small>Factory presets</small></div><div><b>69 ms</b><small>Latency @ 48 kHz</small></div><div><b>50–200%</b><small>Time shift</small></div><div><b>±12 st</b><small>Pitch bend</small></div><div><b>20</b><small>History steps</small></div></div>
+  <div class="cta"><a class="btn primary" href="#try">▶ Try the browser demo</a><a class="btn" href="#inside">What’s ported</a></div>
+ </div>
+ <div class="shot"><img src="../assets/temporal-pitch-portal-hero.webp" alt="NoDAW Temporal Pitch Portal plugin UI" width="1440" height="900"><div class="tag">Plugin UI preview · mock host</div></div>
+</header>
+
+<section id="try">
+ <div class="honest"><b>Browser demo</b><span>The plugin’s DSP engine, ported line by line from its Rust source to a Web Audio AudioWorklet. It really processes the audio you hear. It is not bit-identical to the plugin, and the plugin adds its own UI, analyser and DAW integration.</span></div>
+ <div class="console" id="demo" data-plugin="temporal-pitch-portal" data-proc="nodaw-temporal-pitch-portal" data-preset="Slowed Portal">
+  <div class="in">
+   <div class="top">
+    <div class="screen">
+     <canvas id="spec" aria-label="Spectrum: input and output"></canvas>
+     <div class="legend"><span><i style="background:rgba(220,214,236,.6)"></i>Input</span><span><i style="background:var(--acc)"></i>Output</span></div>
+     <div class="readout"></div>
+     <canvas class="wave" aria-label="Waveform: click to jump"></canvas>
+     <div class="steps" aria-label="Chop steps"></div>
+    </div>
+    <div class="side">
+     <div class="box transport"><button class="btn play" type="button">▶ Play</button>
+      <div class="ab" style="grid-column:1/-1"><button class="a sel" type="button">A · Effect</button><button class="b" type="button">B · Bypass</button></div></div>
+     <div class="box"><span class="lbl">Factory preset</span><select id="preset" aria-label="Factory preset"></select><div class="pdesc"></div></div>
+     <div class="box"><span class="lbl">Source</span><div class="srcrow"><div class="srcname">Loading demo loop…</div><div><span class="lbl" style="margin:0 0 4px">BPM</span><input id="bpm" type="number" min="40" max="240" step="1" value="90" aria-label="Tempo in BPM"></div></div>
+      <div class="transport" style="margin-top:8px"><button class="btn load" type="button">Load file</button><button class="btn usedemo" type="button">Demo loop</button></div>
+      <input id="file" type="file" accept="audio/*" hidden><div class="hint bpmhint" style="display:none">Set BPM to your track’s tempo for synced effects.</div></div>
+     <div class="box"><span class="lbl">Output</span><div class="meter"><span>L</span><div class="bar l"><i></i><b></b></div><span>R</span><div class="bar r"><i></i><b></b></div><div class="mval">peak — dBFS</div></div></div>
+     <button class="btn exp" type="button">⤓ Export WAV</button>
+    </div>
+   </div>
+   <div class="ctls"></div>
+   <p class="hint">Time Shift warps inside each sync period, so the loop keeps its bar length. Set BPM to your file’s tempo. Drop any audio file on this panel to use your own. Double-click a slider to reset it. Space plays and stops. Export renders offline with the current settings.</p>
+   <div class="err" role="alert"></div>
+  </div>
+ </div>
+</section>
+
+<section id="inside">
+ <div class="kicker">In this demo vs the plugin</div>
+ <h2>What’s <em>real</em> here.</h2>
+ <div class="split">
+  <ul class="list">
+   <li><b>Ported</b><span>The engine: the time warp (WSOLA Stretch and Tape modes, synced to 1/4, 1/2 bar, 1 bar or 2 bars), the pitch shifter with glide and drift, the tilt tone, the echo and the latency-matched mix.</span></li>
+   <li><b>Params</b><span>All 13 parameters plus bypass, with the plugin’s own ranges, units and curves (14 host parameters in the plugin).</span></li>
+   <li><b>Presets</b><span>All 14 factory presets, by name and value, read from the plugin’s preset files.</span></li>
+   <li><b>A/B</b><span>Bypass uses the engine’s own crossfade to the latency-delayed dry signal, so the switch never clicks.</span></li>
+  </ul>
+  <ul class="list">
+   <li class="no"><b>Plugin only</b><span>Host tempo and transport (here the warp follows the BPM field, starting from the top of the loop)</span></li><li class="no"><b>Plugin only</b><span>The plugin’s portal visual and meters</span></li><li class="no"><b>Plugin only</b><span>DAW automation, MIDI learn, undo/redo, A/B slots and user presets</span></li>
+   <li class="no"><b>Limits</b><span>A plugin can’t change your host’s timeline, so time is warped inside each sync period.</span></li>
+   <li class="no"><b>Status</b><span>The Temporal Pitch Portal plugin (VST3 + CLAP, Windows x64) is in development: unreleased, not for sale, no price yet.</span></li>
+  </ul>
+ </div>
+</section>
+
+<section>
+ <div class="kicker">Signal flow</div>
+ <h2>Temporal Pitch Portal, <em>stage by stage.</em></h2>
+ <div class="chain"><span>Time Shift (Stretch or Tape)</span><s>→</s><span>Pitch Bend + Glide</span><s>→</s><span>Drift</span><s>→</s><span>Tone tilt</span><s>→</s><span>Echo return</span><s>→</s><span>Mix</span><s>→</s><span>Output</span></div>
+ <div class="grid3"><div class="card"><img src="../assets/temporal-pitch-portal-06-tape-mode.webp" alt="NoDAW Temporal Pitch Portal: Stretch or Tape" loading="lazy" width="960" height="600"><h3>Stretch or Tape</h3><p>Stretch keeps the pitch with WSOLA grains aligned by cross-correlation. Tape bends pitch with the speed, like a varispeed deck.</p></div><div class="card"><img src="../assets/temporal-pitch-portal-04-screwai-flavors.webp" alt="NoDAW Temporal Pitch Portal: Warp Zones and ScrewAI Flavors" loading="lazy" width="960" height="600"><h3>Warp Zones and ScrewAI Flavors</h3><p>14 presets: the prototype’s 5 Warp Zones and 5 ScrewAI Flavors, plus extras. Here time and pitch are independent.</p></div><div class="card"><img src="../assets/temporal-pitch-portal-07-preset-zero-gravity.webp" alt="NoDAW Temporal Pitch Portal: A portal that reads the engine" loading="lazy" width="960" height="600"><h3>A portal that reads the engine</h3><p>The rings turn with time and warp with pitch. The Dimensional Coordinates show the pitch actually applied, temporal pull, drift and speed ripple.</p></div></div>
+ <div class="feat"><div class="card"><h3>Sync periods</h3><p>Time warps inside each period of 1/4, ½ bar, 1 bar or 2 bars. The longest period is 4 s; longer bars are clamped.</p></div><div class="card"><h3>Effects</h3><p>Drift is a wandering micro-pitch with its own rate, Tone is a tilt, and Echo is a return on the shifted signal.</p></div><div class="card"><h3>Dimensional History</h3><p>A bubble per edit: click one to go back. The last 20 are kept. Dark or light look.</p></div></div>
+</section>
+
+<section>
+ <div class="kicker">The NoDAW plugin line · browser demos</div>
+ <h2>Try the <em>other five.</em></h2>
+ <div class="others"><a href="../screw/" style="--acc:#a78bfa"><img src="../assets/screw-01-default-960x600.webp" alt="NoDAW Screw" loading="lazy" width="960" height="600"><b>Screw</b><small>Chopped & screwed</small></a><a href="../racks/" style="--acc:#60a5fa"><img src="../assets/racks-hero.webp" alt="NoDAW Racks" loading="lazy" width="960" height="600"><b>Racks</b><small>Modular channel rack</small></a><a href="../harmonic-space/" style="--acc:#22d3ee"><img src="../assets/harmonic-space-hero.webp" alt="NoDAW Harmonic Space" loading="lazy" width="960" height="600"><b>Harmonic Space</b><small>Spectral Space Designer</small></a><a href="../chronos-dynamic-eq/" style="--acc:#fbbf24"><img src="../assets/chronos-dynamic-eq-hero.webp" alt="NoDAW Chronos Dynamic EQ" loading="lazy" width="960" height="600"><b>Chronos Dynamic EQ</b><small>Seven dynamic bands</small></a><a href="../chronos-weaver/" style="--acc:#c084fc"><img src="../assets/chronos-weaver-hero.webp" alt="NoDAW Chronos Weaver" loading="lazy" width="960" height="600"><b>Chronos Weaver</b><small>Spectral morph, freeze & cloud</small></a></div>
+</section>
+
+<footer><div>© NoDAW Labs · <a href="../">NoDAW plugin line</a> · <a href="https://nodaw-labs-hub.vercel.app/">NoDAW Labs hub</a></div><div class="mono">Demo loop synthesised in code · no samples · preview page</div></footer>
+</div>
+<script type="module" src="../shared/demo.js"></script>
+</body>
+</html>

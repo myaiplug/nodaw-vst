@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" style="--acc:#c084fc;--acc2:#38bdf8">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoDAW Chronos Weaver · browser demo (preview, unreleased)</title>
+<meta name="description" content="Try NoDAW Chronos Weaver in your browser: the plugin's DSP engine ported to Web Audio, with all 17 parameters and 12 factory presets. Unreleased preview from NoDAW Labs, not for sale.">
+<meta property="og:title" content="NoDAW Chronos Weaver · browser demo (preview)">
+<meta property="og:description" content="Morph your signal toward its own past or a captured snapshot, freeze a moment and sustain it, or smear it into a spectral cloud, all shown on a 3D spectrum you can orbit.">
+<meta property="og:image" content="https://myaiplug.github.io/nodaw-vst/assets/chronos-weaver-hero.webp">
+<meta name="theme-color" content="#0b0912">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/demo.css">
+</head>
+<body>
+<div class="wrap">
+<nav><a class="brand" href="../">NODAW<span>CHRONOS WEAVER</span></a><div class="navr"><a class="back" href="../">← All six plugins</a><div class="pill"><i></i>Preview · unreleased · not for sale</div></div></nav>
+
+<header class="hero">
+ <div>
+  <div class="kicker">NoDAW Chronos Weaver · spectral morph, freeze and cloud</div>
+  <h1>Weave the spectrum<br><em>through time.</em></h1>
+  <p class="lede">Morph your signal toward its own past or a captured snapshot, freeze a moment and sustain it, or smear it into a spectral cloud, all shown on a 3D spectrum you can orbit.</p>
+  <div class="specs"><div><b>17</b><small>Automatable params</small></div><div><b>12</b><small>Factory presets</small></div><div><b>43 ms</b><small>Latency @ 48 kHz</small></div><div><b>20–2000</b><small>Weave ms</small></div><div><b>75%</b><small>STFT overlap</small></div><div><b>2</b><small>Colourways</small></div></div>
+  <div class="cta"><a class="btn primary" href="#try">▶ Try the browser demo</a><a class="btn" href="#inside">What’s ported</a></div>
+ </div>
+ <div class="shot"><img src="../assets/chronos-weaver-hero.webp" alt="NoDAW Chronos Weaver plugin UI" width="1440" height="900"><div class="tag">Plugin UI preview · mock host</div></div>
+</header>
+
+<section id="try">
+ <div class="honest"><b>Browser demo</b><span>The plugin’s DSP engine, ported line by line from its Rust source to a Web Audio AudioWorklet. It really processes the audio you hear. It is not bit-identical to the plugin, and the plugin adds its own UI, analyser and DAW integration.</span></div>
+ <div class="console" id="demo" data-plugin="chronos-weaver" data-proc="nodaw-chronos-weaver" data-preset="Glass Cloud">
+  <div class="in">
+   <div class="top">
+    <div class="screen">
+     <canvas id="spec" aria-label="Spectrum: input and output"></canvas>
+     <div class="legend"><span><i style="background:rgba(220,214,236,.6)"></i>Input</span><span><i style="background:var(--acc)"></i>Output</span><span><i style="background:var(--acc2)"></i>B</span></div>
+     <div class="readout"></div>
+     <canvas class="wave" aria-label="Waveform: click to jump"></canvas>
+     <div class="steps" aria-label="Chop steps"></div>
+    </div>
+    <div class="side">
+     <div class="box transport"><button class="btn play" type="button">▶ Play</button>
+      <div class="ab" style="grid-column:1/-1"><button class="a sel" type="button">A · Effect</button><button class="b" type="button">B · Bypass</button></div></div>
+     <div class="box"><span class="lbl">Factory preset</span><select id="preset" aria-label="Factory preset"></select><div class="pdesc"></div></div>
+     <div class="box"><span class="lbl">Source</span><div class="srcrow"><div class="srcname">Loading demo loop…</div><div><span class="lbl" style="margin:0 0 4px">BPM</span><input id="bpm" type="number" min="40" max="240" step="1" value="90" aria-label="Tempo in BPM"></div></div>
+      <div class="transport" style="margin-top:8px"><button class="btn load" type="button">Load file</button><button class="btn usedemo" type="button">Demo loop</button></div>
+      <input id="file" type="file" accept="audio/*" hidden><div class="hint bpmhint" style="display:none">Set BPM to your track’s tempo for synced effects.</div></div>
+     <div class="box"><span class="lbl">Output</span><div class="meter"><span>L</span><div class="bar l"><i></i><b></b></div><span>R</span><div class="bar r"><i></i><b></b></div><div class="mval">peak — dBFS</div></div></div>
+     <button class="btn exp" type="button">⤓ Export WAV</button>
+    </div>
+   </div>
+   <div class="ctls"></div>
+   <p class="hint">Snapshot presets need a B: press Capture B while the loop plays. Freeze holds the moment you switch it on. Drop any audio file on this panel to use your own. Double-click a slider to reset it. Space plays and stops. Export renders offline with the current settings (it captures B at the start of the render).</p>
+   <div class="err" role="alert"></div>
+  </div>
+ </div>
+</section>
+
+<section id="inside">
+ <div class="kicker">In this demo vs the plugin</div>
+ <h2>What’s <em>real</em> here.</h2>
+ <div class="split">
+  <ul class="list">
+   <li><b>Ported</b><span>The engine: the STFT engine (2048-point FFT at 44.1/48 kHz, 4096 above 50 kHz): Blend and Cross morph toward the past or a captured snapshot, the phase-vocoder freeze with sustain, the spectral cloud, and the tempo-synced morph LFO.</span></li>
+   <li><b>Params</b><span>All 16 parameters plus bypass, with the plugin’s own ranges, units and curves (17 host parameters in the plugin).</span></li>
+   <li><b>Presets</b><span>All 12 factory presets, by name and value, read from the plugin’s preset files.</span></li>
+   <li><b>A/B</b><span>Bypass uses the engine’s own crossfade to the latency-delayed dry signal, so the switch never clicks.</span></li>
+  </ul>
+  <ul class="list">
+   <li class="no"><b>Plugin only</b><span>Keeping the captured snapshot with your session (here B lasts until you press Stop)</span></li><li class="no"><b>Plugin only</b><span>The plugin’s 3D orbit view and ice visuals (here B shows as a dashed line on the spectrum)</span></li><li class="no"><b>Plugin only</b><span>DAW automation, MIDI learn, undo/redo, A/B slots and user presets</span></li>
+   <li class="no"><b>Limits</b><span>No sidechain input yet, so source B is the snapshot or the past. One morph target, not four slots. Latency is 4096 samples above 50 kHz.</span></li>
+   <li class="no"><b>Status</b><span>The Chronos Weaver plugin (VST3 + CLAP, Windows x64) is in development: unreleased, not for sale, no price yet.</span></li>
+  </ul>
+ </div>
+</section>
+
+<section>
+ <div class="kicker">Signal flow</div>
+ <h2>Chronos Weaver, <em>stage by stage.</em></h2>
+ <div class="chain"><span>STFT (Hann, 75 %)</span><s>→</s><span>Morph A→B</span><s>→</s><span>Freeze</span><s>→</s><span>Cloud</span><s>→</s><span>Morph LFO</span><s>→</s><span>Mix</span><s>→</s><span>Output</span></div>
+ <div class="grid3"><div class="card"><img src="../assets/chronos-weaver-04-orbit-3d.webp" alt="NoDAW Chronos Weaver: Drag to orbit" loading="lazy" width="960" height="600"><h3>Drag to orbit</h3><p>A 3D spectrum of frequency, time and level, with source B on the front edge and a morph track showing the knob and live LFO.</p></div><div class="card"><img src="../assets/chronos-weaver-05-frozen.webp" alt="NoDAW Chronos Weaver: Freeze" loading="lazy" width="960" height="600"><h3>Freeze</h3><p>Capture the spectrum and sustain it with phase-vocoder phase advance, from about 1 s to infinite.</p></div><div class="card"><img src="../assets/chronos-weaver-06-ice.webp" alt="NoDAW Chronos Weaver: Nebula or ice" loading="lazy" width="960" height="600"><h3>Nebula or ice</h3><p>Two colourways. Cloud smears each bin in time (Grain 5–2000 ms), gated by Density and phase-scattered.</p></div></div>
+ <div class="feat"><div class="card"><h3>Source B</h3><p>Past is the signal’s own spectrum Weave ms ago. Snapshot is a capture you take with Capture B, saved with the session.</p></div><div class="card"><h3>Blend or Cross</h3><p>Blend is a log-magnitude morph. Cross puts B’s spectral envelope on A’s fine structure.</p></div><div class="card"><h3>Morph LFO</h3><p>Depth, tempo sync from ¼ to 4 bars, and sine, triangle or ramp shapes.</p></div></div>
+</section>
+
+<section>
+ <div class="kicker">The NoDAW plugin line · browser demos</div>
+ <h2>Try the <em>other five.</em></h2>
+ <div class="others"><a href="../screw/" style="--acc:#a78bfa"><img src="../assets/screw-01-default-960x600.webp" alt="NoDAW Screw" loading="lazy" width="960" height="600"><b>Screw</b><small>Chopped & screwed</small></a><a href="../racks/" style="--acc:#60a5fa"><img src="../assets/racks-hero.webp" alt="NoDAW Racks" loading="lazy" width="960" height="600"><b>Racks</b><small>Modular channel rack</small></a><a href="../harmonic-space/" style="--acc:#22d3ee"><img src="../assets/harmonic-space-hero.webp" alt="NoDAW Harmonic Space" loading="lazy" width="960" height="600"><b>Harmonic Space</b><small>Spectral Space Designer</small></a><a href="../chronos-dynamic-eq/" style="--acc:#fbbf24"><img src="../assets/chronos-dynamic-eq-hero.webp" alt="NoDAW Chronos Dynamic EQ" loading="lazy" width="960" height="600"><b>Chronos Dynamic EQ</b><small>Seven dynamic bands</small></a><a href="../temporal-pitch-portal/" style="--acc:#e879f9"><img src="../assets/temporal-pitch-portal-hero.webp" alt="NoDAW Temporal Pitch Portal" loading="lazy" width="960" height="600"><b>Temporal Pitch Portal</b><small>Tempo-synced time warp</small></a></div>
+</section>
+
+<footer><div>© NoDAW Labs · <a href="../">NoDAW plugin line</a> · <a href="https://nodaw-labs-hub.vercel.app/">NoDAW Labs hub</a></div><div class="mono">Demo loop synthesised in code · no samples · preview page</div></footer>
+</div>
+<script type="module" src="../shared/demo.js"></script>
+</body>
+</html>
