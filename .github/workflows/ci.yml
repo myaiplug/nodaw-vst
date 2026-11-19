@@ -25,7 +25,9 @@ jobs:
     runs-on: ubuntu-24.04
     needs: test
     env:
-      CPM_SOURCE_CACHE: ${{ github.workspace }}/target/cpm-cache
+      # Outside target/: rust-cache restores target/ and a half-restored CPM cache breaks CMake
+      # ("There is no CLAP SDK at .../target/cpm-cache/clap/...").
+      CPM_SOURCE_CACHE: ${{ github.workspace }}/../cpm-cache
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -33,7 +35,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: sudo apt-get update && sudo apt-get install -y ninja-build cmake g++ libx11-dev libxcb-util-dev libxcb-cursor-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig1-dev libfreetype-dev libgtkmm-3.0-dev libsqlite3-dev
       - name: Build headless CLAP + VST3
-        run: ./scripts/build-linux.sh
+        run: |
+          rm -rf target/wrapper-linux target/cpm-cache target/vst3sdk target/state-check target/clap-validator   # stale CMake trees from the rust cache
+          ./scripts/build-linux.sh
       - name: Build Steinberg validator and vst3-state-check (VST3 SDK from the wrapper's cache, MIT)
         run: |
           SDK=$(dirname "$(find "$CPM_SOURCE_CACHE" -path '*/public.sdk/source/vst/hosting/module.h' | head -1)")/../../../..
