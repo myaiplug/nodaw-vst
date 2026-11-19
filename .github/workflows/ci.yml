@@ -3,6 +3,7 @@ on:
   pull_request: {}
   push:
     branches: [main, "feat/**"]
+    tags: ["v*"]
   workflow_dispatch: {}
 
 concurrency:
@@ -60,11 +61,27 @@ jobs:
     defaults: { run: { shell: bash } }
     env:
       CPM_SOURCE_CACHE: C:/cpm
+      # Gumroad product IDs / Buy URLs (see docs/SELLING.md). Unset variables expand to "" and the
+      # defaults in crates/nodaw-kit/src/gumroad.rs are used.
+      NODAW_GUMROAD_ID_SCREW: ${{ vars.NODAW_GUMROAD_ID_SCREW }}
+      NODAW_GUMROAD_ID_RACKS: ${{ vars.NODAW_GUMROAD_ID_RACKS }}
+      NODAW_GUMROAD_ID_HARMONIC_SPACE: ${{ vars.NODAW_GUMROAD_ID_HARMONIC_SPACE }}
+      NODAW_GUMROAD_ID_CHRONOS_DYNAMIC_EQ: ${{ vars.NODAW_GUMROAD_ID_CHRONOS_DYNAMIC_EQ }}
+      NODAW_GUMROAD_ID_TEMPORAL_PITCH_PORTAL: ${{ vars.NODAW_GUMROAD_ID_TEMPORAL_PITCH_PORTAL }}
+      NODAW_GUMROAD_ID_CHRONOS_WEAVER: ${{ vars.NODAW_GUMROAD_ID_CHRONOS_WEAVER }}
+      NODAW_GUMROAD_URL_SCREW: ${{ vars.NODAW_GUMROAD_URL_SCREW }}
+      NODAW_GUMROAD_URL_RACKS: ${{ vars.NODAW_GUMROAD_URL_RACKS }}
+      NODAW_GUMROAD_URL_HARMONIC_SPACE: ${{ vars.NODAW_GUMROAD_URL_HARMONIC_SPACE }}
+      NODAW_GUMROAD_URL_CHRONOS_DYNAMIC_EQ: ${{ vars.NODAW_GUMROAD_URL_CHRONOS_DYNAMIC_EQ }}
+      NODAW_GUMROAD_URL_TEMPORAL_PITCH_PORTAL: ${{ vars.NODAW_GUMROAD_URL_TEMPORAL_PITCH_PORTAL }}
+      NODAW_GUMROAD_URL_CHRONOS_WEAVER: ${{ vars.NODAW_GUMROAD_URL_CHRONOS_WEAVER }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo test --workspace
+      # --lib --tests: every plugin has an example named ui_fixture, and building all six examples
+      # at once races on target/debug/examples/ui_fixture.exe on Windows (LNK1104).
+      - run: cargo test --workspace --lib --tests
       - name: Build every plugin's .vst3 + .clap (static CRT, no VC++ redistributable needed)
         run: ./scripts/build-windows-ci.sh
       - name: Steinberg VST3 validator on every Windows binary
@@ -88,6 +105,39 @@ jobs:
             dist/windows/pkg
             validator-windows
           if-no-files-found: error
+
+  # Tag push (v*): a GitHub Release with the Windows trial builds: one zip per plugin, an all-in-one
+  # zip, and an installer. Unsigned (no code-signing certificate yet).
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-2022
+    needs: windows
+    permissions: { contents: write }
+    defaults: { run: { shell: bash } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: NoDAW-plugins-windows, path: art }
+      - name: Zips + installer
+        run: |
+          PKG=$(dirname "$(find art -name '*.clap' | head -1)"); echo "PKG=$PKG"
+          TAG="${GITHUB_REF_NAME}"; mkdir -p out stage
+          cp docs/INSTALL-WINDOWS.txt stage/ 2>/dev/null || true
+          grep -v '^#' scripts/plugins.txt | tr -d '\r' | grep -v '^$' | while IFS='|' read -r crate name _rest; do
+            d="stage/$name"; mkdir -p "$d"
+            cp -r "$PKG/$name.vst3" "$d/"; cp "$PKG/$name.clap" "$d/"
+            cp docs/INSTALL-WINDOWS.txt "$d/" 2>/dev/null || true
+            (cd stage && 7z a -tzip -mx=9 "../out/${name// /-}-${TAG}-win64-trial.zip" "$name" > /dev/null)
+          done
+          (cd stage && 7z a -tzip -mx=9 "../out/NoDAW-Plugins-${TAG}-win64-trial.zip" . > /dev/null)
+          ISCC="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          [ -x "$ISCC" ] || { choco install innosetup -y --no-progress > /dev/null; }
+          "$ISCC" "//DAppVersion=${TAG#v}" "//DPkgDir=$(cygpath -w "$PWD/$PKG")" "//DOutDir=$(cygpath -w "$PWD/out")" scripts/installer.iss
+          ls -la out
+      - name: Publish release
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          gh release create "$GITHUB_REF_NAME" out/* --title "NoDAW Plugins $GITHUB_REF_NAME (Windows, 14-day trial)" --notes-file docs/RELEASE_NOTES.md
 
   # PULP (AGPL-3.0, public: github.com/myaiplug/pulp-daw-public) with every NoDAW plugin in its
   # bundled Plugins folder. Built here, in the private repo, so the closed plugin binary never goes into the

@@ -24,10 +24,9 @@ use apf_webview::{assets, Asset, WebView};
 pub static PRODUCT: Product = Product {
     name: "NoDAW Chronos Weaver",
     folder: "Chronos Weaver",
-    // TODO(owner): the Gumroad product ID of NoDAW Chronos Weaver.
-    gumroad_product_id: "TODO_GUMROAD_PRODUCT_ID_CHRONOS_WEAVER",
-    // TODO(owner): the Gumroad page for NoDAW Chronos Weaver.
-    buy_url: "https://nodawlabs.gumroad.com/l/nodaw-chronos-weaver",
+    // Set in crates/nodaw-kit/src/gumroad.rs (or NODAW_GUMROAD_ID_CHRONOS_WEAVER / NODAW_GUMROAD_URL_CHRONOS_WEAVER at build time).
+    gumroad_product_id: nodaw_kit::gumroad::CHRONOS_WEAVER_ID,
+    buy_url: nodaw_kit::gumroad::CHRONOS_WEAVER_URL,
     hmac_key: b"nodaw-chronos-weaver/license/v1/e2a94c17-3d58-4b0f-8c61-9f7d2b05a4e3",
     user_agent: concat!("NoDAW-Chronos-Weaver/", env!("CARGO_PKG_VERSION")),
 };

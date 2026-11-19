@@ -22,10 +22,9 @@ use apf_webview::{assets, Asset, WebView};
 pub static PRODUCT: Product = Product {
     name: "NoDAW Harmonic Space",
     folder: "Harmonic Space",
-    // TODO(owner): the Gumroad product ID of NoDAW Harmonic Space.
-    gumroad_product_id: "TODO_GUMROAD_PRODUCT_ID_HARMONIC_SPACE",
-    // TODO(owner): the Gumroad page for NoDAW Harmonic Space.
-    buy_url: "https://nodawlabs.gumroad.com/l/nodaw-harmonic-space",
+    // Set in crates/nodaw-kit/src/gumroad.rs (or NODAW_GUMROAD_ID_HARMONIC_SPACE / NODAW_GUMROAD_URL_HARMONIC_SPACE at build time).
+    gumroad_product_id: nodaw_kit::gumroad::HARMONIC_SPACE_ID,
+    buy_url: nodaw_kit::gumroad::HARMONIC_SPACE_URL,
     hmac_key: b"nodaw-harmonic-space/license/v1/8b2e61d4-0f3a-4c9e-a7d5-3e91c0b6f218",
     user_agent: concat!("NoDAW-Harmonic-Space/", env!("CARGO_PKG_VERSION")),
 };

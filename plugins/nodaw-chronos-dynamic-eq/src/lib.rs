@@ -22,10 +22,9 @@ use apf_webview::{assets, Asset, WebView};
 pub static PRODUCT: Product = Product {
     name: "NoDAW Chronos Dynamic EQ",
     folder: "Chronos Dynamic EQ",
-    // TODO(owner): the Gumroad product ID of NoDAW Chronos Dynamic EQ.
-    gumroad_product_id: "TODO_GUMROAD_PRODUCT_ID_CHRONOS_DYNAMIC_EQ",
-    // TODO(owner): the Gumroad page for NoDAW Chronos Dynamic EQ.
-    buy_url: "https://nodawlabs.gumroad.com/l/nodaw-chronos-dynamic-eq",
+    // Set in crates/nodaw-kit/src/gumroad.rs (or NODAW_GUMROAD_ID_CHRONOS_DYNAMIC_EQ / NODAW_GUMROAD_URL_CHRONOS_DYNAMIC_EQ at build time).
+    gumroad_product_id: nodaw_kit::gumroad::CHRONOS_DYNAMIC_EQ_ID,
+    buy_url: nodaw_kit::gumroad::CHRONOS_DYNAMIC_EQ_URL,
     hmac_key: b"nodaw-chronos-dynamic-eq/license/v1/5d7a0e3c-92b1-4f68-b0c4-6e2f81a9d357",
     user_agent: concat!("NoDAW-Chronos-Dynamic-EQ/", env!("CARGO_PKG_VERSION")),
 };

@@ -15,12 +15,12 @@ pub use nodaw_kit::license::{
     Verdict, DAY, RECHECK_SECS, TRIAL_DAYS,
 };
 
-/// TODO(owner): the Gumroad product ID of NoDAW Screw (Gumroad dashboard: Product > Content >
-/// License key > "product_id"). Until it is set, activation tells the user it is not available.
-pub const GUMROAD_PRODUCT_ID: &str = "TODO_GUMROAD_PRODUCT_ID";
+/// The Gumroad product ID of NoDAW Screw: set in `crates/nodaw-kit/src/gumroad.rs` (or
+/// `NODAW_GUMROAD_ID_SCREW` at build time). Until it is set, activation tells the user it is not available.
+pub const GUMROAD_PRODUCT_ID: &str = nodaw_kit::gumroad::SCREW_ID;
 
-/// TODO(owner): the public Gumroad page the Buy button opens.
-pub const BUY_URL: &str = "https://nodawlabs.gumroad.com/l/nodaw-screw";
+/// The public Gumroad page the Buy button opens (`NODAW_GUMROAD_URL_SCREW`).
+pub const BUY_URL: &str = nodaw_kit::gumroad::SCREW_URL;
 
 /// NoDAW Screw as a product.
 pub static PRODUCT: Product = Product {

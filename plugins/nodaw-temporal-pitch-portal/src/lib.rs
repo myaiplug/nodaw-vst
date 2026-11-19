@@ -23,10 +23,9 @@ use apf_webview::{assets, Asset, WebView};
 pub static PRODUCT: Product = Product {
     name: "NoDAW Temporal Pitch Portal",
     folder: "Temporal Pitch Portal",
-    // TODO(owner): the Gumroad product ID of NoDAW Temporal Pitch Portal.
-    gumroad_product_id: "TODO_GUMROAD_PRODUCT_ID_TEMPORAL_PITCH_PORTAL",
-    // TODO(owner): the Gumroad page for NoDAW Temporal Pitch Portal.
-    buy_url: "https://nodawlabs.gumroad.com/l/nodaw-temporal-pitch-portal",
+    // Set in crates/nodaw-kit/src/gumroad.rs (or NODAW_GUMROAD_ID_TEMPORAL_PITCH_PORTAL / NODAW_GUMROAD_URL_TEMPORAL_PITCH_PORTAL at build time).
+    gumroad_product_id: nodaw_kit::gumroad::TEMPORAL_PITCH_PORTAL_ID,
+    buy_url: nodaw_kit::gumroad::TEMPORAL_PITCH_PORTAL_URL,
     hmac_key: b"nodaw-temporal-pitch-portal/license/v1/5c1f9e02-7b44-4d6a-9e38-a0d2c7f41b93",
     user_agent: concat!("NoDAW-Temporal-Pitch-Portal/", env!("CARGO_PKG_VERSION")),
 };

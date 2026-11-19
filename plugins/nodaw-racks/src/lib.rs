@@ -24,10 +24,9 @@ use apf_webview::{assets, Asset, WebView};
 pub static PRODUCT: Product = Product {
     name: "NoDAW Racks",
     folder: "Racks",
-    // TODO(owner): the Gumroad product ID of NoDAW Racks.
-    gumroad_product_id: "TODO_GUMROAD_PRODUCT_ID_RACKS",
-    // TODO(owner): the Gumroad page for NoDAW Racks.
-    buy_url: "https://nodawlabs.gumroad.com/l/nodaw-racks",
+    // Set in crates/nodaw-kit/src/gumroad.rs (or NODAW_GUMROAD_ID_RACKS / NODAW_GUMROAD_URL_RACKS at build time).
+    gumroad_product_id: nodaw_kit::gumroad::RACKS_ID,
+    buy_url: nodaw_kit::gumroad::RACKS_URL,
     hmac_key: b"nodaw-racks/license/v1/4f0c2d9e-6a1b-4c37-9e85-1b7d3a6f20c4",
     user_agent: concat!("NoDAW-Racks/", env!("CARGO_PKG_VERSION")),
 };

@@ -37,22 +37,13 @@ Common to every plugin:
 | NoDAW Temporal Pitch Portal | `nodaw-temporal-pitch-portal` | `com.nodaw.temporal-pitch-portal` | NdTp | 3320 smp (69 ms) | 14 | 14 |
 | NoDAW Chronos Weaver | `nodaw-chronos-weaver` | `com.nodaw.chronos-weaver` | NdCw | 2048 smp (43 ms; 4096 above 50 kHz) | 17 | 12 |
 
-## TODO(owner) constants
+## Gumroad product IDs (owner)
 
-Each plugin's `src/lib.rs` has a `PRODUCT` with:
-
-| Plugin | `gumroad_product_id` | `buy_url` |
-|---|---|---|
-| Racks | `TODO_GUMROAD_PRODUCT_ID_RACKS` | https://nodawlabs.gumroad.com/l/nodaw-racks |
-| Harmonic Space | `TODO_GUMROAD_PRODUCT_ID_HARMONIC_SPACE` | https://nodawlabs.gumroad.com/l/nodaw-harmonic-space |
-| Chronos Dynamic EQ | `TODO_GUMROAD_PRODUCT_ID_CHRONOS_DYNAMIC_EQ` | https://nodawlabs.gumroad.com/l/nodaw-chronos-dynamic-eq |
-| Temporal Pitch Portal | `TODO_GUMROAD_PRODUCT_ID_TEMPORAL_PITCH_PORTAL` | https://nodawlabs.gumroad.com/l/nodaw-temporal-pitch-portal |
-| Chronos Weaver | `TODO_GUMROAD_PRODUCT_ID_CHRONOS_WEAVER` | https://nodawlabs.gumroad.com/l/nodaw-chronos-weaver |
-
-Screw's are in `plugins/nodaw-screw/src/license.rs` (`GUMROAD_PRODUCT_ID`, `BUY_URL`), which now
-uses the shared `nodaw_kit::license` with Screw's unchanged product, key and folder. Until a
-product ID is set, the activation dialog says activation is not available yet; the trial works.
-The buy URLs are guesses at the Gumroad slugs.
+All six product IDs and Buy URLs live in one file, `crates/nodaw-kit/src/gumroad.rs`, or can be
+set at build time with `NODAW_GUMROAD_ID_<PLUGIN>` / `NODAW_GUMROAD_URL_<PLUGIN>` (CI passes the
+repository's Actions variables of those names). See `docs/SELLING.md` for the Gumroad checklist.
+Until an ID is set, the activation dialog says activation is not available yet; the trial works.
+Screw keeps its original product, HMAC key and state folder, so existing trials carry over.
 
 ## NoDAW Racks
 

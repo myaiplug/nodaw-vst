@@ -2,6 +2,8 @@
 //!
 //! * [`license`]: the 14-day trial, Gumroad activation and the post-trial dropouts (one
 //!   [`license::Product`] per plugin, so each has its own trial and its own license).
+//! * [`gumroad`]: every plugin's Gumroad product ID and Buy page, in one file (or set at
+//!   build time from environment variables).
 //! * [`ctl`]: the web view's controller: the binary meter/spectrum frame, A/B slots, the
 //!   license endpoints, the range table the page uses to map host values to plain units, and a
 //!   hook ([`ctl::Ext`]) for each plugin's own endpoints and session state.
@@ -10,6 +12,7 @@
 //! The audio thread only ever touches atomics from here (meters, `demo_flag`), never a lock.
 
 pub mod ctl;
+pub mod gumroad;
 pub mod license;
 pub mod testing;
 
