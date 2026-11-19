@@ -1,6 +1,6 @@
 NoDAW plugins - Windows x64 (VST3 + CLAP) - 14-day free trial
 
-Install (or use the NoDAW-Plugins-...-setup.exe installer instead):
+Install (or use the NoDAW-Plugins-win64-trial-setup.exe installer instead):
   * Copy each "NoDAW <Name>.vst3" folder into   C:\Program Files\Common Files\VST3\
   * Copy each "NoDAW <Name>.clap" file into      C:\Program Files\Common Files\CLAP\
   * Rescan plugins in your DAW.

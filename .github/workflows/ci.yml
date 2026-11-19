@@ -127,9 +127,9 @@ jobs:
             d="stage/$name"; mkdir -p "$d"
             cp -r "$PKG/$name.vst3" "$d/"; cp "$PKG/$name.clap" "$d/"
             cp docs/INSTALL-WINDOWS.txt "$d/" 2>/dev/null || true
-            (cd stage && 7z a -tzip -mx=9 "../out/${name// /-}-${TAG}-win64-trial.zip" "$name" > /dev/null)
+            (cd stage && 7z a -tzip -mx=9 "../out/${name// /-}-win64-trial.zip" "$name" > /dev/null)
           done
-          (cd stage && 7z a -tzip -mx=9 "../out/NoDAW-Plugins-${TAG}-win64-trial.zip" . > /dev/null)
+          (cd stage && 7z a -tzip -mx=9 "../out/NoDAW-Plugins-win64-trial.zip" . > /dev/null)
           ISCC="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
           [ -x "$ISCC" ] || { choco install innosetup -y --no-progress > /dev/null; }
           "$ISCC" "//DAppVersion=${TAG#v}" "//DPkgDir=$(cygpath -w "$PWD/$PKG")" "//DOutDir=$(cygpath -w "$PWD/out")" scripts/installer.iss

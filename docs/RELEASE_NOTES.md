@@ -5,9 +5,9 @@ until activated with a license key.
 Plugins: NoDAW Screw, Racks, Harmonic Space, Chronos Dynamic EQ, Temporal Pitch Portal, Chronos Weaver.
 
 Downloads:
-* `NoDAW-Plugins-…-win64-trial-setup.exe`: installer (puts VST3s in Common Files\VST3 and CLAPs in Common Files\CLAP; pick which plugins).
-* `NoDAW-Plugins-…-win64-trial.zip`: all six, copy by hand (see INSTALL-WINDOWS.txt inside).
-* `NoDAW-<Plugin>-…-win64-trial.zip`: one plugin.
+* `NoDAW-Plugins-win64-trial-setup.exe`: installer (puts VST3s in Common Files\VST3 and CLAPs in Common Files\CLAP; pick which plugins).
+* `NoDAW-Plugins-win64-trial.zip`: all six, copy by hand (see INSTALL-WINDOWS.txt inside).
+* `NoDAW-<Plugin>-win64-trial.zip`: one plugin.
 
 Known limits:
 * **Not code-signed**: Windows SmartScreen may warn ("More info" > "Run anyway").
