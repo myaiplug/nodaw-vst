@@ -501,8 +501,8 @@ impl Engine {
         let ratio = (w.sr / ((nb - 1) * 2) as f64) / (sample_rate / ((bins - 1) * 2) as f64);
         let scale = (nb - 1) as f32 / (bins - 1) as f32;
         for c in 0..2 {
-            for k in 0..nb {
-                w.snap[c][k] = if same {
+            for (k, out) in w.snap[c].iter_mut().enumerate().take(nb) {
+                *out = if same {
                     get(c, k)
                 } else {
                     let x = k as f64 * ratio;
@@ -587,8 +587,8 @@ impl Engine {
         let morph = morph.clamp(0.0, 1.0);
         if s.capture && !self.last_capture {
             self.weave.snap_count = [0, 0];
-            for c in 0..2 {
-                self.weave.snap[c].fill(0.0);
+            for snap in self.weave.snap.iter_mut() {
+                snap.fill(0.0);
             }
             self.weave.capturing = true;
         }
