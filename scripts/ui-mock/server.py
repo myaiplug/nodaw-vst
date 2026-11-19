@@ -43,6 +43,8 @@ class Model:
         self.clip = False
         self.presets = self.load_presets()
         self.index = {d["key"]: i for i, d in enumerate(self.defs)}
+        self.license = {"state": "trial", "days_left": 11, "trial_days": 14, "busy": False, "message": None, "ok": False, "email": None, "key_hint": None,
+                        "buy_url": "https://nodawlabs.gumroad.com/l/nodaw-screw", "activation_ready": True}
 
     # ---- value maps (mirror of apf::param) ----
     def steps(self, d):
@@ -233,6 +235,10 @@ def make_handler(model):
                         if k == "playing": m.playing = v == "1"
                         elif k == "level": m.level = float(v)
                         elif k == "preset": m.load_preset("factory:" + v)
+                        elif k == "license": m.license = {"state": v, "days_left": int(q.get("days", "11")), "trial_days": 14, "busy": False, "message": None, "ok": False,
+                                                          "email": "beez@example.com" if v == "licensed" else None, "key_hint": "••••9F2C" if v == "licensed" else None,
+                                                          "buy_url": "https://nodawlabs.gumroad.com/l/nodaw-screw", "activation_ready": True}
+                        elif k == "days": pass
                         else:
                             try: v = float(v)
                             except ValueError: pass
@@ -247,6 +253,10 @@ def make_handler(model):
                 if p.startswith("/__apf/plugin/"):
                     r = p[len("/__apf/plugin/"):]
                     if r == "frame": return self.send(200, m.frame(), "application/octet-stream")
+                    if r == "license": return self.js(m.license)
+                    if r == "license-activate":
+                        m.license = dict(m.license, busy=False, message="That license does not exist for the provided product.", ok=False); return self.js(m.license)
+                    if r == "license-buy": return self.js({"opened": True, "url": m.license["buy_url"]})
                     if r == "ranges": return self.js(m.ranges)
                     if r == "patterns": return self.js(m.patterns)
                     if r == "steps":

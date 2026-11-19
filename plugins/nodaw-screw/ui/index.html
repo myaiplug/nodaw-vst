@@ -17,6 +17,9 @@
     </div>
     <div class="presets" data-apf-presets></div>
     <div class="tools">
+      <button type="button" id="lic-badge" class="lic-badge" hidden title="License and trial">
+        <i class="lic-dot"></i><span class="lic-txt">Trial</span>
+      </button>
       <div class="seg" role="group" aria-label="A/B compare">
         <button type="button" id="ab-a" class="on" title="Compare slot A">A</button>
         <button type="button" id="ab-b" title="Compare slot B">B</button>
@@ -90,11 +93,41 @@
     <span class="f-sep"></span>
     <span class="f-item" id="f-tr"><i class="dot"></i><b>Free-run</b></span>
     <span class="f-hint" id="f-hint">Drag to adjust · Shift for fine · Double-click to reset · Right-click for MIDI learn</span>
-    <span class="f-ver">NoDAW · v0.1</span>
+    <span class="f-ver">NoDAW · v0.2</span>
   </footer>
   <div data-apf-resize-grip></div>
 </div>
 <div id="tip" class="tip" role="status"></div>
+
+<div id="lic" class="lic" hidden role="dialog" aria-modal="true" aria-labelledby="lic-title">
+  <div class="lic-card">
+    <button type="button" class="lic-x" id="lic-close" aria-label="Close">
+      <svg viewBox="0 0 16 16"><path d="m4 4 8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+    <div class="lic-head">
+      <span class="logo">NODAW</span><span class="prod">SCREW</span>
+    </div>
+    <h2 id="lic-title" class="lic-title">Your trial</h2>
+    <div class="lic-meter" aria-hidden="true"><i id="lic-bar"></i></div>
+    <p class="lic-sub" id="lic-sub"></p>
+    <form class="lic-form" id="lic-form" autocomplete="off">
+      <label class="lic-label" for="lic-key">License key</label>
+      <div class="lic-row">
+        <input id="lic-key" type="text" spellcheck="false" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" aria-describedby="lic-msg">
+        <button type="submit" class="lic-btn lic-primary" id="lic-activate">Activate</button>
+      </div>
+      <p class="lic-msg" id="lic-msg" role="status" aria-live="polite"></p>
+    </form>
+    <div class="lic-licensed" id="lic-licensed" hidden>
+      <p><b id="lic-who"></b></p>
+      <p class="lic-fine" id="lic-keyhint"></p>
+    </div>
+    <div class="lic-foot">
+      <button type="button" class="lic-btn lic-buy" id="lic-buy">Buy NoDAW Screw</button>
+      <span class="lic-fine" id="lic-fine">Your key is in the Gumroad receipt email.</span>
+    </div>
+  </div>
+</div>
 <script src="app.js"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@
 //! kept in the [`ScrewController`]. See `docs/DESIGN.md`.
 
 pub mod engine;
+pub mod license;
 pub mod shared;
 
 use std::sync::atomic::Ordering;
@@ -96,6 +97,8 @@ const UI: &[Asset] = assets![
 pub struct NoDawScrew {
     engine: Engine,
     shared: Arc<Shared>,
+    /// Trial over and not activated: half a second of silence every 45 s (license.rs).
+    dropout: license::Dropout,
 }
 
 /// The engine's settings from the parameter values. No allocation.
@@ -159,10 +162,12 @@ impl Plugin for NoDawScrew {
     ];
 
     fn new() -> Self {
-        Self { engine: Engine::new(48_000.0), shared: Arc::new(Shared::new()) }
+        Self { engine: Engine::new(48_000.0), shared: Arc::new(Shared::new()), dropout: license::Dropout::new(48_000.0) }
     }
 
     fn controller(&mut self, host: HostHandle) -> Option<Arc<dyn Controller>> {
+        // A licensed copy whose last online check is over 30 days old asks again, off-thread.
+        self.shared.license.maybe_recheck(license::now_secs());
         Some(Arc::new(ScrewController::new(self.shared.clone(), Some(host))))
     }
 
@@ -170,7 +175,11 @@ impl Plugin for NoDawScrew {
     fn activate(&mut self, config: &ProcessConfig, params: &Params) {
         if (self.engine.sample_rate() - config.sample_rate).abs() > 0.5 {
             self.engine = Engine::new(config.sample_rate);
+            self.dropout = license::Dropout::new(config.sample_rate);
         }
+        // A trial that ran out while the session was open takes effect here (and when the
+        // window asks for the license state).
+        self.shared.license.refresh(license::now_secs());
         self.engine.reset_to(&settings(params, &self.shared));
         self.shared.sample_rate.store((config.sample_rate as f32).to_bits(), Ordering::Relaxed);
         self.shared.latency.store(self.engine.latency() as u32, Ordering::Relaxed);
@@ -195,6 +204,8 @@ impl Plugin for NoDawScrew {
         sh.in_meter.record(l, r);
         sh.in_scope.push_stereo(l, r);
         let info = self.engine.process(l, r, &s, ctx.transport.song_pos_beats, ctx.transport.playing, ctx.transport.tempo);
+        // Lock-free: one relaxed atomic load. Bypassed audio is the dry signal: left alone.
+        self.dropout.process(l, r, sh.license.demo_flag() && !s.bypass);
         sh.out_meter.record(l, r);
         sh.out_scope.push_stereo(l, r);
         GainReduction::record(&sh.gr, info.min_gain);

@@ -237,4 +237,55 @@ button { background: none; border: 0; cursor: pointer; }
 .presets .apf-name { background: linear-gradient(180deg, #0c0c11, #08080b); font-family: var(--f-ui); font-weight: 500; font-size: .88rem; }
 .presets .apf-name em { color: var(--accent-hot); }
 
+/* ── trial / license ───────────────────────────────────────────────────────────────────── */
+.lic-badge { height: 1.9rem; display: flex; align-items: center; gap: .45rem; padding: 0 .75rem; border-radius: 1rem; border: 1px solid var(--accent-edge);
+  background: linear-gradient(180deg, rgba(var(--accent-rgb), .16), rgba(var(--accent-2-rgb), .06)); color: var(--accent-soft);
+  font: 600 .68rem/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; box-shadow: inset 0 1px 0 var(--hair-hi); transition: border-color .15s, color .15s, box-shadow .15s; }
+.lic-badge:hover { color: #fff; border-color: rgba(var(--accent-hot-rgb), .6); box-shadow: 0 0 .9rem rgba(var(--accent-rgb), .35); }
+.lic-dot { width: .45rem; height: .45rem; border-radius: 50%; background: var(--accent-hot); box-shadow: 0 0 .5rem var(--accent-glow); }
+.lic-badge.low { border-color: rgba(255, 191, 74, .45); color: var(--warn); background: linear-gradient(180deg, rgba(255, 191, 74, .14), rgba(255, 191, 74, .04)); }
+.lic-badge.low .lic-dot { background: var(--warn); box-shadow: 0 0 .5rem rgba(255, 191, 74, .7); }
+.lic-badge.ended { border-color: rgba(255, 79, 109, .5); color: #ffd0d8; background: linear-gradient(180deg, rgba(255, 79, 109, .2), rgba(255, 79, 109, .06)); }
+.lic-badge.ended .lic-dot { background: var(--hot); box-shadow: 0 0 .5rem rgba(255, 79, 109, .8); animation: lic-pulse 1.6s ease-in-out infinite; }
+@keyframes lic-pulse { 50% { opacity: .35; } }
+
+.lic { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(2, 2, 4, .62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: lic-in .18s ease-out; }
+.lic[hidden] { display: none; }
+@keyframes lic-in { from { opacity: 0; } }
+.lic-card { position: relative; width: min(30rem, calc(100% - 3rem)); padding: 1.6rem 1.7rem 1.3rem; border-radius: 1rem; border: 1px solid var(--accent-edge);
+  background: radial-gradient(28rem 12rem at 50% -20%, rgba(var(--accent-2-rgb), .28), transparent 70%), linear-gradient(180deg, #16161d, #0c0c11);
+  box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, .75), 0 0 2.2rem rgba(var(--accent-rgb), .18), inset 0 1px 0 var(--hair-hi); animation: lic-up .22s cubic-bezier(.2, .9, .3, 1.2); }
+@keyframes lic-up { from { transform: translateY(.8rem) scale(.98); opacity: 0; } }
+.lic-x { position: absolute; top: .8rem; right: .8rem; width: 1.8rem; height: 1.8rem; border-radius: .5rem; color: var(--ink-dim); display: grid; place-items: center; }
+.lic-x:hover { color: var(--ink); background: rgba(255, 255, 255, .06); }
+.lic-x svg { width: 1rem; height: 1rem; }
+.lic-head { display: flex; align-items: baseline; gap: .55rem; margin-bottom: 1rem; }
+.lic-title { font: 1.9rem/1 var(--f-disp); letter-spacing: .06em; color: #fff; margin-bottom: .7rem; }
+.lic-meter { height: .3rem; border-radius: 1rem; background: #08080c; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .8); overflow: hidden; margin-bottom: .75rem; }
+.lic-meter i { display: block; height: 100%; width: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-2), var(--accent), var(--accent-hot)); box-shadow: 0 0 .7rem var(--accent-glow); transition: width .4s; }
+.lic.ended .lic-meter i { background: var(--hot); box-shadow: 0 0 .7rem rgba(255, 79, 109, .7); }
+.lic.licensed .lic-meter i { background: linear-gradient(90deg, #2bb880, var(--ok)); box-shadow: 0 0 .7rem rgba(82, 230, 166, .6); }
+.lic-sub { color: var(--ink-dim); font-size: .92rem; line-height: 1.45; margin-bottom: 1.1rem; }
+.lic-label { display: block; font: 500 .62rem/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: .45rem; }
+.lic-row { display: flex; gap: .5rem; }
+.lic-row input { flex: 1; min-width: 0; height: 2.3rem; padding: 0 .75rem; border-radius: .55rem; border: 1px solid var(--hair); background: #07070a; color: var(--ink);
+  font: 500 .82rem/1 var(--f-mono); letter-spacing: .04em; box-shadow: inset 0 1px 3px rgba(0, 0, 0, .7); user-select: text; -webkit-user-select: text; }
+.lic-row input:focus { border-color: rgba(var(--accent-hot-rgb), .6); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .7), 0 0 0 3px rgba(var(--accent-rgb), .18); }
+.lic-btn { height: 2.3rem; padding: 0 1.1rem; border-radius: .55rem; font: 600 .85rem/1 var(--f-ui); white-space: nowrap; transition: filter .12s, box-shadow .12s, opacity .12s; }
+.lic-primary { color: #fff; background: linear-gradient(180deg, rgba(var(--accent-rgb), .95), rgba(var(--accent-2-rgb), .95)); box-shadow: 0 0 1rem rgba(var(--accent-rgb), .4), inset 0 1px 0 rgba(255, 255, 255, .25); text-shadow: 0 1px 0 rgba(0, 0, 0, .35); }
+.lic-primary:hover:not(:disabled) { filter: brightness(1.12); }
+.lic-primary:disabled { opacity: .55; cursor: default; }
+.lic-primary.busy { background-image: linear-gradient(90deg, rgba(var(--accent-2-rgb), .9) 0 40%, rgba(var(--accent-hot-rgb), .9) 50%, rgba(var(--accent-2-rgb), .9) 60%); background-size: 250% 100%; animation: lic-busy 1s linear infinite; }
+@keyframes lic-busy { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+.lic-msg { min-height: 1.1rem; margin-top: .5rem; font-size: .8rem; color: var(--ink-dim); }
+.lic-msg.err { color: #ff8da0; }
+.lic-msg.ok { color: var(--ok); }
+.lic-licensed { margin: .2rem 0 1rem; color: var(--ink); }
+.lic-licensed b { font-weight: 600; }
+.lic-foot { display: flex; align-items: center; gap: .9rem; margin-top: .6rem; padding-top: 1rem; border-top: 1px solid var(--hair); }
+.lic-buy { color: var(--accent-soft); border: 1px solid var(--accent-edge); background: rgba(var(--accent-rgb), .08); }
+.lic-buy:hover { color: #fff; border-color: rgba(var(--accent-hot-rgb), .6); box-shadow: 0 0 .9rem rgba(var(--accent-rgb), .3); }
+.lic-fine { font: 500 .7rem/1.35 var(--f-mono); color: var(--ink-faint); letter-spacing: .03em; }
+.lic.licensed .lic-form, .lic.licensed .lic-buy { display: none; }
+
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
