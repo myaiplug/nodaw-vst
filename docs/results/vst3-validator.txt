@@ -1,0 +1,311 @@
+* Loading module...
+
+	/workspace/nodaw-vst/dist/linux/NoDAW Screw.vst3
+
+* Check valid bundle structure...
+
+* Scanning classes...
+
+  Factory Info:
+	vendor = NoDAW
+	url = https://nodaw.app
+	email = info@
+
+  Class Info 0:
+	name = NoDAW Screw
+	category = Audio Module Class
+	subCategories = Fx
+	version = 0.1.0
+	sdkVersion = VST 3.8.0
+	cid = 1D7E21DAD4BD563185EFB5F148F0DC2C
+
+* Checking snapshots...
+
+Info: No snapshots in Bundle.
+
+* Creating tests...
+
+* Running tests...
+
+-------------------------------------------------------------
+TestSuite : NoDAW Screw
+-------------------------------------------------------------
+
+-------------------------------------------------------------
+TestSuite : General Tests
+-------------------------------------------------------------
+
+[Scan Editor Classes]
+	AUDIO in: 1, out: 1
+Info:  ===Scan Editor Classes ====================================
+Info:  Processor and edit controller united.
+[Succeeded]
+
+[Scan Buses]
+Info:  ===Scan Buses ====================================
+Info:  => Audio Buses: [1 In(s) => 1 Out(s)]
+Info:       In [0]: "Main In" (Main-Default Active) 
+Info:       Out[0]: "Main Out" (Main-Default Active) 
+Info:  => Event Buses: [0 In(s) => 0 Out(s)]
+[Succeeded]
+
+[Scan Parameters]
+Info:  ===Scan Parameters ====================================
+Info:  This component exports 22 parameter(s)
+Info:     Parameter 000 (id=1573592237): [title="Bypass"] [unit=""] [type = Toggle, default = 0.000000, unit = 0]
+Info:     Parameter 001 (id=1135351820): [title="Input"] [unit=""] [type = Float, default = 0.500000, unit = 1]
+Info:     Parameter 002 (id=2089425219): [title="Output"] [unit=""] [type = Float, default = 0.500000, unit = 1]
+Info:     Parameter 003 (id=1469012833): [title="Mix"] [unit=""] [type = Float, default = 1.000000, unit = 1]
+Info:     Parameter 004 (id=1026706097): [title="Pitch"] [unit=""] [type = Float, default = 0.375000, unit = 2]
+Info:     Parameter 005 (id=585688324): [title="Wow"] [unit=""] [type = Float, default = 0.000000, unit = 2]
+Info:     Parameter 006 (id=1160454547): [title="Wow Rate"] [unit=""] [type = Float, default = 0.422549, unit = 2]
+Info:     Parameter 007 (id=391927001): [title="Flutter"] [unit=""] [type = Float, default = 0.000000, unit = 2]
+Info:     Parameter 008 (id=288347380): [title="Lowpass"] [unit=""] [type = Float, default = 1.000000, unit = 3]
+Info:     Parameter 009 (id=1406973818): [title="Warmth"] [unit=""] [type = Float, default = 0.333333, unit = 3]
+Info:     Parameter 010 (id=1004675271): [title="Reverb"] [unit=""] [type = Float, default = 0.250000, unit = 4]
+Info:     Parameter 011 (id=1074495119): [title="Decay"] [unit=""] [type = Float, default = 0.621519, unit = 4]
+Info:     Parameter 012 (id=1337920782): [title="Size"] [unit=""] [type = Float, default = 0.333333, unit = 4]
+Info:     Parameter 013 (id=32077325): [title="Damping"] [unit=""] [type = Float, default = 0.673621, unit = 4]
+Info:     Parameter 014 (id=735813136): [title="Pre-delay"] [unit=""] [type = Float, default = 0.282843, unit = 4]
+Info:     Parameter 015 (id=854512312): [title="Chop Pattern"] [unit=""] [type = Discrete, default = 0.000000, unit = 5]
+Info:     Parameter 016 (id=1854516352): [title="Chop Rate"] [unit=""] [type = Discrete, default = 0.200000, unit = 5]
+Info:     Parameter 017 (id=575727723): [title="Chop Depth"] [unit=""] [type = Float, default = 1.000000, unit = 5]
+Info:     Parameter 018 (id=361197087): [title="Width"] [unit=""] [type = Float, default = 0.500000, unit = 1]
+Info:     Parameter 019 (id=1307994467): [title="Limiter"] [unit=""] [type = Toggle, default = 1.000000, unit = 6]
+Info:     Parameter 020 (id=971348096): [title="Ceiling"] [unit=""] [type = Float, default = 0.916667, unit = 6]
+Info:     Parameter 021 (id=12582912): [title="Preset"] [unit=""] [type = Float, default = 0.000000, unit = 0]
+[Succeeded]
+
+[MIDI Mapping]
+Info:  ===MIDI Mapping ====================================
+Info:  No MIDI Mapping interface supplied!
+[Succeeded]
+
+[MIDI Learn]
+Info:  ===MIDI Learn ====================================
+Info:  No MIDI Learn interface supplied!
+[Succeeded]
+
+[Scan Units]
+Info:  ===Scan Units ====================================
+Info:  This component has 7 unit(s).
+Info:     Unit000 (ID = 0): "Root" (parent ID = -1, programlist ID = 12582912)
+Info:     Unit001 (ID = 1): "Global" (parent ID = 0, programlist ID = -1)
+Info:     Unit002 (ID = 2): "Screw" (parent ID = 0, programlist ID = -1)
+Info:     Unit003 (ID = 3): "Tone" (parent ID = 0, programlist ID = -1)
+Info:     Unit004 (ID = 4): "Space" (parent ID = 0, programlist ID = -1)
+Info:     Unit005 (ID = 5): "Chop" (parent ID = 0, programlist ID = -1)
+Info:     Unit006 (ID = 6): "Output" (parent ID = 0, programlist ID = -1)
+[Succeeded]
+
+[Scan Programs]
+Info:  ===Scan Programs ====================================
+Info:  Programlist 000 (id=12582912): "P" No programs!!! (programCount is null!)
+Info:  Programlist 000 (id=12582912):  "Presets" (0 programs).
+[Succeeded]
+
+[Terminate/Initialize]
+Info:  ===Terminate/Initialize ====================================
+	AUDIO in: 1, out: 1
+[Succeeded]
+
+[Check Unit Structure]
+Info:  ===Check Unit Structure ====================================
+Info:  All units have valid parent IDs.
+[Succeeded]
+
+[Valid State Transition 32bits]
+Info:  ===Valid State Transition 32bits ====================================
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+	AUDIO in: 1, out: 1
+[Succeeded]
+
+[Valid State Transition 64bits]
+Info:  ===Valid State Transition 64bits ====================================
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[Bus Consistency]
+Info:  ===Bus Consistency ====================================
+[Succeeded]
+
+[Bus Activation]
+Info:  ===Bus Activation ====================================
+Info:     Bus Activation: Input Audio Bus (0) (kMain)
+Info:     Bus Activation: Output Audio Bus (0) (kMain)
+[Succeeded]
+
+[Check Audio Bus Arrangement]
+Info:  ===Check Audio Bus Arrangement ====================================
+Info:     Check Input Audio Bus Arrangement (0)
+Info:     Check Output Audio Bus Arrangement (0)
+[Succeeded]
+
+[SideChain Arrangement]
+Info:  ===SideChain Arrangement ====================================
+[Succeeded]
+
+[Suspend/Resume]
+Info:  ===Suspend/Resume ====================================
+[Succeeded]
+
+[Note Expression]
+Info:  ===Note Expression ====================================
+Info:  No Note Expression PhysicalUIMapping interface supplied!
+[Succeeded]
+
+[Keyswitch]
+Info:  ===Keyswitch ====================================
+Info:  No Keyswitch interface supplied!
+[Succeeded]
+
+[ProcessContext Requirements]
+Info:  ===ProcessContext Requirements ====================================
+Info:  ProcessContextRequirements:
+Info:   - None
+[Succeeded]
+
+-------------------------------------------------------------
+TestSuite : Single Precision (32 bit) Tests
+-------------------------------------------------------------
+
+[Process Test]
+[Succeeded]
+
+[Process function running in another thread]
+Info:  ===Process function running in another thread ====================================
+[Succeeded]
+
+[Silence Flags]
+Info:  ===Silence Flags ====================================
+[Succeeded]
+
+[Silence Processing]
+Info:  ===Silence Processing ====================================
+[Succeeded]
+
+[Parameters Flush (no Buffer)]
+Info:  ===Parameters Flush (no Buffer) ====================================
+[Succeeded]
+
+[Parameters Flush 2 (only numChannel==0)]
+Info:  ===Parameters Flush 2 (only numChannel==0) ====================================
+[Succeeded]
+
+[Parameters Flush 2 (no Buffer, no parameter change)]
+Info:  ===Parameters Flush 2 (no Buffer, no parameter change) ====================================
+[Succeeded]
+
+[Variable Block Size]
+Info:  ===Variable Block Size ====================================
+[Succeeded]
+
+[Process Format]
+Info:  ===Process Format ====================================
+Info:  ***Tested Sample Rates***
+Info:        22050 Hz - processed successfully!
+Info:        32000 Hz - processed successfully!
+Info:        44100 Hz - processed successfully!
+Info:        48000 Hz - processed successfully!
+Info:        88200 Hz - processed successfully!
+Info:        96000 Hz - processed successfully!
+Info:       192000 Hz - processed successfully!
+Info:       384000 Hz - processed successfully!
+Info:    1234.5678 Hz - processed successfully!
+Info:    12345.678 Hz - processed successfully!
+Info:    123456.78 Hz - processed successfully!
+Info:    1234567.8 Hz - processed successfully!
+[Succeeded]
+
+[Parameter Bypass persistence]
+Info:  ===Parameter Bypass persistence ====================================
+[Succeeded]
+
+[In: Stereo: 2 Channels, Out: Stereo: 2 Channels]
+Info:  ===In: Stereo: 2 Channels, Out: Stereo: 2 Channels ====================================
+[Succeeded]
+
+[In: Mono: 1 Channels, Out: Mono: 1 Channels]
+Info:  ===In: Mono: 1 Channels, Out: Mono: 1 Channels ====================================
+Info:      Mono Input-SpeakerArrangement is not supported. Plug-in suggests: Stereo.
+Info:      Mono Output-SpeakerArrangement is not supported. Plug-in suggests: Stereo.
+[Succeeded]
+
+[Accuracy: Block, 1 Parameters, Change every100 Samples]
+Info:  ===Accuracy: Block, 1 Parameters, Change every100 Samples ====================================
+[Succeeded]
+
+[Accuracy: Sample, 1 Parameters, Change every100 Samples]
+Info:  ===Accuracy: Sample, 1 Parameters, Change every100 Samples ====================================
+Info:     Not all points have been read via IParameterChanges
+[Succeeded]
+
+-------------------------------------------------------------
+TestSuite : Double Precision (64 bit) Tests
+-------------------------------------------------------------
+
+[Process Test]
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[Process function running in another thread]
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[Silence Flags]
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[Silence Processing]
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[Parameters Flush (no Buffer)]
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[Parameters Flush 2 (only numChannel==0)]
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[Parameters Flush 2 (no Buffer, no parameter change)]
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[Variable Block Size]
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[Process Format]
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[Parameter Bypass persistence]
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[In: Stereo: 2 Channels, Out: Stereo: 2 Channels]
+Info:  ===In: Stereo: 2 Channels, Out: Stereo: 2 Channels ====================================
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[In: Mono: 1 Channels, Out: Mono: 1 Channels]
+Info:  ===In: Mono: 1 Channels, Out: Mono: 1 Channels ====================================
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[Accuracy: Block, 1 Parameters, Change every100 Samples]
+Info:  ===Accuracy: Block, 1 Parameters, Change every100 Samples ====================================
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+[Accuracy: Sample, 1 Parameters, Change every100 Samples]
+Info:  ===Accuracy: Sample, 1 Parameters, Change every100 Samples ====================================
+Info:  64bit Audio Processing not supported.
+[Succeeded]
+
+-------------------------------------------------------------
+Result: 47 tests passed, 0 tests failed
+-------------------------------------------------------------

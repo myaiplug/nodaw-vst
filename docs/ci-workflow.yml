@@ -1,0 +1,32 @@
+# Ready-to-use GitHub Actions workflow. NOT in .github/workflows/ on purpose: the token used to
+# create this repo has no `workflow` scope. To enable: copy to .github/workflows/ci.yml and push
+# with a token (or the web UI) that has that scope.
+name: ci
+on: { pull_request: {}, push: { branches: [main] } }
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: clippy }
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets --no-default-features -- -D warnings
+      - run: cargo test --workspace --no-default-features
+  linux-headless-validators:
+    runs-on: ubuntu-24.04
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: sudo apt-get update && sudo apt-get install -y ninja-build cmake g++ libx11-dev libxcb-util-dev libxcb-cursor-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig1-dev libfreetype-dev
+      - run: ./scripts/build-linux.sh
+      # then build the VST3 SDK validator + clap-validator + vst3-state-check (docs/TESTING.md) and run scripts/validate-linux.sh
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --workspace
+      - run: cargo build --release -p nodaw-screw   # staticlib; then CMake wrapper, see scripts/build-windows.sh (cross) for the flags
+      # Code signing (Authenticode) step goes here once a certificate exists.

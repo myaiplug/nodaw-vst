@@ -1,0 +1,1 @@
+FAIL: 8 scenario(s) lost the saved sound or show stale values

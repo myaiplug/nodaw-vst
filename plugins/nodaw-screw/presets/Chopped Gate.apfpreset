@@ -1,0 +1,35 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.screw",
+  "name": "Chopped Gate",
+  "type": "Chop",
+  "subtype": "Gate",
+  "mood": [
+    "Rhythmic",
+    "Tight"
+  ],
+  "description": "Pulse gate on eighth notes with a short tail",
+  "author": "NoDAW",
+  "params": {
+    "in_gain": 0,
+    "out_gain": 0,
+    "mix": 100,
+    "pitch": -2,
+    "wow": 0,
+    "wow_rate": 0.7,
+    "flutter": 0,
+    "lowpass": 20000,
+    "bass": 0,
+    "rev_mix": 30,
+    "rev_decay": 2.2,
+    "rev_size": 1,
+    "rev_damp": 6000,
+    "rev_pre": 0,
+    "chop_pattern": "Pulse",
+    "chop_rate": "1/8",
+    "chop_depth": 100,
+    "width": 100,
+    "limiter": true,
+    "ceiling": -1
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.screw",
+  "name": "Slowed + Reverb",
+  "type": "Screw",
+  "subtype": "Slowed",
+  "mood": [
+    "Dreamy",
+    "Wide"
+  ],
+  "description": "The internet-famous slowed and reverbed sound",
+  "author": "NoDAW",
+  "params": {
+    "in_gain": 0,
+    "out_gain": 0,
+    "mix": 100,
+    "pitch": -3,
+    "wow": 0,
+    "wow_rate": 0.7,
+    "flutter": 0,
+    "lowpass": 14000,
+    "bass": 1.5,
+    "rev_mix": 42,
+    "rev_decay": 6.5,
+    "rev_size": 1.3,
+    "rev_damp": 4500,
+    "rev_pre": 35,
+    "chop_pattern": "Off",
+    "chop_rate": "1/8",
+    "chop_depth": 100,
+    "width": 125,
+    "limiter": true,
+    "ceiling": -1
+  }
+}

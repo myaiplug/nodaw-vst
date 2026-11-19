@@ -1,0 +1,160 @@
+diff -ruN -x target -x Cargo.toml -x apf-host -x apf-hot -x examples -x xtask /workspace/nodaw-vst-work/apf/crates/apf/src/clap.rs vendor/apf/crates/apf/src/clap.rs
+--- /workspace/nodaw-vst-work/apf/crates/apf/src/clap.rs	2026-11-02 09:18:09.909399389 -0500
++++ vendor/apf/crates/apf/src/clap.rs	2026-11-02 09:24:19.884162685 -0500
+@@ -18,6 +18,8 @@
+ use clap_sys::entry::clap_plugin_entry;
+ use clap_sys::events::*;
+ use clap_sys::ext::audio_ports::*;
++use clap_sys::ext::latency::*;
++use clap_sys::ext::tail::*;
+ use clap_sys::ext::gui::*;
+ use clap_sys::ext::log::*;
+ use clap_sys::ext::note_ports::*;
+@@ -474,6 +476,9 @@
+         audio.sample_rate = sample_rate;
+         let config = ProcessConfig { sample_rate, min_frames: min, max_frames: max };
+         (*inst.plugin.get()).activate(&config, &inst.shared.params);
++        // NoDAW patch: latency and tail are asked on the main thread, here, never while `process` runs.
++        inst.shared.latency.store((*inst.plugin.get()).latency(), Ordering::Release);
++        inst.shared.tail.store((*inst.plugin.get()).tail(), Ordering::Release);
+         audio.active = true;
+         inst.poisoned.store(false, Ordering::Relaxed);
+         true
+@@ -538,6 +543,10 @@
+         ext!(clap_plugin_note_ports, NOTE_PORTS)
+     } else if id == CLAP_EXT_GUI && has_view::<P>() {
+         ext!(clap_plugin_gui, GUI)
++    } else if id == CLAP_EXT_LATENCY {
++        ext!(clap_plugin_latency, LATENCY)
++    } else if id == CLAP_EXT_TAIL {
++        ext!(clap_plugin_tail, TAIL)
+     } else if id == CLAP_EXT_AUV2_PARAM_ORDERING {
+         ext!(ClapPluginAuv2ParamOrdering, AUV2_PARAM_ORDERING)
+     } else if (id == CLAP_EXT_REMOTE_CONTROLS || id == CLAP_EXT_REMOTE_CONTROLS_COMPAT) && !P::PARAMS.is_empty() {
+@@ -569,6 +578,8 @@
+     const STATE: clap_plugin_state = clap_plugin_state { save: Some(state_save::<P>), load: Some(state_load::<P>) };
+     const AUDIO_PORTS: clap_plugin_audio_ports =
+         clap_plugin_audio_ports { count: Some(audio_ports_count::<P>), get: Some(audio_ports_get::<P>) };
++    const LATENCY: clap_plugin_latency = clap_plugin_latency { get: Some(latency_get::<P>) };
++    const TAIL: clap_plugin_tail = clap_plugin_tail { get: Some(tail_get::<P>) };
+     const NOTE_PORTS: clap_plugin_note_ports =
+         clap_plugin_note_ports { count: Some(note_ports_count::<P>), get: Some(note_ports_get::<P>) };
+     const AUV2_PARAM_ORDERING: ClapPluginAuv2ParamOrdering =
+@@ -1599,6 +1610,16 @@
+ // ---------------------------------------------------------------------------------------------
+ // Audio and note ports
+ 
++unsafe extern "C" fn latency_get<P: Plugin>(plugin: *const clap_plugin) -> u32 {
++    let inst = Instance::<P>::from_raw(plugin);
++    inst.shared.latency.load(Ordering::Acquire)
++}
++
++unsafe extern "C" fn tail_get<P: Plugin>(plugin: *const clap_plugin) -> u32 {
++    let inst = Instance::<P>::from_raw(plugin);
++    inst.shared.tail.load(Ordering::Acquire)
++}
++
+ unsafe extern "C" fn audio_ports_count<P: Plugin>(_plugin: *const clap_plugin, is_input: bool) -> u32 {
+     let channels = if is_input { P::LAYOUT.main_input } else { P::LAYOUT.main_output };
+     (channels > 0) as u32
+diff -ruN -x target -x Cargo.toml -x apf-host -x apf-hot -x examples -x xtask /workspace/nodaw-vst-work/apf/crates/apf/src/plugin.rs vendor/apf/crates/apf/src/plugin.rs
+--- /workspace/nodaw-vst-work/apf/crates/apf/src/plugin.rs	2026-11-02 09:18:09.909399389 -0500
++++ vendor/apf/crates/apf/src/plugin.rs	2026-11-02 09:24:19.884162685 -0500
+@@ -312,6 +312,22 @@
+     /// Clear all DSP state (voices, delay lines, filters) without reallocating.
+     fn reset(&mut self) {}
+ 
++    /// NoDAW patch. The latency in samples that `process` adds to the signal, so the host can
++    /// compensate (CLAP `clap.latency`, VST3 `getLatencySamples`). Called once on the main
++    /// thread right after [`Self::activate`], so it may depend on the sample rate; it must stay
++    /// the same until the next `activate`.
++    fn latency(&self) -> u32 {
++        0
++    }
++
++    /// NoDAW patch. The tail in samples that rings on after the input stops (reverb, delay), so
++    /// the host keeps calling `process` when it renders or bounces (CLAP `clap.tail`, VST3
++    /// `getTailSamples`). `u32::MAX` is an infinite tail. Called after [`Self::activate`], on
++    /// the main thread; give the longest tail the parameters allow.
++    fn tail(&self) -> u32 {
++        0
++    }
++
+     /// A note or MIDI event, called at the exact sample it happened (the block is split around it). Audio thread: no allocation, no locks.
+     fn event(&mut self, _event: &Event, _ctx: &ProcessContext) {}
+ 
+diff -ruN -x target -x Cargo.toml -x apf-host -x apf-hot -x examples -x xtask /workspace/nodaw-vst-work/apf/crates/apf/src/view.rs vendor/apf/crates/apf/src/view.rs
+--- /workspace/nodaw-vst-work/apf/crates/apf/src/view.rs	2026-11-02 09:18:09.909399389 -0500
++++ vendor/apf/crates/apf/src/view.rs	2026-11-02 09:24:19.884162685 -0500
+@@ -163,6 +163,11 @@
+     pub(crate) view_size: AtomicU64,
+     /// The open view's [`View::scale`] (f64 bits), for its resize requests.
+     pub(crate) view_scale: AtomicU64,
++    /// NoDAW patch: the plugin's latency in samples, read once after `activate`
++    /// (main thread) and served to the host's `clap.latency` query.
++    pub(crate) latency: AtomicU32,
++    /// NoDAW patch: the plugin's tail in samples (u32::MAX: infinite), as above.
++    pub(crate) tail: AtomicU32,
+ }
+ 
+ impl Shared {
+@@ -185,6 +190,8 @@
+             pitch_bend: AtomicU32::new(0f32.to_bits()),
+             controller: OnceLock::new(),
+             pending_dirty: AtomicBool::new(false),
++            latency: AtomicU32::new(0),
++            tail: AtomicU32::new(0),
+             callback_requested: AtomicBool::new(false),
+             detached: AtomicBool::new(false),
+             view_size: AtomicU64::new(0),
+diff -ruN -x target -x Cargo.toml -x apf-host -x apf-hot -x examples -x xtask /workspace/nodaw-vst-work/apf/crates/apf-test/src/lib.rs vendor/apf/crates/apf-test/src/lib.rs
+--- /workspace/nodaw-vst-work/apf/crates/apf-test/src/lib.rs	2026-11-02 09:18:09.905399403 -0500
++++ vendor/apf/crates/apf-test/src/lib.rs	2026-11-02 09:24:37.864102584 -0500
+@@ -323,6 +323,24 @@
+         self.active = true;
+     }
+ 
++    /// NoDAW patch: the latency in samples the plugin reports through `clap.latency` (0 when it has no such extension).
++    pub fn latency(&self) -> u32 {
++        // SAFETY: plain CLAP call on a live instance; the extension struct is `clap_plugin_latency`.
++        unsafe {
++            let e = ((*self.raw).get_extension.unwrap())(self.raw, clap_sys::ext::latency::CLAP_EXT_LATENCY.as_ptr()) as *const clap_sys::ext::latency::clap_plugin_latency;
++            e.as_ref().and_then(|e| e.get).map_or(0, |f| f(self.raw))
++        }
++    }
++
++    /// NoDAW patch: the tail in samples the plugin reports through `clap.tail` (0 when it has no such extension).
++    pub fn tail(&self) -> u32 {
++        // SAFETY: as above.
++        unsafe {
++            let e = ((*self.raw).get_extension.unwrap())(self.raw, clap_sys::ext::tail::CLAP_EXT_TAIL.as_ptr()) as *const clap_sys::ext::tail::clap_plugin_tail;
++            e.as_ref().and_then(|e| e.get).map_or(0, |f| f(self.raw))
++        }
++    }
++
+     /// Number of parameters the host sees.
+     pub fn param_count(&self) -> u32 {
+         // SAFETY: plain CLAP call.
+diff -ruN -x target -x Cargo.toml -x apf-host -x apf-hot -x examples -x xtask /workspace/nodaw-vst-work/apf/crates/apf-webview/src/lib.rs vendor/apf/crates/apf-webview/src/lib.rs
+--- /workspace/nodaw-vst-work/apf/crates/apf-webview/src/lib.rs	2026-11-02 09:18:09.905399403 -0500
++++ vendor/apf/crates/apf-webview/src/lib.rs	2026-11-02 09:24:37.860102597 -0500
+@@ -294,7 +294,9 @@
+     fn open(&mut self, parent: ParentWindow, ctx: ViewContext) -> Result<(), String> {
+         self.close();
+         let assets = self.assets;
+-        let dev_dir = std::env::var_os("APF_UI_DIR").map(PathBuf::from);
++        // NoDAW patch: the development switches are debug/devtools-build only; a shipped plugin does not read the environment.
++        let dev_switches = cfg!(any(debug_assertions, feature = "devtools"));
++        let dev_dir = if dev_switches { std::env::var_os("APF_UI_DIR").map(PathBuf::from) } else { None };
+         let protocol_ctx = ctx.clone();
+         let ipc_ctx = ctx;
+         let sizing = Sizing { resizable: self.resizable, min: self.min_size, max: self.max_size };
+@@ -321,7 +323,7 @@
+         };
+         #[cfg(not(target_os = "windows"))]
+         let mut builder = WebViewBuilder::new();
+-        if let Some(script) = std::env::var_os("APF_UI_INJECT_JS").and_then(|p| std::fs::read_to_string(p).ok()) {
++        if let Some(script) = dev_switches.then(|| std::env::var_os("APF_UI_INJECT_JS")).flatten().and_then(|p| std::fs::read_to_string(p).ok()) {
+             builder = builder.with_initialization_script(script);
+         }
+         let builder = builder

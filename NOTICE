@@ -1,0 +1,12 @@
+NoDAW VST
+Copyright (c) 2026 NoDAW. All rights reserved (placeholder; licence for NoDAW's own code is undecided).
+
+This product bundles or links third-party software. Full list and licence texts:
+THIRD_PARTY_LICENSES.md and docs/licenses/.
+
+ - APF (https://github.com/mihasm/apf), MIT, Copyright (c) 2026 Miha Smrekar, vendored in vendor/apf (patched, see NODAW-PATCHES.md)
+ - clap-wrapper v0.17.0, MIT, Copyright (c) 2022 defiantnerd (build-time, linked into the plugin)
+ - CLAP SDK, MIT, Free Audio contributors (build-time headers)
+ - Steinberg VST3 SDK 3.8.0, MIT. "VST" is a trademark of Steinberg Media Technologies GmbH.
+ - wry / webview2-com / windows crates, MIT or Apache-2.0
+ - Space Grotesk, Bebas Neue, JetBrains Mono fonts, SIL Open Font License 1.1
