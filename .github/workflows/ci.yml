@@ -27,7 +27,7 @@ jobs:
     env:
       # Outside target/: rust-cache restores target/ and a half-restored CPM cache breaks CMake
       # ("There is no CLAP SDK at .../target/cpm-cache/clap/...").
-      CPM_SOURCE_CACHE: ${{ runner.temp }}/cpm-cache
+      CPM_SOURCE_CACHE: ${{ github.workspace }}/../cpm-cache
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
