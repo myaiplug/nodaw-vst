@@ -1,0 +1,23 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "De-Box",
+  "type": "Vocals",
+  "subtype": "Vocals",
+  "mood": [
+    "Clear"
+  ],
+  "description": "Scoops boxy 200-800 Hz buildup and opens the top a touch.",
+  "author": "NoDAW",
+  "params": {
+    "amp": 0.48,
+    "hpf": 92.0,
+    "b2_gain": -1.92,
+    "b2_q": 1.46,
+    "b3_gain": -2.88,
+    "b3_q": 1.17,
+    "b5_gain": 0.48,
+    "b6_gain": 0.96,
+    "b7_gain": 1.44
+  }
+}

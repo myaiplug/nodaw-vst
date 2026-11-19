@@ -15,7 +15,11 @@ impl DelayLine {
     /// A delay line that can read up to `max_delay` samples back.
     pub fn new(max_delay: usize) -> Self {
         let n = next_pow2(max_delay + 8);
-        Self { buf: vec![0.0; n], mask: n - 1, pos: 0 }
+        Self {
+            buf: vec![0.0; n],
+            mask: n - 1,
+            pos: 0,
+        }
     }
     /// Longest readable delay in samples.
     pub fn capacity(&self) -> usize {
@@ -73,7 +77,11 @@ pub struct Allpass {
 impl Allpass {
     /// An all-pass of `len` samples with coefficient `g`.
     pub fn new(len: usize, g: f32) -> Self {
-        Self { line: DelayLine::new(len + 2), len: len.max(1), g }
+        Self {
+            line: DelayLine::new(len + 2),
+            len: len.max(1),
+            g,
+        }
     }
     /// Process one sample.
     #[inline]

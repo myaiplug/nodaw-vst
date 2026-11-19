@@ -20,11 +20,8 @@ ui = ["dep:apf-webview"]
 apf = { path = "../../vendor/apf/crates/apf" }
 apf-webview = { path = "../../vendor/apf/crates/apf-webview", optional = true }
 nodaw-dsp = { path = "../../crates/nodaw-dsp" }
-# Licensing (license.rs): HMAC-SHA256 for the state file, HTTPS to Gumroad's verify API.
-# All MIT/Apache-2.0 (ureq, rustls) or Apache-2.0 AND ISC (ring); see THIRD_PARTY_LICENSES.md.
-hmac = "0.12"
-sha2 = "0.10"
-ureq = { version = "2.12", default-features = false, features = ["tls"] }
+# the trial and license code shared by every NoDAW plugin
+nodaw-kit = { path = "../../crates/nodaw-kit" }
 
 [dev-dependencies]
 clap-sys = "0.5"

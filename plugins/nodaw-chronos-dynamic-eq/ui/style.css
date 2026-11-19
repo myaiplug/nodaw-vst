@@ -1,0 +1,89 @@
+/* NoDAW Chronos Dynamic EQ: Screw's design language (ui-kit/kit.css) in Chronos violet (or
+   amber), precision-chronograph details: ring meters per band, instrument-glass panels. */
+:root, html.look-violet {
+  --accent-rgb: 123, 97, 255;
+  --accent-2-rgb: 99, 72, 230;
+  --accent-hot-rgb: 167, 151, 255;
+  --accent-soft-rgb: 221, 214, 255;
+  --accent-dark-rgb: 60, 40, 150;
+  --accent-edge-rgb: 52, 44, 100;
+  --accent-well-rgb: 18, 14, 40;
+  --plate-1: #0a0914;
+  --plate-2: #05050a;
+  --apf-accent-dim: #3c2896;
+}
+html.look-amber {
+  --accent-rgb: 245, 158, 11;
+  --accent-2-rgb: 217, 119, 6;
+  --accent-hot-rgb: 252, 211, 77;
+  --accent-soft-rgb: 254, 243, 199;
+  --accent-dark-rgb: 146, 64, 14;
+  --accent-edge-rgb: 92, 62, 20;
+  --accent-well-rgb: 36, 22, 4;
+  --plate-1: #120d05;
+  --plate-2: #080602;
+  --apf-accent-dim: #92400e;
+}
+
+.app { grid-template-rows: 3.2rem minmax(0, 1fr) 11.2rem 1.75rem; gap: .55rem; }
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 8.8rem; gap: .55rem; min-height: 0; }
+.lg-static i { background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .6) 0 3px, transparent 3px 6px); }
+.looks { position: absolute; top: .45rem; right: .7rem; display: flex; gap: .35rem; }
+.looks button { width: .95rem; height: .95rem; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .15); transition: transform .12s; }
+.looks button:hover { transform: scale(1.15); }
+.looks button.on { border-color: #fff; box-shadow: 0 0 .5rem rgba(var(--accent-hot-rgb), .7); }
+.looks [data-look="violet"] { background: linear-gradient(135deg, #a797ff, #4b33c9); }
+.looks [data-look="amber"] { background: linear-gradient(135deg, #fcd34d, #b45309); }
+.solo-note { position: absolute; top: .45rem; right: 3.6rem; font: 700 .62rem/1 var(--f-mono); letter-spacing: .14em; color: #1a1300; background: var(--warn); padding: .25rem .5rem; border-radius: .3rem; box-shadow: 0 0 .8rem rgba(255, 191, 74, .5); }
+.solo-note[hidden] { display: none; }
+
+/* lower section: band chips + the selected band, and the master */
+.lower { display: grid; grid-template-columns: minmax(0, 1fr) 10.4rem; gap: .55rem; min-height: 0; }
+.bandzone { display: grid; grid-template-rows: 2.6rem minmax(0, 1fr); gap: .4rem; min-width: 0; min-height: 0; }
+.chips { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .35rem; }
+.chip { position: relative; display: flex; align-items: center; gap: .4rem; padding: 0 .45rem; border-radius: .55rem; border: 1px solid var(--hair); text-align: left; min-width: 0;
+  background: linear-gradient(180deg, #15141d, #0b0a10); box-shadow: inset 0 1px 0 var(--hair-hi); transition: border-color .12s, opacity .12s; }
+.chip:hover { border-color: color-mix(in srgb, var(--bc) 45%, var(--hair)); }
+.chip.on { border-color: var(--bc); box-shadow: inset 0 1px 0 var(--hair-hi), 0 0 .8rem color-mix(in srgb, var(--bc) 35%, transparent); background: linear-gradient(180deg, #1c1a27, #0d0c14); }
+.chip.off { opacity: .45; }
+.chip.dim { opacity: .55; }
+.ring { --d: 0; position: relative; flex: none; width: 1.9rem; height: 1.9rem; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(from 0deg, var(--hair) 0 360deg); }
+.ring b { position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--bc) 0 calc(max(var(--d), 0) * 360deg), transparent 0);
+  -webkit-mask: radial-gradient(circle, transparent 58%, #000 60%); mask: radial-gradient(circle, transparent 58%, #000 60%); }
+.ring.cut b { background: conic-gradient(from 0deg, transparent 0 calc((1 + var(--d)) * 360deg), #ffbf4a 0); }
+.ring::after { content: ""; position: absolute; inset: 22%; border-radius: 50%; background: #08080c; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .8); }
+.ring span { position: relative; z-index: 1; font: 700 .62rem/1 var(--f-mono); color: var(--bc); }
+.chip.dynamic .ring { background: conic-gradient(from 0deg, color-mix(in srgb, var(--bc) 25%, var(--hair)) 0 360deg); }
+.c-txt { display: flex; flex-direction: column; gap: .18rem; min-width: 0; flex: 1; }
+.c-f { font: 600 .66rem/1 var(--f-mono); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-g { font: 500 .58rem/1 var(--f-mono); color: var(--ink-dim); white-space: nowrap; }
+.c-m { position: absolute; top: .22rem; right: .35rem; font: 600 .46rem/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+.chip.dynamic .c-m { color: var(--accent-hot); }
+
+.panels { position: relative; min-height: 0; }
+.bp { display: none; position: absolute; inset: 0; padding: .45rem .7rem .3rem; flex-direction: column; }
+.bp.on { display: flex; }
+.bp::after { content: ""; position: absolute; left: 0; top: .9rem; bottom: .9rem; width: 3px; border-radius: 2px; background: var(--bc); box-shadow: 0 0 .6rem var(--bc); }
+.bp h3 { gap: .6rem; margin-bottom: .1rem; }
+.dyn-read { font: 600 .66rem/1 var(--f-mono) !important; color: var(--ink-faint) !important; letter-spacing: .04em; }
+.dyn-read.on { color: var(--warn) !important; }
+.bp-tools { margin-left: auto; display: flex; gap: .3rem; }
+.bp-tools .pill { height: 1.3rem; font-size: .54rem; }
+.bp-body { flex: 1; display: grid; grid-template-columns: minmax(0, 4fr) 1px minmax(0, 6.4fr); gap: .5rem; align-items: center; min-height: 0; }
+.bp-sep { width: 1px; height: 80%; background: linear-gradient(180deg, transparent, var(--hair), transparent); }
+.bp-eq, .bp-dyn { display: grid; align-items: center; justify-items: center; gap: .1rem; min-width: 0; }
+.bp-eq { grid-template-columns: 4.2rem repeat(3, minmax(0, 1fr)); }
+.bp-dyn { grid-template-columns: 5.2rem repeat(5, minmax(0, 1fr)); }
+.bp-type { display: flex; flex-direction: column; align-items: center; gap: .3rem; }
+.bp-type .choice { flex-direction: column; }
+.bp-type .choice button { height: 1.25rem; font-size: .52rem; padding: 0 .4rem; width: 100%; }
+.bp-type .choice button + button { border-left: 0; border-top: 1px solid var(--hair); }
+.bp .k-ring { stroke: var(--bc); filter: drop-shadow(0 0 3px var(--bc)); }
+.bp.static .bp-dyn .knob { opacity: .4; }
+.bp .knob.mini { --k: 3rem; }
+.master { padding: .45rem .55rem; }
+.master .grid { gap: .25rem .1rem; }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.master .knob.tiny { --k: 2.6rem; }

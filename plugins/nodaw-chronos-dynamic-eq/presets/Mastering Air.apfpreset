@@ -1,0 +1,24 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-dynamic-eq",
+  "name": "Mastering Air",
+  "type": "Master",
+  "subtype": "Air",
+  "mood": [
+    "Bright",
+    "Open"
+  ],
+  "description": "A high shelf that opens up when the top end is there",
+  "author": "NoDAW",
+  "params": {
+    "b7_freq": 10000,
+    "b7_mode": "Expand",
+    "b7_thresh": -38,
+    "b7_ratio": 2,
+    "b7_range": 3,
+    "b7_attack": 20,
+    "b7_release": 300,
+    "b1_freq": 40,
+    "b1_gain": 0.8
+  }
+}

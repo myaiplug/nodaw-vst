@@ -1,0 +1,28 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Tape Wobble",
+  "type": "Character",
+  "subtype": "Character",
+  "mood": [
+    "Vintage",
+    "Wobbly"
+  ],
+  "description": "Flanger warble (~1 Hz) with a soft, rolled-off top and a little warmth.",
+  "author": "NoDAW",
+  "params": {
+    "hpf": 68.0,
+    "lpf": 8400,
+    "rev_mix": 5.3,
+    "sub": 1.0,
+    "fl_mix": 45,
+    "fl_rate": 1.1,
+    "out_gain": -2.22,
+    "b1_gain": 0.48,
+    "b2_gain": 0.48,
+    "b4_gain": -0.48,
+    "b5_gain": -0.96,
+    "b6_gain": -1.44,
+    "b7_gain": -1.92
+  }
+}

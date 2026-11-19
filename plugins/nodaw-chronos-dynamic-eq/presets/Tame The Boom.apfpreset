@@ -1,0 +1,22 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-dynamic-eq",
+  "name": "Tame The Boom",
+  "type": "Bass",
+  "subtype": "Control",
+  "mood": [
+    "Tight"
+  ],
+  "description": "Holds back a boomy 150 Hz only when it builds up",
+  "author": "NoDAW",
+  "params": {
+    "b2_freq": 150,
+    "b2_q": 1.4,
+    "b2_mode": "Compress",
+    "b2_thresh": -22,
+    "b2_ratio": 4,
+    "b2_range": 8,
+    "b2_attack": 8,
+    "b2_release": 180
+  }
+}

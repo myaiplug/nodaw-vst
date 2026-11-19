@@ -1,0 +1,19 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-weaver",
+  "name": "Echoes Of Itself",
+  "type": "Morph",
+  "subtype": "Past",
+  "mood": [
+    "Wet",
+    "Moving"
+  ],
+  "description": "The spectrum of one bar ago (at 120 BPM) breathes in and out with the LFO",
+  "author": "NoDAW",
+  "params": {
+    "morph": 35,
+    "weave": 2000,
+    "lfo_depth": 70,
+    "lfo_sync": "2 Bars"
+  }
+}

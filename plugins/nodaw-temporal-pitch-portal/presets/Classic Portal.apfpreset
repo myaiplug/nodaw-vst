@@ -1,0 +1,16 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Classic Portal",
+  "type": "Warp Zones",
+  "subtype": "Neutral",
+  "mood": [
+    "Clean"
+  ],
+  "description": "Neutral portal: 100 % time, 0 st, a whisper of drift",
+  "author": "NoDAW",
+  "params": {
+    "drift": 3.0,
+    "drift_rate": 0.4
+  }
+}

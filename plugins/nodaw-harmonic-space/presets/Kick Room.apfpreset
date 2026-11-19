@@ -1,0 +1,31 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Kick Room",
+  "type": "Low end",
+  "subtype": "Low end",
+  "mood": [
+    "Punchy"
+  ],
+  "description": "Short room and slight echo, 800 Hz box cut, 2-4 kHz beater punch.",
+  "author": "NoDAW",
+  "params": {
+    "amp": 0.48,
+    "hpf": 48.8,
+    "lpf": 14000,
+    "dly_mix": 6,
+    "dly_time": 154,
+    "rev_mix": 12.0,
+    "sub": 1.5,
+    "out_gain": -0.71,
+    "b1_gain": 1.2,
+    "b2_gain": -0.96,
+    "b2_q": 1.46,
+    "b3_gain": -1.44,
+    "b3_q": 1.17,
+    "b4_gain": 1.44,
+    "b4_q": 1.46,
+    "b5_gain": 0.96,
+    "b5_q": 1.27
+  }
+}

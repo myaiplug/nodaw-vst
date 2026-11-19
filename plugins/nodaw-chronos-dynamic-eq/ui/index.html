@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en" class="look-violet">
+<head>
+<meta charset="utf-8">
+<title>NoDAW Chronos Dynamic EQ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- apf.js is served by the framework: window.apf, and it binds every data-param* element. -->
+<script src="/__apf/apf.js"></script>
+<link rel="stylesheet" href="kit.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app" class="app">
+  <main class="main">
+    <section class="display" id="display">
+      <canvas id="spec" aria-label="Spectrum analyzer with the dynamic EQ curve: drag a band's node to move it, scroll for Q"></canvas>
+      <div class="legend">
+        <span class="lg lg-in"><i></i>Input</span>
+        <span class="lg lg-out"><i></i>Output</span>
+        <span class="lg lg-eq"><i></i>Live curve</span>
+        <span class="lg lg-static"><i></i>Static</span>
+        <button type="button" id="tilt" class="lg-btn" title="Spectrum slope (compensates the natural roll-off)">3 dB/oct</button>
+      </div>
+      <div class="looks" id="looks" role="group" aria-label="Colourway">
+        <button type="button" data-look="violet" title="Violet"></button>
+        <button type="button" data-look="amber" title="Amber"></button>
+      </div>
+      <div class="solo-note" id="solo-note" hidden>SOLO · auditioning</div>
+    </section>
+    <aside class="meters" aria-label="Level meters"><canvas id="meters"></canvas></aside>
+  </main>
+
+  <section class="lower">
+    <div class="bandzone">
+      <div class="chips" id="chips" role="tablist" aria-label="Bands"></div>
+      <div class="panels" id="panels"></div>
+    </div>
+    <div class="panel master">
+      <h3>Master</h3>
+      <div class="grid g2" id="g-master"></div>
+    </div>
+  </section>
+</div>
+<script src="kit.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

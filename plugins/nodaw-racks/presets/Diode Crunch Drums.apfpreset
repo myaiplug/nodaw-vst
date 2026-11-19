@@ -1,0 +1,29 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.racks",
+  "name": "Diode Crunch Drums",
+  "type": "Drums",
+  "subtype": "Bus",
+  "mood": [
+    "Aggressive",
+    "Punchy"
+  ],
+  "description": "Diode grit blended in parallel, scooped mids, hard limit",
+  "author": "NoDAW",
+  "params": {
+    "sat_curve": "Diode",
+    "sat_drive": 20,
+    "sat_mix": 55,
+    "eq2_gain": 2.5,
+    "eq2_freq": 90,
+    "eq2_q": 1.2,
+    "eq4_gain": -3,
+    "eq4_freq": 800,
+    "eq4_q": 0.9,
+    "eq6_gain": 2,
+    "eq6_freq": 5500,
+    "lim_gain": 6,
+    "lim_release": 60,
+    "order": "EQ > SAT > SPACE > LIM"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.racks",
+  "name": "Haas Guitar",
+  "type": "Guitar",
+  "subtype": "Stereo",
+  "mood": [
+    "Wide"
+  ],
+  "description": "Haas widening for a mono guitar, low cut, presence",
+  "author": "NoDAW",
+  "params": {
+    "sp_haas": 14,
+    "sp_width": 120,
+    "eq1_type": "Low Cut",
+    "eq1_freq": 110,
+    "eq5_gain": 2,
+    "eq5_freq": 2500,
+    "sat_curve": "Tube",
+    "sat_drive": 8,
+    "lim_on": false
+  }
+}

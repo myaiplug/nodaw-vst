@@ -5,16 +5,12 @@ unlicensed copy keeps working: audio is processed, presets and sessions save and
 locked. The only difference is a **0.5 s dropout to silence every 45 s** (15 ms raised-cosine fades,
 so it never clicks). Bypassed audio is left alone. Activating with a Gumroad license key removes it.
 
-## For the owner: two constants to fill before selling
+## For the owner: product IDs before selling
 
-In `plugins/nodaw-screw/src/license.rs`:
-
-| Constant | What to put there |
-|---|---|
-| `GUMROAD_PRODUCT_ID` | Gumroad dashboard → the product → Content → enable *Generate a unique license key per sale* → the `product_id` shown there. Until set, the dialog says activation opens when the plugin goes on sale. |
-| `BUY_URL` | The public product page the Buy button opens (placeholder: `https://nodawlabs.gumroad.com/l/nodaw-screw`). |
-
-Also consider changing `HMAC_KEY` (any random string) before the first public release.
+Every plugin's Gumroad `product_id` and Buy URL are in `crates/nodaw-kit/src/gumroad.rs` (or the
+`NODAW_GUMROAD_ID_*` / `NODAW_GUMROAD_URL_*` build-time variables). Where to find the ID and what to
+create on Gumroad: `docs/SELLING.md`. Until an ID is set, the dialog says activation opens when the
+plugin goes on sale.
 
 ## How it works
 

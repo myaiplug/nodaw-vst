@@ -54,7 +54,9 @@ pub fn load_with(params: &Params, bytes: &[u8]) -> Result<Vec<Chunk>, String> {
     }
     let version = r.u32()?;
     if version > VERSION {
-        return Err(format!("state version {version} is newer than this plugin understands"));
+        return Err(format!(
+            "state version {version} is newer than this plugin understands"
+        ));
     }
     let count = r.u32()? as usize;
     let mut entries = Vec::with_capacity(count.min(4096));
@@ -72,7 +74,10 @@ pub fn load_with(params: &Params, bytes: &[u8]) -> Result<Vec<Chunk>, String> {
         chunks.push((tag, body.to_vec()));
     }
     for (i, def) in params.defs().iter().enumerate() {
-        let v = entries.iter().find(|e| e.0 == def.host_id()).map_or(def.default_host_value(), |e| e.1);
+        let v = entries
+            .iter()
+            .find(|e| e.0 == def.host_id())
+            .map_or(def.default_host_value(), |e| e.1);
         params.set_host_value(i, v);
     }
     Ok(chunks)
@@ -121,8 +126,10 @@ mod tests {
     use super::*;
     use crate::param::ParamDef;
 
-    const DEFS: &[ParamDef] =
-        &[ParamDef::float("a", "A", 0.0, 1.0, 0.25), ParamDef::choice("b", "B", &["x", "y", "z"], 0)];
+    const DEFS: &[ParamDef] = &[
+        ParamDef::float("a", "A", 0.0, 1.0, 0.25),
+        ParamDef::choice("b", "B", &["x", "y", "z"], 0),
+    ];
 
     #[test]
     fn roundtrip_and_tolerance() {

@@ -85,7 +85,9 @@ impl Source {
         if let Some(name) = id.strip_prefix("factory:") {
             Some(Source::Factory(name.to_owned()))
         } else {
-            id.strip_prefix("file:").filter(|p| !p.is_empty()).map(|p| Source::File(PathBuf::from(p)))
+            id.strip_prefix("file:")
+                .filter(|p| !p.is_empty())
+                .map(|p| Source::File(PathBuf::from(p)))
         }
     }
 }
@@ -121,7 +123,12 @@ impl Metadata {
 
     /// Trimmed, without empty or repeated tags (in any letter case).
     pub fn cleaned(mut self) -> Metadata {
-        for s in [&mut self.category, &mut self.subcategory, &mut self.description, &mut self.author] {
+        for s in [
+            &mut self.category,
+            &mut self.subcategory,
+            &mut self.description,
+            &mut self.author,
+        ] {
             let t = s.trim();
             if t.len() != s.len() {
                 *s = t.to_owned();
@@ -141,14 +148,29 @@ impl Metadata {
     /// The metadata members of a preset file's root object. Members of the wrong kind count
     /// as missing; `mood` may also be one string of comma-separated words.
     fn from_json(root: &Value) -> Metadata {
-        let text = |key: &str| root.get(key).and_then(Value::as_str).unwrap_or("").to_owned();
+        let text = |key: &str| {
+            root.get(key)
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_owned()
+        };
         let tags = match root.get("mood") {
-            Some(Value::Arr(items)) => items.iter().filter_map(Value::as_str).map(str::to_owned).collect(),
+            Some(Value::Arr(items)) => items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(str::to_owned)
+                .collect(),
             Some(Value::Str(s)) => s.split(',').map(str::to_owned).collect(),
             _ => Vec::new(),
         };
-        Metadata { category: text("type"), subcategory: text("subtype"), tags, description: text("description"), author: text("author") }
-            .cleaned()
+        Metadata {
+            category: text("type"),
+            subcategory: text("subtype"),
+            tags,
+            description: text("description"),
+            author: text("author"),
+        }
+        .cleaned()
     }
 
     /// The non-empty members, each as `,\n  "key": value`.
@@ -205,8 +227,16 @@ impl Preset {
         if root.get(FORMAT_KEY).and_then(Value::as_f64).is_none() {
             return Err("not a preset file".into());
         }
-        let name = root.get("name").and_then(Value::as_str).unwrap_or("").trim().to_owned();
-        let plugin = root.get("plugin").and_then(Value::as_str).map(str::to_owned);
+        let name = root
+            .get("name")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .trim()
+            .to_owned();
+        let plugin = root
+            .get("plugin")
+            .and_then(Value::as_str)
+            .map(str::to_owned);
         let meta = Metadata::from_json(&root);
         let values = match root.get("params") {
             Some(Value::Obj(members)) => members.clone(),
@@ -216,9 +246,18 @@ impl Preset {
             None | Some(Value::Null) => None,
             Some(Value::Str(s)) => Some(s.clone()),
             // Hand on the value as written, every digit of its numbers kept.
-            Some(_) => json::members_raw(text)?.into_iter().find(|(k, _)| k == CONTROLLER_KEY).map(|(_, r)| text[r].to_owned()),
+            Some(_) => json::members_raw(text)?
+                .into_iter()
+                .find(|(k, _)| k == CONTROLLER_KEY)
+                .map(|(_, r)| text[r].to_owned()),
         };
-        Ok(Preset { name, plugin, meta, values, controller })
+        Ok(Preset {
+            name,
+            plugin,
+            meta,
+            values,
+            controller,
+        })
     }
 
     /// The host value of every parameter (in `params` order) this preset sets: its own value,
@@ -228,7 +267,11 @@ impl Preset {
             .defs()
             .iter()
             .map(|def| {
-                let v = self.values.iter().find(|(k, _)| k == def.key).map(|(_, v)| v);
+                let v = self
+                    .values
+                    .iter()
+                    .find(|(k, _)| k == def.key)
+                    .map(|(_, v)| v);
                 let host = match (v, def.kind) {
                     (Some(Value::Num(n)), ParamKind::Float { .. }) => Some(def.plain_to_host(*n)),
                     (Some(Value::Num(n)), _) => Some(def.sanitize_host(*n)),
@@ -255,14 +298,26 @@ pub fn to_json(info: &PluginInfo, name: &str, params: &Params) -> String {
 }
 
 /// The preset file text for the current values and the controller's text.
-pub fn to_json_with(info: &PluginInfo, name: &str, params: &Params, controller: Option<&str>) -> String {
+pub fn to_json_with(
+    info: &PluginInfo,
+    name: &str,
+    params: &Params,
+    controller: Option<&str>,
+) -> String {
     to_json_with_meta(info, name, &Metadata::default(), params, controller)
 }
 
 /// The preset file text for the current values, the controller's text and what the preset
 /// says about itself (empty members are left out).
-pub fn to_json_with_meta(info: &PluginInfo, name: &str, meta: &Metadata, params: &Params, controller: Option<&str>) -> String {
-    let mut out = String::with_capacity(256 + 40 * params.len() + controller.map_or(0, |c| c.len() * 2));
+pub fn to_json_with_meta(
+    info: &PluginInfo,
+    name: &str,
+    meta: &Metadata,
+    params: &Params,
+    controller: Option<&str>,
+) -> String {
+    let mut out =
+        String::with_capacity(256 + 40 * params.len() + controller.map_or(0, |c| c.len() * 2));
     out.push_str("{\n  ");
     json::write_str(&mut out, FORMAT_KEY);
     out.push_str(": ");
@@ -282,9 +337,10 @@ pub fn to_json_with_meta(info: &PluginInfo, name: &str, meta: &Metadata, params:
             ParamKind::Float { .. } => json::write_num(&mut out, def.host_to_plain(v)),
             ParamKind::Int { .. } => json::write_num(&mut out, v.round()),
             ParamKind::Bool { .. } => out.push_str(if v >= 0.5 { "true" } else { "false" }),
-            ParamKind::Choice { options, .. } => {
-                json::write_str(&mut out, options[(v.round().max(0.0) as usize).min(options.len() - 1)])
-            }
+            ParamKind::Choice { options, .. } => json::write_str(
+                &mut out,
+                options[(v.round().max(0.0) as usize).min(options.len() - 1)],
+            ),
         }
     }
     out.push_str("\n  }");
@@ -292,7 +348,8 @@ pub fn to_json_with_meta(info: &PluginInfo, name: &str, meta: &Metadata, params:
         out.push_str(",\n  ");
         json::write_str(&mut out, CONTROLLER_KEY);
         out.push_str(": ");
-        let structured = matches!(text.trim_start().as_bytes().first(), Some(b'{' | b'[')) && json::parse(text).is_ok();
+        let structured = matches!(text.trim_start().as_bytes().first(), Some(b'{' | b'['))
+            && json::parse(text).is_ok();
         if structured {
             json::write_pretty(&mut out, text, 2);
         } else {
@@ -308,10 +365,21 @@ pub fn user_dir(info: &PluginInfo) -> Option<PathBuf> {
     let vendor = file_stem_of(info.vendor);
     let name = file_stem_of(info.name);
     if cfg!(target_os = "macos") {
-        Some(real_home()?.join("Library/Audio/Presets").join(vendor).join(name))
+        Some(
+            real_home()?
+                .join("Library/Audio/Presets")
+                .join(vendor)
+                .join(name),
+        )
     } else if cfg!(windows) {
         let profile = std::env::var_os("USERPROFILE")?;
-        Some(PathBuf::from(profile).join("Documents").join(vendor).join(name).join("Presets"))
+        Some(
+            PathBuf::from(profile)
+                .join("Documents")
+                .join(vendor)
+                .join(name)
+                .join("Presets"),
+        )
     } else {
         let data = std::env::var_os("XDG_DATA_HOME")
             .map(PathBuf::from)
@@ -338,11 +406,21 @@ pub fn file_stem_of(name: &str) -> String {
     let cleaned: String = name
         .trim()
         .chars()
-        .map(|c| if c.is_control() || matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') { '-' } else { c })
+        .map(|c| {
+            if c.is_control() || matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') {
+                '-'
+            } else {
+                c
+            }
+        })
         .take(100)
         .collect();
     let cleaned = cleaned.trim().trim_start_matches('.').trim().to_owned();
-    if cleaned.is_empty() { "Preset".to_owned() } else { cleaned }
+    if cleaned.is_empty() {
+        "Preset".to_owned()
+    } else {
+        cleaned
+    }
 }
 
 /// A preset in a list: where it is, what it is called and what it says about itself.
@@ -373,7 +451,9 @@ pub struct Factory {
 impl Factory {
     /// Parse factory preset texts; those that fail to parse are left out.
     pub fn parse(texts: &[&str]) -> Factory {
-        Factory { presets: texts.iter().filter_map(|t| Preset::parse(t).ok()).collect() }
+        Factory {
+            presets: texts.iter().filter_map(|t| Preset::parse(t).ok()).collect(),
+        }
     }
 
     /// The factory presets of a plugin (its [`crate::Plugin::FACTORY_PRESETS`]), parsed once
@@ -383,7 +463,10 @@ impl Factory {
         type Cache = Mutex<Vec<((usize, usize), Arc<Factory>)>>;
         static CACHE: OnceLock<Cache> = OnceLock::new();
         let key = (texts.as_ptr() as usize, texts.len());
-        let mut cache = CACHE.get_or_init(Default::default).lock().unwrap_or_else(|e| e.into_inner());
+        let mut cache = CACHE
+            .get_or_init(Default::default)
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         if let Some((_, f)) = cache.iter().find(|(k, _)| *k == key) {
             return f.clone();
         }
@@ -414,19 +497,29 @@ impl Factory {
 
     /// Whether a factory preset has this name in any letter case (a user preset cannot).
     pub fn has_name(&self, name: &str) -> bool {
-        self.presets.iter().any(|p| p.name.eq_ignore_ascii_case(name))
+        self.presets
+            .iter()
+            .any(|p| p.name.eq_ignore_ascii_case(name))
     }
 
     /// The presets as list entries.
     pub fn entries(&self) -> impl Iterator<Item = Entry> + '_ {
-        self.presets.iter().map(|p| Entry { source: Source::Factory(p.name.clone()), name: p.name.clone(), meta: p.meta.clone() })
+        self.presets.iter().map(|p| Entry {
+            source: Source::Factory(p.name.clone()),
+            name: p.name.clone(),
+            meta: p.meta.clone(),
+        })
     }
 }
 
 /// The factory presets, in the plugin's order, by name. Parses every time; plugins use
 /// [`Factory::shared`].
 pub fn factory(texts: &[&str]) -> Vec<(String, Preset)> {
-    Factory::parse(texts).presets.into_iter().map(|p| (p.name.clone(), p)).collect()
+    Factory::parse(texts)
+        .presets
+        .into_iter()
+        .map(|p| (p.name.clone(), p))
+        .collect()
 }
 
 /// What a listing keeps of a preset file, reused while the file's size and modification
@@ -441,7 +534,10 @@ struct Listed {
 /// Every preset file listed so far, by path. Main thread (and hosts' indexer threads).
 fn listed() -> std::sync::MutexGuard<'static, HashMap<PathBuf, Listed>> {
     static LISTED: OnceLock<Mutex<HashMap<PathBuf, Listed>>> = OnceLock::new();
-    LISTED.get_or_init(Default::default).lock().unwrap_or_else(|e| e.into_inner())
+    LISTED
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
 }
 
 /// Forget what a listing knew of this file (it was just written or deleted).
@@ -459,38 +555,68 @@ pub fn files_in(dir: &Path) -> Vec<Entry> {
     let mut cache = listed();
     let mut out = Vec::with_capacity(found.len());
     for (path, modified, len) in found {
-        let fresh = cache.get(&path).is_some_and(|l| l.modified == modified && l.len == len && modified.is_some());
+        let fresh = cache
+            .get(&path)
+            .is_some_and(|l| l.modified == modified && l.len == len && modified.is_some());
         if !fresh {
-            let preset = std::fs::read_to_string(&path).ok().and_then(|t| Preset::parse(&t).ok());
+            let preset = std::fs::read_to_string(&path)
+                .ok()
+                .and_then(|t| Preset::parse(&t).ok());
             let (name, meta) = preset.map(|p| (p.name, p.meta)).unwrap_or_default();
             let name = if name.is_empty() {
-                path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default()
+                path.file_stem()
+                    .map(|s| s.to_string_lossy().into_owned())
+                    .unwrap_or_default()
             } else {
                 name
             };
-            cache.insert(path.clone(), Listed { modified, len, name, meta });
+            cache.insert(
+                path.clone(),
+                Listed {
+                    modified,
+                    len,
+                    name,
+                    meta,
+                },
+            );
         }
         let l = &cache[&path];
-        out.push(Entry { name: l.name.clone(), meta: l.meta.clone(), source: Source::File(path) });
+        out.push(Entry {
+            name: l.name.clone(),
+            meta: l.meta.clone(),
+            source: Source::File(path),
+        });
     }
     // Drop files of this folder that are gone.
     cache.retain(|p, _| !p.starts_with(dir) || seen.contains(p));
     drop(cache);
-    out.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()).then_with(|| a.name.cmp(&b.name)));
+    out.sort_by(|a, b| {
+        a.name
+            .to_lowercase()
+            .cmp(&b.name.to_lowercase())
+            .then_with(|| a.name.cmp(&b.name))
+    });
     out
 }
 
 fn collect(dir: &Path, depth: usize, out: &mut Vec<(PathBuf, Option<SystemTime>, u64)>) {
-    let Ok(entries) = std::fs::read_dir(dir) else { return };
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
     for e in entries.flatten() {
         let path = e.path();
         // Follows links, as reading the file does.
-        let Ok(meta) = std::fs::metadata(&path) else { continue };
+        let Ok(meta) = std::fs::metadata(&path) else {
+            continue;
+        };
         if meta.is_dir() {
             if depth < 2 {
                 collect(&path, depth + 1, out);
             }
-        } else if path.extension().is_some_and(|x| x.eq_ignore_ascii_case(EXTENSION)) {
+        } else if path
+            .extension()
+            .is_some_and(|x| x.eq_ignore_ascii_case(EXTENSION))
+        {
             out.push((path, meta.modified().ok(), meta.len()));
         }
     }
@@ -508,12 +634,19 @@ pub fn list(info: &PluginInfo, factory: &Factory) -> Vec<Entry> {
 /// Read the preset a source names.
 pub fn read(source: &Source, factory: &Factory) -> Result<Preset, String> {
     match source {
-        Source::Factory(name) => factory.get(name).cloned().ok_or_else(|| format!("no factory preset '{name}'")),
+        Source::Factory(name) => factory
+            .get(name)
+            .cloned()
+            .ok_or_else(|| format!("no factory preset '{name}'")),
         Source::File(path) => {
-            let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
+            let text =
+                std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
             let mut p = Preset::parse(&text).map_err(|e| format!("{}: {e}", path.display()))?;
             if p.name.is_empty() {
-                p.name = path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+                p.name = path
+                    .file_stem()
+                    .map(|s| s.to_string_lossy().into_owned())
+                    .unwrap_or_default();
             }
             Ok(p)
         }
@@ -579,10 +712,15 @@ pub fn save_in(
 ) -> Result<Source, SaveError> {
     // An existing preset of the same name (in any letter case) is the one to overwrite, even
     // when its file is named differently.
-    let existing = files_in(dir).into_iter().find(|e| e.name.trim().eq_ignore_ascii_case(name));
+    let existing = files_in(dir)
+        .into_iter()
+        .find(|e| e.name.trim().eq_ignore_ascii_case(name));
     let path = match &existing {
         Some(e) if !overwrite => return Err(SaveError::Exists(e.source.clone())),
-        Some(Entry { source: Source::File(p), .. }) => p.clone(),
+        Some(Entry {
+            source: Source::File(p),
+            ..
+        }) => p.clone(),
         _ => dir.join(format!("{}.{EXTENSION}", file_stem_of(name))),
     };
     if !overwrite && path.exists() {
@@ -604,9 +742,15 @@ pub fn save_in(
 
 /// Delete a user preset. Only files in the user folder can be deleted.
 pub fn delete(info: &PluginInfo, source: &Source) -> Result<(), String> {
-    let Source::File(path) = source else { return Err("factory presets cannot be deleted".into()) };
+    let Source::File(path) = source else {
+        return Err("factory presets cannot be deleted".into());
+    };
     let dir = user_dir(info).ok_or("no home folder")?;
-    if !path.starts_with(&dir) || !path.extension().is_some_and(|x| x.eq_ignore_ascii_case(EXTENSION)) {
+    if !path.starts_with(&dir)
+        || !path
+            .extension()
+            .is_some_and(|x| x.eq_ignore_ascii_case(EXTENSION))
+    {
         return Err("only presets in the user folder can be deleted".into());
     }
     std::fs::remove_file(path).map_err(|e| format!("{}: {e}", path.display()))?;
@@ -654,16 +798,20 @@ pub fn same_sound(params: &Params, a: &[f64], b: &[f64]) -> bool {
         return false;
     }
     let (mut ta, mut tb) = (String::new(), String::new());
-    params.defs().iter().zip(a.iter().zip(b)).all(|(def, (x, y))| {
-        if x == y {
-            return true;
-        }
-        ta.clear();
-        tb.clear();
-        def.format(*x, &mut ta);
-        def.format(*y, &mut tb);
-        ta == tb
-    })
+    params
+        .defs()
+        .iter()
+        .zip(a.iter().zip(b))
+        .all(|(def, (x, y))| {
+            if x == y {
+                return true;
+            }
+            ta.clear();
+            tb.clear();
+            def.format(*x, &mut ta);
+            def.format(*y, &mut tb);
+            ta == tb
+        })
 }
 
 #[cfg(test)]
@@ -673,7 +821,9 @@ mod tests {
 
     const DEFS: &[ParamDef] = &[
         ParamDef::choice("wave", "Waveform", &["Sine", "Saw", "Square"], 1),
-        ParamDef::float("cutoff", "Cutoff", 20.0, 20000.0, 2400.0).unit("Hz").curve(Curve::Log),
+        ParamDef::float("cutoff", "Cutoff", 20.0, 20000.0, 2400.0)
+            .unit("Hz")
+            .curve(Curve::Log),
         ParamDef::int("bend", "Bend Range", 0, 24, 2),
         ParamDef::bool("on", "On", true),
     ];
@@ -696,24 +846,36 @@ mod tests {
         p.set_host_value(3, 0.0);
         let text = to_json(&INFO, "Bright \"one\"", &p);
         assert!(text.contains("\"wave\": \"Square\""), "{text}");
-        assert!(text.contains("\"cutoff\": 440,") || text.contains("\"cutoff\": 440\n"), "{text}");
+        assert!(
+            text.contains("\"cutoff\": 440,") || text.contains("\"cutoff\": 440\n"),
+            "{text}"
+        );
         let preset = Preset::parse(&text).unwrap();
         assert_eq!(preset.name, "Bright \"one\"");
         assert_eq!(preset.plugin.as_deref(), Some("dev.test.plugin"));
         let q = Params::new(DEFS);
         preset.apply(&q);
         for i in 0..DEFS.len() {
-            assert!((q.host_value(i) - p.host_value(i)).abs() < 1e-9, "param {i}");
+            assert!(
+                (q.host_value(i) - p.host_value(i)).abs() < 1e-9,
+                "param {i}"
+            );
         }
     }
 
     #[test]
     fn missing_and_bad_values_get_defaults() {
-        let preset = Preset::parse(r#"{"apf-preset": 1, "name": "x", "params": {"wave": "Nope", "bend": 99, "extra": 1}}"#).unwrap();
+        let preset = Preset::parse(
+            r#"{"apf-preset": 1, "name": "x", "params": {"wave": "Nope", "bend": 99, "extra": 1}}"#,
+        )
+        .unwrap();
         let q = Params::new(DEFS);
         let v = preset.host_values(&q);
         assert_eq!(v[0], 1.0, "unknown option name: default");
-        assert!((v[1] - DEFS[1].default_host_value()).abs() < 1e-12, "missing: default");
+        assert!(
+            (v[1] - DEFS[1].default_host_value()).abs() < 1e-12,
+            "missing: default"
+        );
         assert_eq!(v[2], 24.0, "clamped");
         assert_eq!(v[3], 1.0);
         assert!(Preset::parse(r#"{"name": "x", "params": {}}"#).is_err());
@@ -727,13 +889,22 @@ mod tests {
         let a = save_in(&dir, &INFO, &p, None, None, "Pad: wide/soft", false).unwrap();
         let Source::File(path) = &a else { panic!() };
         assert_eq!(path.file_name().unwrap(), "Pad- wide-soft.apfpreset");
-        assert!(matches!(save_in(&dir, &INFO, &p, None, None, "pad: WIDE/soft", false), Err(SaveError::Exists(_))));
+        assert!(matches!(
+            save_in(&dir, &INFO, &p, None, None, "pad: WIDE/soft", false),
+            Err(SaveError::Exists(_))
+        ));
         p.set_host_value(2, 7.0);
-        assert_eq!(save_in(&dir, &INFO, &p, None, None, "pad: WIDE/soft", true).unwrap(), a);
+        assert_eq!(
+            save_in(&dir, &INFO, &p, None, None, "pad: WIDE/soft", true).unwrap(),
+            a
+        );
         save_in(&dir, &INFO, &p, None, None, "Another", false).unwrap();
         let names: Vec<String> = files_in(&dir).into_iter().map(|e| e.name).collect();
         assert_eq!(names, ["Another", "pad: WIDE/soft"]);
-        assert_eq!(read(&a, &Factory::default()).unwrap().host_values(&p)[2], 7.0);
+        assert_eq!(
+            read(&a, &Factory::default()).unwrap().host_values(&p)[2],
+            7.0
+        );
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
@@ -755,7 +926,10 @@ mod tests {
         // JSON: embedded as a value, readable, numbers exactly as the controller wrote them.
         let data = r#"{"rev":3,"modules":[{"id":1,"type":"vco","params":{"freq":0.30000000000000004}}],"cables":[]}"#;
         let text = to_json_with(&INFO, "Patch", &p, Some(data));
-        assert!(text.contains("\"controller\": {\n    \"rev\": 3,\n    \"modules\": [\n"), "{text}");
+        assert!(
+            text.contains("\"controller\": {\n    \"rev\": 3,\n    \"modules\": [\n"),
+            "{text}"
+        );
         assert!(text.contains("\"freq\": 0.30000000000000004"), "{text}");
         let preset = Preset::parse(&text).unwrap();
         let back = preset.controller.as_deref().unwrap();
@@ -765,14 +939,30 @@ mod tests {
         // Anything else: a string, given back exactly. A JSON string or number is text too.
         for plain in ["patch v1\nline \"two\"", "\"quoted\"", "42", "", "{ broken"] {
             let text = to_json_with(&INFO, "Text", &p, Some(plain));
-            assert_eq!(Preset::parse(&text).unwrap().controller.as_deref(), Some(plain), "{text}");
+            assert_eq!(
+                Preset::parse(&text).unwrap().controller.as_deref(),
+                Some(plain),
+                "{text}"
+            );
         }
         // Presets without data, and the plain parameter preset of before, still read.
-        assert_eq!(Preset::parse(&to_json(&INFO, "Old", &p)).unwrap().controller, None);
+        assert_eq!(
+            Preset::parse(&to_json(&INFO, "Old", &p))
+                .unwrap()
+                .controller,
+            None
+        );
         let dir = std::env::temp_dir().join(format!("apf-preset-ctrl-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let src = save_in(&dir, &INFO, &p, Some(data), None, "With data", false).unwrap();
-        assert!(same_data(read(&src, &Factory::default()).unwrap().controller.as_deref().unwrap(), data));
+        assert!(same_data(
+            read(&src, &Factory::default())
+                .unwrap()
+                .controller
+                .as_deref()
+                .unwrap(),
+            data
+        ));
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
@@ -789,7 +979,10 @@ mod tests {
             description: "Pure sine sub".into(),
             author: "Miha".into(),
         };
-        assert_eq!(p.meta, meta, "trimmed, empty and repeated words dropped, unknown keys ignored");
+        assert_eq!(
+            p.meta, meta,
+            "trimmed, empty and repeated words dropped, unknown keys ignored"
+        );
         // Written after the name, read back the same; the values are untouched by it.
         let params = Params::new(DEFS);
         p.apply(&params);
@@ -802,12 +995,22 @@ mod tests {
         assert_eq!(back.meta, meta);
         assert_eq!(back.host_values(&params), p.host_values(&params));
         // Mood as one comma-separated string; wrong kinds count as missing.
-        let p = Preset::parse(r#"{"apf-preset": 1, "name": "x", "type": 7, "mood": "Warm, Soft", "params": {}}"#).unwrap();
-        assert_eq!((p.meta.category.as_str(), p.meta.tags.clone()), ("", vec!["Warm".to_string(), "Soft".to_string()]));
+        let p = Preset::parse(
+            r#"{"apf-preset": 1, "name": "x", "type": 7, "mood": "Warm, Soft", "params": {}}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            (p.meta.category.as_str(), p.meta.tags.clone()),
+            ("", vec!["Warm".to_string(), "Soft".to_string()])
+        );
         // An old preset: empty metadata, and a preset without it is written as before.
-        let old = Preset::parse(r#"{"apf-preset": 1, "name": "Old", "params": {"wave": "Saw"}}"#).unwrap();
+        let old = Preset::parse(r#"{"apf-preset": 1, "name": "Old", "params": {"wave": "Saw"}}"#)
+            .unwrap();
         assert!(old.meta.is_empty());
-        assert_eq!(to_json_with_meta(&INFO, "n", &Metadata::default(), &params, None), to_json(&INFO, "n", &params));
+        assert_eq!(
+            to_json_with_meta(&INFO, "n", &Metadata::default(), &params, None),
+            to_json(&INFO, "n", &params)
+        );
     }
 
     #[test]
@@ -815,7 +1018,11 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("apf-preset-meta-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let p = Params::new(DEFS);
-        let meta = Metadata { category: "Pad".into(), tags: vec!["Warm".into()], ..Default::default() };
+        let meta = Metadata {
+            category: "Pad".into(),
+            tags: vec!["Warm".into()],
+            ..Default::default()
+        };
         let src = save_in(&dir, &INFO, &p, None, Some(&meta), "Soft", false).unwrap();
         let listed = files_in(&dir);
         assert_eq!((listed[0].name.as_str(), &listed[0].meta), ("Soft", &meta));
@@ -823,7 +1030,11 @@ mod tests {
         save_in(&dir, &INFO, &p, None, None, "Soft", true).unwrap();
         assert_eq!(read(&src, &Factory::default()).unwrap().meta, meta);
         // ... with metadata replaces it, and the listing sees the change.
-        let other = Metadata { category: "Keys".into(), description: "Soft keys".into(), ..Default::default() };
+        let other = Metadata {
+            category: "Keys".into(),
+            description: "Soft keys".into(),
+            ..Default::default()
+        };
         save_in(&dir, &INFO, &p, None, Some(&other), "soft", true).unwrap();
         assert_eq!(files_in(&dir)[0].meta, other);
         assert_eq!(read(&src, &Factory::default()).unwrap().name, "soft");
@@ -835,17 +1046,30 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("apf-preset-list-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("Bass")).unwrap();
-        let file = |name: &str, ty: &str| format!(r#"{{"apf-preset": 1, "name": "{name}", "type": "{ty}", "params": {{}}}}"#);
+        let file = |name: &str, ty: &str| {
+            format!(r#"{{"apf-preset": 1, "name": "{name}", "type": "{ty}", "params": {{}}}}"#)
+        };
         std::fs::write(dir.join("a.apfpreset"), file("A", "Lead")).unwrap();
         std::fs::write(dir.join("Bass/b.apfpreset"), file("B", "Bass")).unwrap();
         std::fs::write(dir.join("notes.txt"), "not a preset").unwrap();
-        let types = |d: &Path| files_in(d).into_iter().map(|e| (e.name, e.meta.category)).collect::<Vec<_>>();
-        assert_eq!(types(&dir), [("A".into(), "Lead".into()), ("B".into(), "Bass".into())]);
+        let types = |d: &Path| {
+            files_in(d)
+                .into_iter()
+                .map(|e| (e.name, e.meta.category))
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            types(&dir),
+            [("A".into(), "Lead".into()), ("B".into(), "Bass".into())]
+        );
         // Edited in place (another size): read again. Removed: gone from the list.
         std::fs::write(dir.join("a.apfpreset"), file("A", "Pluck!")).unwrap();
         std::fs::remove_file(dir.join("Bass/b.apfpreset")).unwrap();
         assert_eq!(types(&dir), [("A".into(), "Pluck!".into())]);
-        assert!(!listed().keys().any(|p| p.ends_with("Bass/b.apfpreset")), "the cache forgets removed files");
+        assert!(
+            !listed().keys().any(|p| p.ends_with("Bass/b.apfpreset")),
+            "the cache forgets removed files"
+        );
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
@@ -858,8 +1082,13 @@ mod tests {
         ];
         let a = Factory::shared(TEXTS);
         assert!(Arc::ptr_eq(&a, &Factory::shared(TEXTS)));
-        let entries: Vec<(String, String)> = a.entries().map(|e| (e.name, e.meta.category)).collect();
-        assert_eq!(entries, [("Two".into(), "Pad".into()), ("One".into(), "".into())], "the plugin's order, broken ones left out");
+        let entries: Vec<(String, String)> =
+            a.entries().map(|e| (e.name, e.meta.category)).collect();
+        assert_eq!(
+            entries,
+            [("Two".into(), "Pad".into()), ("One".into(), "".into())],
+            "the plugin's order, broken ones left out"
+        );
         assert!(a.has_name("one") && a.get("one").is_none() && a.get("One").is_some());
     }
 
@@ -867,7 +1096,10 @@ mod tests {
     fn ids_and_names() {
         let s = Source::File(PathBuf::from("/a/b c.apfpreset"));
         assert_eq!(Source::from_id(&s.id()), Some(s));
-        assert_eq!(Source::from_id("factory:Init Saw"), Some(Source::Factory("Init Saw".into())));
+        assert_eq!(
+            Source::from_id("factory:Init Saw"),
+            Some(Source::Factory("Init Saw".into()))
+        );
         assert_eq!(Source::from_id("file:"), None);
         assert_eq!(file_stem_of("  ..\u{7}  "), "-");
         assert_eq!(file_stem_of("   "), "Preset");

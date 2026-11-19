@@ -1,0 +1,13 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Init",
+  "type": "Utility",
+  "subtype": "Default",
+  "mood": [
+    "Clean"
+  ],
+  "description": "Everything flat and every effect out: a clean starting point",
+  "author": "NoDAW",
+  "params": {}
+}

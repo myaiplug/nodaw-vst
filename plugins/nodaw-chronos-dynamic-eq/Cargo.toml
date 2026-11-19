@@ -1,0 +1,32 @@
+[package]
+name = "nodaw-chronos-dynamic-eq"
+description = "NoDAW Chronos Dynamic EQ: seven-band dynamic EQ as a CLAP/VST3 plugin"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-NoDAW-Proprietary"
+publish = false
+
+[lib]
+crate-type = ["staticlib", "rlib"]
+
+[features]
+default = ["ui"]
+ui = ["dep:apf-webview"]
+
+[dependencies]
+apf = { path = "../../vendor/apf/crates/apf" }
+apf-webview = { path = "../../vendor/apf/crates/apf-webview", optional = true }
+nodaw-dsp = { path = "../../crates/nodaw-dsp" }
+nodaw-kit = { path = "../../crates/nodaw-kit" }
+
+[dev-dependencies]
+clap-sys = "0.5"
+apf-test = { path = "../../vendor/apf/crates/apf-test" }
+
+[package.metadata.apf]
+name = "NoDAW Chronos Dynamic EQ"
+bundle-id = "com.nodaw.chronos-dynamic-eq"
+au-type = "aufx"
+au-subtype = "NdDq"
+au-manufacturer = "NdDw"
+au-manufacturer-name = "NoDAW"

@@ -1,0 +1,23 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "808 Weight",
+  "type": "Low end",
+  "subtype": "Low end",
+  "mood": [
+    "Deep",
+    "Heavy"
+  ],
+  "description": "+6 dB sub shelf, top rolled to ~8 kHz, small 800 Hz dip for clean weight.",
+  "author": "NoDAW",
+  "params": {
+    "hpf": 29.6,
+    "lpf": 8000,
+    "sub": 6.0,
+    "out_gain": -2.22,
+    "b1_gain": 1.92,
+    "b3_gain": -1.92,
+    "b3_q": 1.27,
+    "b4_gain": -0.48
+  }
+}

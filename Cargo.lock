@@ -1064,8 +1064,67 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 
 [[package]]
+name = "nodaw-chronos-dynamic-eq"
+version = "0.1.0"
+dependencies = [
+ "apf",
+ "apf-test",
+ "apf-webview",
+ "clap-sys",
+ "nodaw-dsp",
+ "nodaw-kit",
+]
+
+[[package]]
+name = "nodaw-chronos-weaver"
+version = "0.1.0"
+dependencies = [
+ "apf",
+ "apf-test",
+ "apf-webview",
+ "clap-sys",
+ "nodaw-dsp",
+ "nodaw-kit",
+]
+
+[[package]]
 name = "nodaw-dsp"
 version = "0.1.0"
+
+[[package]]
+name = "nodaw-harmonic-space"
+version = "0.1.0"
+dependencies = [
+ "apf",
+ "apf-test",
+ "apf-webview",
+ "clap-sys",
+ "nodaw-dsp",
+ "nodaw-kit",
+]
+
+[[package]]
+name = "nodaw-kit"
+version = "0.1.0"
+dependencies = [
+ "apf",
+ "hmac",
+ "nodaw-dsp",
+ "sha2",
+ "ureq",
+]
+
+[[package]]
+name = "nodaw-racks"
+version = "0.1.0"
+dependencies = [
+ "apf",
+ "apf-test",
+ "apf-webview",
+ "clap-sys",
+ "nodaw-dsp",
+ "nodaw-kit",
+]
 
 [[package]]
 name = "nodaw-screw"
@@ -1075,10 +1134,20 @@ dependencies = [
  "apf-test",
  "apf-webview",
  "clap-sys",
- "hmac",
  "nodaw-dsp",
- "sha2",
- "ureq",
+ "nodaw-kit",
+]
+
+[[package]]
+name = "nodaw-temporal-pitch-portal"
+version = "0.1.0"
+dependencies = [
+ "apf",
+ "apf-test",
+ "apf-webview",
+ "clap-sys",
+ "nodaw-dsp",
+ "nodaw-kit",
 ]
 
 [[package]]

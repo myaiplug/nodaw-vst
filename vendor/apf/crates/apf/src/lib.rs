@@ -41,30 +41,32 @@
 pub mod clap;
 pub mod controller;
 pub mod dsp;
-pub mod view;
 pub mod json;
 pub mod param;
 pub mod plugin;
 pub mod preset;
 pub mod queue;
 pub mod state;
+pub mod view;
 
 pub use controller::{Controller, ControllerRequest, ControllerResponse, HostHandle};
-pub use view::{learnable_cc, View, ViewContext, ParentWindow};
 pub use param::{Curve, ParamDef, ParamId, ParamKind, Params};
 pub use plugin::{
-    cc, AudioBuffer, AudioLayout, Event, Plugin, PluginInfo, ProcessConfig, ProcessContext, ProcessStatus, RemotePage, Transport,
+    cc, AudioBuffer, AudioLayout, Event, Plugin, PluginInfo, ProcessConfig, ProcessContext,
+    ProcessStatus, RemotePage, Transport,
 };
+pub use view::{learnable_cc, ParentWindow, View, ViewContext};
 
 /// What a plugin crate usually imports: `use apf::prelude::*;`.
 pub mod prelude {
     pub use crate::dsp::{
-        db_to_gain, midi_to_hz, Adsr, AdsrShape, AdsrStage, DelayLine, Lfo, LfoShape, OnePole, Oscillator, Smoother, Svf, SvfCoeffs,
-        Waveform,
+        db_to_gain, midi_to_hz, Adsr, AdsrShape, AdsrStage, DelayLine, Lfo, LfoShape, OnePole,
+        Oscillator, Smoother, Svf, SvfCoeffs, Waveform,
     };
     pub use crate::{
-        cc, AudioBuffer, AudioLayout, Controller, ControllerRequest, ControllerResponse, Curve, View, Event, HostHandle, ParamDef,
-        ParamId, Params, Plugin, PluginInfo, ProcessConfig, ProcessContext, ProcessStatus, RemotePage,
+        cc, AudioBuffer, AudioLayout, Controller, ControllerRequest, ControllerResponse, Curve,
+        Event, HostHandle, ParamDef, ParamId, Params, Plugin, PluginInfo, ProcessConfig,
+        ProcessContext, ProcessStatus, RemotePage, View,
     };
 }
 

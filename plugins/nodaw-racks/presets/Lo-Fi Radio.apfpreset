@@ -1,0 +1,27 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.racks",
+  "name": "Lo-Fi Radio",
+  "type": "Character",
+  "subtype": "Lo-Fi",
+  "mood": [
+    "Dark",
+    "Gritty"
+  ],
+  "description": "Band-limited and gritty, like a small speaker",
+  "author": "NoDAW",
+  "params": {
+    "sat_curve": "Diode",
+    "sat_drive": 16,
+    "eq1_type": "Low Cut",
+    "eq1_freq": 400,
+    "eq1_q": 0.9,
+    "eq7_type": "High Cut",
+    "eq7_freq": 3500,
+    "eq7_q": 0.9,
+    "eq4_gain": 4,
+    "eq4_freq": 1500,
+    "sp_width": 20,
+    "lim_gain": 6
+  }
+}

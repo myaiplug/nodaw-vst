@@ -1,0 +1,30 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-dynamic-eq",
+  "name": "De-Harsh Guitars",
+  "type": "Guitar",
+  "subtype": "Tone",
+  "mood": [
+    "Smooth"
+  ],
+  "description": "Dynamic cuts at 2.5 and 4 kHz that follow the pick",
+  "author": "NoDAW",
+  "params": {
+    "b5_freq": 2600,
+    "b5_q": 1.8,
+    "b5_mode": "Compress",
+    "b5_thresh": -28,
+    "b5_ratio": 4,
+    "b5_range": 6,
+    "b5_attack": 3,
+    "b5_release": 120,
+    "b6_freq": 4200,
+    "b6_q": 2,
+    "b6_mode": "Compress",
+    "b6_thresh": -30,
+    "b6_ratio": 4,
+    "b6_range": 5,
+    "b6_attack": 3,
+    "b6_release": 120
+  }
+}

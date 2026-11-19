@@ -19,10 +19,22 @@ pub struct Coeffs {
 
 impl Coeffs {
     /// Passes everything.
-    pub const IDENTITY: Coeffs = Coeffs { b0: 1.0, b1: 0.0, b2: 0.0, a1: 0.0, a2: 0.0 };
+    pub const IDENTITY: Coeffs = Coeffs {
+        b0: 1.0,
+        b1: 0.0,
+        b2: 0.0,
+        a1: 0.0,
+        a2: 0.0,
+    };
 
     fn norm(b0: f64, b1: f64, b2: f64, a0: f64, a1: f64, a2: f64) -> Self {
-        Self { b0: (b0 / a0) as f32, b1: (b1 / a0) as f32, b2: (b2 / a0) as f32, a1: (a1 / a0) as f32, a2: (a2 / a0) as f32 }
+        Self {
+            b0: (b0 / a0) as f32,
+            b1: (b1 / a0) as f32,
+            b2: (b2 / a0) as f32,
+            a1: (a1 / a0) as f32,
+            a2: (a2 / a0) as f32,
+        }
     }
 
     /// 2nd-order low-pass.
@@ -30,7 +42,14 @@ impl Coeffs {
         let w = 2.0 * std::f64::consts::PI * (fc as f64).clamp(10.0, sr * 0.49) / sr;
         let (s, c) = w.sin_cos();
         let alpha = s / (2.0 * q as f64);
-        Self::norm((1.0 - c) / 2.0, 1.0 - c, (1.0 - c) / 2.0, 1.0 + alpha, -2.0 * c, 1.0 - alpha)
+        Self::norm(
+            (1.0 - c) / 2.0,
+            1.0 - c,
+            (1.0 - c) / 2.0,
+            1.0 + alpha,
+            -2.0 * c,
+            1.0 - alpha,
+        )
     }
 
     /// Low shelf (slope 1) with `gain_db` below `fc`.
@@ -55,14 +74,27 @@ impl Coeffs {
         let w = 2.0 * std::f64::consts::PI * (fc as f64).clamp(5.0, sr * 0.49) / sr;
         let (s, c) = w.sin_cos();
         let alpha = s / (2.0 * q as f64);
-        Self::norm((1.0 + c) / 2.0, -(1.0 + c), (1.0 + c) / 2.0, 1.0 + alpha, -2.0 * c, 1.0 - alpha)
+        Self::norm(
+            (1.0 + c) / 2.0,
+            -(1.0 + c),
+            (1.0 + c) / 2.0,
+            1.0 + alpha,
+            -2.0 * c,
+            1.0 - alpha,
+        )
     }
 
     /// Magnitude response at `f` Hz, for tests and drawing.
     pub fn magnitude(&self, f: f32, sr: f64) -> f32 {
         let w = 2.0 * std::f64::consts::PI * f as f64 / sr;
         let (c1, s1, c2, s2) = (w.cos(), w.sin(), (2.0 * w).cos(), (2.0 * w).sin());
-        let (b0, b1, b2, a1, a2) = (self.b0 as f64, self.b1 as f64, self.b2 as f64, self.a1 as f64, self.a2 as f64);
+        let (b0, b1, b2, a1, a2) = (
+            self.b0 as f64,
+            self.b1 as f64,
+            self.b2 as f64,
+            self.a1 as f64,
+            self.a2 as f64,
+        );
         let nr = b0 + b1 * c1 + b2 * c2;
         let ni = -(b1 * s1 + b2 * s2);
         let dr = 1.0 + a1 * c1 + a2 * c2;

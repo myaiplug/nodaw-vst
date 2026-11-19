@@ -1,0 +1,22 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.racks",
+  "name": "Wide Master",
+  "type": "Master",
+  "subtype": "Stereo",
+  "mood": [
+    "Wide",
+    "Open"
+  ],
+  "description": "Gentle width with mono-safe lows and a transparent ceiling",
+  "author": "NoDAW",
+  "params": {
+    "sat_drive": 4,
+    "sp_width": 135,
+    "sp_mono": 140,
+    "eq7_gain": 1.2,
+    "lim_gain": 3,
+    "lim_ceiling": -1,
+    "lim_release": 220
+  }
+}

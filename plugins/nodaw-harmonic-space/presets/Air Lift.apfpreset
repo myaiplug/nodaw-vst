@@ -1,0 +1,21 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Air Lift",
+  "type": "Vocals",
+  "subtype": "Vocals",
+  "mood": [
+    "Bright",
+    "Airy"
+  ],
+  "description": "Gentle 8k/16k air with a mild 80 Hz rumble cut. Low end stays flat.",
+  "author": "NoDAW",
+  "params": {
+    "hpf": 82.4,
+    "rev_mix": 4.0,
+    "b4_gain": 0.48,
+    "b5_gain": 1.2,
+    "b6_gain": 2.4,
+    "b7_gain": 3.36
+  }
+}

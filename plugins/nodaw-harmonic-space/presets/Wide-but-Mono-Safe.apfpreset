@@ -1,0 +1,26 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Wide-but-Mono-Safe",
+  "type": "Fix-it",
+  "subtype": "Fix-it",
+  "mood": [
+    "Wide",
+    "Safe"
+  ],
+  "description": "Width from a moderate stereo reverb and a light echo only. No flanger, so it holds up in mono.",
+  "author": "NoDAW",
+  "params": {
+    "hpf": 77.6,
+    "lpf": 20400,
+    "dly_mix": 8,
+    "dly_time": 172,
+    "rev_mix": 13.3,
+    "out_gain": -0.71,
+    "b2_gain": -0.48,
+    "b4_gain": 0.48,
+    "b5_gain": 0.48,
+    "b6_gain": 0.96,
+    "b7_gain": 0.96
+  }
+}

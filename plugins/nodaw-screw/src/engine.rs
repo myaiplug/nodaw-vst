@@ -212,18 +212,34 @@ impl Engine {
         if lp != self.lp_for {
             self.lp_for = lp;
             // At the top of the range the filter is out of the path altogether.
-            self.lp_c = if lp >= 19_900.0 { Coeffs::IDENTITY } else { Coeffs::lowpass(lp.min(self.sr as f32 * 0.45), 0.707, self.sr) };
+            self.lp_c = if lp >= 19_900.0 {
+                Coeffs::IDENTITY
+            } else {
+                Coeffs::lowpass(lp.min(self.sr as f32 * 0.45), 0.707, self.sr)
+            };
         }
         if s.bass_db != self.shelf_for {
             self.shelf_for = s.bass_db;
-            self.shelf_c = if s.bass_db.abs() < 0.01 { Coeffs::IDENTITY } else { Coeffs::low_shelf(SHELF_HZ, s.bass_db, self.sr) };
+            self.shelf_c = if s.bass_db.abs() < 0.01 {
+                Coeffs::IDENTITY
+            } else {
+                Coeffs::low_shelf(SHELF_HZ, s.bass_db, self.sr)
+            };
         }
     }
 
     /// Process one block in place. `beats` is the host's song position at the first sample of
     /// the block and `playing` its transport; `tempo` in BPM when known.
     #[allow(clippy::too_many_arguments)]
-    pub fn process(&mut self, l: &mut [f32], r: &mut [f32], s: &Settings, beats: Option<f64>, playing: bool, tempo: Option<f64>) -> BlockInfo {
+    pub fn process(
+        &mut self,
+        l: &mut [f32],
+        r: &mut [f32],
+        s: &Settings,
+        beats: Option<f64>,
+        playing: bool,
+        tempo: Option<f64>,
+    ) -> BlockInfo {
         let n = l.len().min(r.len());
         self.update_tone(s);
         self.reverb.set(s.reverb);
@@ -234,7 +250,11 @@ impl Engine {
         }
         let ratio = semitones_to_ratio(s.pitch_st);
         let rate = s.wow_rate_hz.clamp(0.05, 20.0);
-        let exc_ms = if s.wow_cents > 0.0 { wobble::excursion_ms(s.wow_cents, rate) } else { 0.0 };
+        let exc_ms = if s.wow_cents > 0.0 {
+            wobble::excursion_ms(s.wow_cents, rate)
+        } else {
+            0.0
+        };
         let (start, inc) = self.clock.begin_block(beats, playing, tempo, self.sr);
         let chop_on = s.pattern.iter().any(|&v| v != 2) && s.chop_depth > 0.0;
 
@@ -256,10 +276,16 @@ impl Engine {
         for i in 0..n {
             let (xl, xr) = (l[i], r[i]);
             // A non-finite sample must not poison the feedback paths.
-            let (xl, xr) = (if xl.is_finite() { xl } else { 0.0 }, if xr.is_finite() { xr } else { 0.0 });
+            let (xl, xr) = (
+                if xl.is_finite() { xl } else { 0.0 },
+                if xr.is_finite() { xr } else { 0.0 },
+            );
             self.byp[0].push(xl);
             self.byp[1].push(xr);
-            let (bl, br) = (self.byp[0].tap_int(lat_total), self.byp[1].tap_int(lat_total));
+            let (bl, br) = (
+                self.byp[0].tap_int(lat_total),
+                self.byp[1].tap_int(lat_total),
+            );
 
             let g = self.in_gain.tick(in_t);
             let (il, ir) = (xl * g, xr * g);
@@ -281,7 +307,11 @@ impl Engine {
             // input `lat_wet` samples ago.
             let pos = start + inc * (i as f64 - lat_wet as f64);
             step = chop::step_at(pos, s.chop_steps_per_beat);
-            let target = if chop_on { chop::level_gain(s.pattern[step], s.chop_depth) } else { 1.0 };
+            let target = if chop_on {
+                chop::level_gain(s.pattern[step], s.chop_depth)
+            } else {
+                1.0
+            };
             let cg = self.chop_gain.tick(target);
             let (cl, cr) = (tl * cg, tr * cg);
 
@@ -321,10 +351,18 @@ mod tests {
     use super::*;
 
     fn sine(n: usize, hz: f64, sr: f64, amp: f32) -> Vec<f32> {
-        (0..n).map(|i| (amp as f64 * (2.0 * std::f64::consts::PI * hz * i as f64 / sr).sin()) as f32).collect()
+        (0..n)
+            .map(|i| (amp as f64 * (2.0 * std::f64::consts::PI * hz * i as f64 / sr).sin()) as f32)
+            .collect()
     }
 
-    fn run(e: &mut Engine, s: &Settings, l: &[f32], r: &[f32], block: usize) -> (Vec<f32>, Vec<f32>) {
+    fn run(
+        e: &mut Engine,
+        s: &Settings,
+        l: &[f32],
+        r: &[f32],
+        block: usize,
+    ) -> (Vec<f32>, Vec<f32>) {
         let (mut ol, mut or) = (l.to_vec(), r.to_vec());
         let mut beats = 0.0;
         for (cl, cr) in ol.chunks_mut(block).zip(or.chunks_mut(block)) {
@@ -349,7 +387,10 @@ mod tests {
         let sr = 48_000.0;
         let mut e = Engine::new(sr);
         let x = sine(48_000, 330.0, sr, 0.5);
-        let s = Settings { bypass: true, ..Settings::default() };
+        let s = Settings {
+            bypass: true,
+            ..Settings::default()
+        };
         e.reset_to(&s);
         let (l, _) = run(&mut e, &s, &x, &x, 480);
         let lat = e.latency();
@@ -363,7 +404,13 @@ mod tests {
         let sr = 44_100.0;
         let mut e = Engine::new(sr);
         let x = sine(44_100, 220.0, sr, 0.4);
-        let s = Settings { mix: 0.0, rev_mix: 1.0, pitch_st: -7.0, limiter_on: false, ..Settings::default() };
+        let s = Settings {
+            mix: 0.0,
+            rev_mix: 1.0,
+            pitch_st: -7.0,
+            limiter_on: false,
+            ..Settings::default()
+        };
         e.reset_to(&s);
         let (l, _) = run(&mut e, &s, &x, &x, 441);
         let lat_wet = e.latency() - Limiter::new(sr, 2.0, 80.0).latency();
@@ -380,11 +427,19 @@ mod tests {
         let sr = 48_000.0;
         let mut e = Engine::new(sr);
         let x = sine(96_000, 440.0, sr, 0.5);
-        let s = Settings { pitch_st: -12.0, rev_mix: 0.0, limiter_on: false, ..Settings::default() };
+        let s = Settings {
+            pitch_st: -12.0,
+            rev_mix: 0.0,
+            limiter_on: false,
+            ..Settings::default()
+        };
         e.reset_to(&s);
         let (l, _) = run(&mut e, &s, &x, &x, 512);
         let tail = &l[48_000..];
-        let crossings = tail.windows(2).filter(|w| w[0] <= 0.0 && w[1] > 0.0).count() as f64;
+        let crossings = tail
+            .windows(2)
+            .filter(|w| w[0] <= 0.0 && w[1] > 0.0)
+            .count() as f64;
         let hz = crossings / (tail.len() as f64 / sr);
         assert!((hz - 220.0).abs() < 4.0, "got {hz} Hz");
         let peak = tail.iter().fold(0.0f32, |m, v| m.max(v.abs()));
@@ -398,10 +453,23 @@ mod tests {
         let x = sine(48_000, 500.0, sr, 0.3);
         // Wow and flutter are deliberately a little different left to right (a 0.19 cycle offset
         // and independent flutter) and the reverb is stereo by design, so the check holds for the rest.
-        let s = Settings { wow_cents: 0.0, flutter: 0.0, rev_mix: 0.0, pitch_st: -2.0, width: 1.4, chop_depth: 0.7, pattern: chop::PATTERNS[3].1, ..Settings::default() };
+        let s = Settings {
+            wow_cents: 0.0,
+            flutter: 0.0,
+            rev_mix: 0.0,
+            pitch_st: -2.0,
+            width: 1.4,
+            chop_depth: 0.7,
+            pattern: chop::PATTERNS[3].1,
+            ..Settings::default()
+        };
         e.reset_to(&s);
         let (l, r) = run(&mut e, &s, &x, &x, 256);
-        let worst = l.iter().zip(&r).map(|(a, b)| (a - b).abs()).fold(0.0f32, f32::max);
+        let worst = l
+            .iter()
+            .zip(&r)
+            .map(|(a, b)| (a - b).abs())
+            .fold(0.0f32, f32::max);
         assert!(worst < 1e-3, "mono sources lost mono: {worst}");
     }
 
@@ -411,11 +479,19 @@ mod tests {
         let mut e = Engine::new(sr);
         let l = sine(24_000, 300.0, sr, 0.3);
         let r = sine(24_000, 410.0, sr, 0.3);
-        let s = Settings { width: 0.0, rev_mix: 0.5, ..Settings::default() };
+        let s = Settings {
+            width: 0.0,
+            rev_mix: 0.5,
+            ..Settings::default()
+        };
         e.reset_to(&s);
         let (ol, or) = run(&mut e, &s, &l, &r, 480);
         // Wet side is collapsed; the dry side still carries the stereo image, but mix is 100 %.
-        let worst = ol[12_000..].iter().zip(&or[12_000..]).map(|(a, b)| (a - b).abs()).fold(0.0f32, f32::max);
+        let worst = ol[12_000..]
+            .iter()
+            .zip(&or[12_000..])
+            .map(|(a, b)| (a - b).abs())
+            .fold(0.0f32, f32::max);
         assert!(worst < 1e-3, "{worst}");
     }
 
@@ -447,7 +523,13 @@ mod tests {
                 match &reference {
                     None => reference = Some(out),
                     Some((rl, rr)) => {
-                        let worst = out.0.iter().zip(rl).chain(out.1.iter().zip(rr)).map(|(a, b)| (a - b).abs()).fold(0.0f32, f32::max);
+                        let worst = out
+                            .0
+                            .iter()
+                            .zip(rl)
+                            .chain(out.1.iter().zip(rr))
+                            .map(|(a, b)| (a - b).abs())
+                            .fold(0.0f32, f32::max);
                         assert!(worst < tol, "block {block}: differs by {worst}");
                     }
                 }
@@ -465,10 +547,18 @@ mod tests {
         x[3000] = f32::NEG_INFINITY;
         x[4000] = 1.0e30;
         x[5000] = 1.0e-42;
-        let s = Settings { rev_mix: 0.5, wow_cents: 50.0, flutter: 1.0, ..Settings::default() };
+        let s = Settings {
+            rev_mix: 0.5,
+            wow_cents: 50.0,
+            flutter: 1.0,
+            ..Settings::default()
+        };
         e.reset_to(&s);
         let (l, r) = run(&mut e, &s, &x, &x, 333);
-        assert!(l.iter().chain(&r).all(|v| v.is_finite()), "non-finite sample");
+        assert!(
+            l.iter().chain(&r).all(|v| v.is_finite()),
+            "non-finite sample"
+        );
     }
 
     #[test]
@@ -479,7 +569,12 @@ mod tests {
             for decay in [0.2, 20.0] {
                 let s = Settings {
                     pitch_st: pitch,
-                    reverb: ReverbParams { decay, size: 2.0, damp_hz: 20_000.0, predelay_ms: 250.0 },
+                    reverb: ReverbParams {
+                        decay,
+                        size: 2.0,
+                        damp_hz: 20_000.0,
+                        predelay_ms: 250.0,
+                    },
                     rev_mix: 1.0,
                     wow_cents: 100.0,
                     wow_rate_hz: 10.0,
@@ -495,7 +590,10 @@ mod tests {
                 e.reset_to(&s);
                 let (l, r) = run(&mut e, &s, &x, &x, 512);
                 let peak = l.iter().chain(&r).fold(0.0f32, |m, v| m.max(v.abs()));
-                assert!(peak.is_finite() && peak <= 10f32.powf(-11.0 / 20.0) * 1.05, "pitch {pitch} decay {decay}: peak {peak}");
+                assert!(
+                    peak.is_finite() && peak <= 10f32.powf(-11.0 / 20.0) * 1.05,
+                    "pitch {pitch} decay {decay}: peak {peak}"
+                );
             }
         }
     }
@@ -505,7 +603,13 @@ mod tests {
         let sr = 48_000.0;
         let mut e = Engine::new(sr);
         let x = sine(48_000, 1000.0, sr, 1.0);
-        let s = Settings { pitch_st: 0.0, rev_mix: 0.0, in_db: 12.0, ceiling_db: -1.0, ..Settings::default() };
+        let s = Settings {
+            pitch_st: 0.0,
+            rev_mix: 0.0,
+            in_db: 12.0,
+            ceiling_db: -1.0,
+            ..Settings::default()
+        };
         e.reset_to(&s);
         let (l, _) = run(&mut e, &s, &x, &x, 480);
         let peak = l[4800..].iter().fold(0.0f32, |m, v| m.max(v.abs()));
@@ -517,14 +621,25 @@ mod tests {
     fn silence_decays_to_exact_zero_with_no_subnormals_left() {
         let sr = 48_000.0;
         let mut e = Engine::new(sr);
-        let s = Settings { rev_mix: 1.0, pitch_st: -5.0, reverb: ReverbParams { decay: 20.0, ..ReverbParams::default() }, ..Settings::default() };
+        let s = Settings {
+            rev_mix: 1.0,
+            pitch_st: -5.0,
+            reverb: ReverbParams {
+                decay: 20.0,
+                ..ReverbParams::default()
+            },
+            ..Settings::default()
+        };
         e.reset_to(&s);
         let burst = sine(4800, 800.0, sr, 0.5);
         run(&mut e, &s, &burst, &burst, 512);
         let silence = vec![0.0f32; (sr as usize) * 120];
         let (l, _) = run(&mut e, &s, &silence, &silence, 1024);
         let last = &l[l.len() - 4800..];
-        assert!(last.iter().all(|v| *v == 0.0 || v.is_normal()), "a subnormal reached the output");
+        assert!(
+            last.iter().all(|v| *v == 0.0 || v.is_normal()),
+            "a subnormal reached the output"
+        );
         assert!(last.iter().all(|v| v.abs() < 1e-6), "the tail never died");
         assert!(!e.reverb.holds_subnormals());
     }
@@ -537,7 +652,14 @@ mod tests {
         let mut e = Engine::new(sr);
         let n = (sr * 2.0) as usize;
         let x = vec![0.5f32; n];
-        let s = Settings { pitch_st: 0.0, rev_mix: 0.0, limiter_on: false, pattern: chop::PATTERNS[1].1, chop_steps_per_beat: 4.0, ..Settings::default() };
+        let s = Settings {
+            pitch_st: 0.0,
+            rev_mix: 0.0,
+            limiter_on: false,
+            pattern: chop::PATTERNS[1].1,
+            chop_steps_per_beat: 4.0,
+            ..Settings::default()
+        };
         e.reset_to(&s);
         let (l, _) = run(&mut e, &s, &x, &x, 480);
         let lat = e.latency();
@@ -549,7 +671,10 @@ mod tests {
         assert!(host(15_000) > 0.45, "step 2 open: {}", host(15_000));
         // The edges sit on the grid within a few milliseconds.
         let first_closed = (2000..n - lat).find(|&t| host(t).abs() < 0.25).unwrap();
-        assert!((first_closed as i64 - 6000).abs() < (0.004 * sr) as i64, "edge at {first_closed}");
+        assert!(
+            (first_closed as i64 - 6000).abs() < (0.004 * sr) as i64,
+            "edge at {first_closed}"
+        );
     }
 
     #[test]
@@ -560,7 +685,10 @@ mod tests {
             let s = Settings::default();
             e.reset_to(&s);
             let (l, r) = run(&mut e, &s, &x, &x, 256);
-            assert!(l.iter().chain(&r).all(|v| v.is_finite() && v.abs() <= 1.0), "{sr}");
+            assert!(
+                l.iter().chain(&r).all(|v| v.is_finite() && v.abs() <= 1.0),
+                "{sr}"
+            );
             assert!(l.iter().any(|v| v.abs() > 0.1), "{sr}: silent");
         }
     }

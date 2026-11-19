@@ -1,0 +1,20 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-weaver",
+  "name": "Glass Cloud",
+  "type": "Cloud",
+  "subtype": "Grains",
+  "mood": [
+    "Bright",
+    "Sparkly"
+  ],
+  "description": "Short, sparse grains with full phase scatter",
+  "author": "NoDAW",
+  "params": {
+    "cloud": 90,
+    "grain": 25,
+    "density": 25,
+    "scatter": 100,
+    "mix": 70
+  }
+}

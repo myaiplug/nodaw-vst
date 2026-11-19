@@ -1,0 +1,29 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Lo-fi Room",
+  "type": "Character",
+  "subtype": "Character",
+  "mood": [
+    "Lo-Fi",
+    "Dark"
+  ],
+  "description": "Muffled ~4.4 kHz top, thin lows, low-mid bump, light wobble and room.",
+  "author": "NoDAW",
+  "params": {
+    "amp": 0.72,
+    "hpf": 164.0,
+    "lpf": 4400,
+    "dly_mix": 6,
+    "dly_time": 154,
+    "rev_mix": 18.7,
+    "fl_mix": 15,
+    "fl_rate": 0.5,
+    "b1_gain": -0.96,
+    "b2_gain": 0.96,
+    "b3_gain": 1.44,
+    "b5_gain": -1.44,
+    "b6_gain": -2.4,
+    "b7_gain": -2.88
+  }
+}

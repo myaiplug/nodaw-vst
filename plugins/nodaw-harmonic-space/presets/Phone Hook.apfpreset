@@ -1,0 +1,31 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Phone Hook",
+  "type": "Vocals",
+  "subtype": "Vocals",
+  "mood": [
+    "Lo-Fi",
+    "Narrow"
+  ],
+  "description": "Telephone band (~300 Hz-3.4 kHz) with a pushed 800 Hz-2 kHz honk.",
+  "author": "NoDAW",
+  "params": {
+    "amp": 2.01,
+    "hpf": 298.4,
+    "lpf": 3400,
+    "rev_mix": 2.7,
+    "out_gain": 1.34,
+    "b1_gain": -4.8,
+    "b2_gain": -2.4,
+    "b2_q": 1.17,
+    "b3_gain": 2.88,
+    "b3_q": 1.46,
+    "b4_gain": 3.84,
+    "b4_q": 1.27,
+    "b5_gain": 0.96,
+    "b5_q": 1.17,
+    "b6_gain": -2.4,
+    "b7_gain": -3.6
+  }
+}

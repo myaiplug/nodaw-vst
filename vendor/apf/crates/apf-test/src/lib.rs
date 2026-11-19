@@ -103,7 +103,13 @@ union AnyEvent {
 pub struct Event(AnyEvent);
 
 fn header(type_: u16, size: usize, time: u32) -> clap_event_header {
-    clap_event_header { size: size as u32, time, space_id: CLAP_CORE_EVENT_SPACE_ID, type_, flags: 0 }
+    clap_event_header {
+        size: size as u32,
+        time,
+        space_id: CLAP_CORE_EVENT_SPACE_ID,
+        type_,
+        flags: 0,
+    }
 }
 
 impl Event {
@@ -135,7 +141,11 @@ impl Event {
     pub fn param(time: u32, param_id: u32, host_value: f64) -> Self {
         Event(AnyEvent {
             param: clap_event_param_value {
-                header: header(CLAP_EVENT_PARAM_VALUE, size_of::<clap_event_param_value>(), time),
+                header: header(
+                    CLAP_EVENT_PARAM_VALUE,
+                    size_of::<clap_event_param_value>(),
+                    time,
+                ),
                 param_id,
                 cookie: ptr::null_mut(),
                 note_id: -1,
@@ -149,7 +159,13 @@ impl Event {
 
     /// A raw three-byte MIDI message.
     pub fn midi(time: u32, data: [u8; 3]) -> Self {
-        Event(AnyEvent { midi: clap_event_midi { header: header(CLAP_EVENT_MIDI, size_of::<clap_event_midi>(), time), port_index: 0, data } })
+        Event(AnyEvent {
+            midi: clap_event_midi {
+                header: header(CLAP_EVENT_MIDI, size_of::<clap_event_midi>(), time),
+                port_index: 0,
+                data,
+            },
+        })
     }
 
     /// A MIDI control change on channel 1 (`value` 0..=127).
@@ -176,14 +192,20 @@ unsafe extern "C" fn events_size(list: *const clap_input_events) -> u32 {
     }
 }
 
-unsafe extern "C" fn events_get(list: *const clap_input_events, i: u32) -> *const clap_event_header {
+unsafe extern "C" fn events_get(
+    list: *const clap_input_events,
+    i: u32,
+) -> *const clap_event_header {
     unsafe {
         let events = &*((*list).ctx as *const &[Event]);
         &events[i as usize].0.header
     }
 }
 
-unsafe extern "C" fn out_push(_list: *const clap_output_events, _e: *const clap_event_header) -> bool {
+unsafe extern "C" fn out_push(
+    _list: *const clap_output_events,
+    _e: *const clap_event_header,
+) -> bool {
     // The plugin's output events (parameter gestures for the host) are not needed here;
     // taking them without storing keeps `process` free of our own allocations.
     true
@@ -192,7 +214,11 @@ unsafe extern "C" fn out_push(_list: *const clap_output_events, _e: *const clap_
 // --- a minimal host ---------------------------------------------------------------------------
 
 unsafe extern "C" fn host_get_extension(_h: *const clap_host, id: *const c_char) -> *const c_void {
-    static PARAMS: clap_host_params = clap_host_params { rescan: Some(host_rescan), clear: Some(host_clear), request_flush: Some(host_noop) };
+    static PARAMS: clap_host_params = clap_host_params {
+        rescan: Some(host_rescan),
+        clear: Some(host_clear),
+        request_flush: Some(host_noop),
+    };
     if unsafe { CStr::from_ptr(id) } == CLAP_EXT_PARAMS {
         &PARAMS as *const _ as *const c_void
     } else {
@@ -294,16 +320,27 @@ impl Instance {
         // SAFETY: the calls follow the CLAP specification, with pointers that stay valid.
         unsafe {
             assert!(init(c"/tmp/apf-test.clap".as_ptr()), "entry init failed");
-            let factory = get_factory(CLAP_PLUGIN_FACTORY_ID.as_ptr()) as *const clap_plugin_factory;
+            let factory =
+                get_factory(CLAP_PLUGIN_FACTORY_ID.as_ptr()) as *const clap_plugin_factory;
             assert!(!factory.is_null(), "no plugin factory");
             let factory = &*factory;
-            assert_eq!((factory.get_plugin_count.unwrap())(factory), 1, "expected one plugin");
+            assert_eq!(
+                (factory.get_plugin_count.unwrap())(factory),
+                1,
+                "expected one plugin"
+            );
             let desc = &*(factory.get_plugin_descriptor.unwrap())(factory, 0);
             let id = CStr::from_ptr(desc.id).to_string_lossy().into_owned();
             let raw = (factory.create_plugin.unwrap())(factory, host(), desc.id);
             assert!(!raw.is_null(), "create_plugin failed");
             assert!(((*raw).init.unwrap())(raw), "plugin init failed");
-            Instance { raw, params: ext(raw, CLAP_EXT_PARAMS), state: ext(raw, CLAP_EXT_STATE), active: false, id }
+            Instance {
+                raw,
+                params: ext(raw, CLAP_EXT_PARAMS),
+                state: ext(raw, CLAP_EXT_STATE),
+                active: false,
+                id,
+            }
         }
     }
 
@@ -317,8 +354,14 @@ impl Instance {
     pub fn activate(&mut self, sample_rate: f64, max_frames: u32) {
         // SAFETY: plain CLAP calls on a live instance.
         unsafe {
-            assert!(((*self.raw).activate.unwrap())(self.raw, sample_rate, 1, max_frames), "activate failed");
-            assert!(((*self.raw).start_processing.unwrap())(self.raw), "start_processing failed");
+            assert!(
+                ((*self.raw).activate.unwrap())(self.raw, sample_rate, 1, max_frames),
+                "activate failed"
+            );
+            assert!(
+                ((*self.raw).start_processing.unwrap())(self.raw),
+                "start_processing failed"
+            );
         }
         self.active = true;
     }
@@ -327,7 +370,10 @@ impl Instance {
     pub fn latency(&self) -> u32 {
         // SAFETY: plain CLAP call on a live instance; the extension struct is `clap_plugin_latency`.
         unsafe {
-            let e = ((*self.raw).get_extension.unwrap())(self.raw, clap_sys::ext::latency::CLAP_EXT_LATENCY.as_ptr()) as *const clap_sys::ext::latency::clap_plugin_latency;
+            let e = ((*self.raw).get_extension.unwrap())(
+                self.raw,
+                clap_sys::ext::latency::CLAP_EXT_LATENCY.as_ptr(),
+            ) as *const clap_sys::ext::latency::clap_plugin_latency;
             e.as_ref().and_then(|e| e.get).map_or(0, |f| f(self.raw))
         }
     }
@@ -336,7 +382,10 @@ impl Instance {
     pub fn tail(&self) -> u32 {
         // SAFETY: as above.
         unsafe {
-            let e = ((*self.raw).get_extension.unwrap())(self.raw, clap_sys::ext::tail::CLAP_EXT_TAIL.as_ptr()) as *const clap_sys::ext::tail::clap_plugin_tail;
+            let e = ((*self.raw).get_extension.unwrap())(
+                self.raw,
+                clap_sys::ext::tail::CLAP_EXT_TAIL.as_ptr(),
+            ) as *const clap_sys::ext::tail::clap_plugin_tail;
             e.as_ref().and_then(|e| e.get).map_or(0, |f| f(self.raw))
         }
     }
@@ -364,7 +413,10 @@ impl Instance {
         // SAFETY: `info` is a plain-data struct the plugin fills.
         unsafe {
             let mut info: clap_param_info = std::mem::zeroed();
-            assert!((self.params.get_info.unwrap())(self.raw, index, &mut info), "no parameter {index}");
+            assert!(
+                (self.params.get_info.unwrap())(self.raw, index, &mut info),
+                "no parameter {index}"
+            );
             info
         }
     }
@@ -383,7 +435,13 @@ impl Instance {
         let mut buf = [0 as c_char; 64];
         // SAFETY: the buffer is 64 bytes, as announced.
         unsafe {
-            assert!((self.params.value_to_text.unwrap())(self.raw, param_id, host_value, buf.as_mut_ptr(), 64));
+            assert!((self.params.value_to_text.unwrap())(
+                self.raw,
+                param_id,
+                host_value,
+                buf.as_mut_ptr(),
+                64
+            ));
             CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned()
         }
     }
@@ -396,10 +454,17 @@ impl Instance {
         let mut v = 0.0;
         // SAFETY: plain CLAP calls; `events` outlives the flush.
         unsafe {
-            assert!((self.params.text_to_value.unwrap())(self.raw, id, text.as_ptr(), &mut v), "{name} = {text:?}: not understood");
+            assert!(
+                (self.params.text_to_value.unwrap())(self.raw, id, text.as_ptr(), &mut v),
+                "{name} = {text:?}: not understood"
+            );
             let events = [Event::param(0, id, v)];
             let slice: &[Event] = &events;
-            let list = clap_input_events { ctx: &slice as *const _ as *mut c_void, size: Some(events_size), get: Some(events_get) };
+            let list = clap_input_events {
+                ctx: &slice as *const _ as *mut c_void,
+                size: Some(events_size),
+                get: Some(events_get),
+            };
             (self.params.flush.unwrap())(self.raw, &list, ptr::null());
         }
         v
@@ -408,12 +473,24 @@ impl Instance {
     /// Process one block in place. `input` is the main input for an effect (left, right);
     /// instruments pass `None`. The buffers must all be the same length. Allocations the
     /// plugin makes during this call are counted (see [`CountingAllocator`]).
-    pub fn process(&mut self, events: &[Event], input: Option<(&[f32], &[f32])>, left: &mut [f32], right: &mut [f32]) -> Status {
+    pub fn process(
+        &mut self,
+        events: &[Event],
+        input: Option<(&[f32], &[f32])>,
+        left: &mut [f32],
+        right: &mut [f32],
+    ) -> Status {
         assert!(self.active, "call activate first");
         assert_eq!(left.len(), right.len());
         let frames = left.len() as u32;
         let mut out_ptrs = [left.as_mut_ptr(), right.as_mut_ptr()];
-        let mut out = clap_audio_buffer { data32: out_ptrs.as_mut_ptr(), data64: ptr::null_mut(), channel_count: 2, latency: 0, constant_mask: 0 };
+        let mut out = clap_audio_buffer {
+            data32: out_ptrs.as_mut_ptr(),
+            data64: ptr::null_mut(),
+            channel_count: 2,
+            latency: 0,
+            constant_mask: 0,
+        };
         // The host's input buffers are read-only in practice; CLAP's struct has one pointer type.
         let mut in_ptrs = match input {
             Some((l, r)) => {
@@ -422,10 +499,23 @@ impl Instance {
             }
             None => [ptr::null_mut::<f32>(); 2],
         };
-        let inp = clap_audio_buffer { data32: in_ptrs.as_mut_ptr(), data64: ptr::null_mut(), channel_count: 2, latency: 0, constant_mask: 0 };
+        let inp = clap_audio_buffer {
+            data32: in_ptrs.as_mut_ptr(),
+            data64: ptr::null_mut(),
+            channel_count: 2,
+            latency: 0,
+            constant_mask: 0,
+        };
         let slice: &[Event] = events;
-        let in_events = clap_input_events { ctx: &slice as *const _ as *mut c_void, size: Some(events_size), get: Some(events_get) };
-        let out_events = clap_output_events { ctx: ptr::null_mut(), try_push: Some(out_push) };
+        let in_events = clap_input_events {
+            ctx: &slice as *const _ as *mut c_void,
+            size: Some(events_size),
+            get: Some(events_get),
+        };
+        let out_events = clap_output_events {
+            ctx: ptr::null_mut(),
+            try_push: Some(out_push),
+        };
         let process = clap_process {
             steady_time: -1,
             frames_count: frames,
@@ -454,30 +544,55 @@ impl Instance {
     pub fn render(&mut self, events: &[Event], frames: usize) -> Audio {
         let (mut left, mut right) = (vec![0.0; frames], vec![0.0; frames]);
         let status = self.process(events, None, &mut left, &mut right);
-        Audio { left, right, status }
+        Audio {
+            left,
+            right,
+            status,
+        }
     }
 
     /// Run an effect over `left`/`right` in blocks of at most `block` frames, the events
     /// going into the first block. Returns the processed audio.
-    pub fn render_effect(&mut self, events: &[Event], left: &[f32], right: &[f32], block: usize) -> Audio {
+    pub fn render_effect(
+        &mut self,
+        events: &[Event],
+        left: &[f32],
+        right: &[f32],
+        block: usize,
+    ) -> Audio {
         let (mut out_l, mut out_r) = (vec![0.0; left.len()], vec![0.0; left.len()]);
         let mut status = Status::Continue;
         let mut start = 0;
         while start < left.len() {
             let end = (start + block).min(left.len());
             let first: &[Event] = if start == 0 { events } else { &[] };
-            status = self.process(first, Some((&left[start..end], &right[start..end])), &mut out_l[start..end], &mut out_r[start..end]);
+            status = self.process(
+                first,
+                Some((&left[start..end], &right[start..end])),
+                &mut out_l[start..end],
+                &mut out_r[start..end],
+            );
             start = end;
         }
-        Audio { left: out_l, right: out_r, status }
+        Audio {
+            left: out_l,
+            right: out_r,
+            status,
+        }
     }
 
     /// The session as a host saves it.
     pub fn save_state(&self) -> Vec<u8> {
         let mut saved: Vec<u8> = Vec::new();
-        let stream = clap_ostream { ctx: &mut saved as *mut _ as *mut c_void, write: Some(ostream_write) };
+        let stream = clap_ostream {
+            ctx: &mut saved as *mut _ as *mut c_void,
+            write: Some(ostream_write),
+        };
         // SAFETY: plain CLAP call; the stream outlives it.
-        assert!(unsafe { (self.state.save.unwrap())(self.raw, &stream) }, "state save failed");
+        assert!(
+            unsafe { (self.state.save.unwrap())(self.raw, &stream) },
+            "state save failed"
+        );
         saved
     }
 
@@ -485,7 +600,10 @@ impl Instance {
     /// plugin accepted it.
     pub fn load_state(&mut self, data: Vec<u8>) -> bool {
         let mut reader = Reader { data, pos: 0 };
-        let stream = clap_istream { ctx: &mut reader as *mut _ as *mut c_void, read: Some(istream_read) };
+        let stream = clap_istream {
+            ctx: &mut reader as *mut _ as *mut c_void,
+            read: Some(istream_read),
+        };
         // SAFETY: plain CLAP call; the stream outlives it.
         unsafe { (self.state.load.unwrap())(self.raw, &stream) }
     }

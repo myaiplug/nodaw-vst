@@ -18,31 +18,31 @@ use clap_sys::audio_buffer::clap_audio_buffer;
 use clap_sys::entry::clap_plugin_entry;
 use clap_sys::events::*;
 use clap_sys::ext::audio_ports::*;
-use clap_sys::ext::latency::*;
-use clap_sys::ext::tail::*;
 use clap_sys::ext::gui::*;
+use clap_sys::ext::latency::*;
 use clap_sys::ext::log::*;
 use clap_sys::ext::note_ports::*;
 use clap_sys::ext::params::*;
 use clap_sys::ext::preset_load::*;
 use clap_sys::ext::remote_controls::*;
 use clap_sys::ext::state::*;
+use clap_sys::ext::tail::*;
 use clap_sys::ext::thread_check::*;
 use clap_sys::factory::plugin_factory::*;
 use clap_sys::factory::preset_discovery::*;
-use clap_sys::universal_plugin_id::clap_universal_plugin_id;
 use clap_sys::host::clap_host;
 use clap_sys::id::{clap_id, CLAP_INVALID_ID};
 use clap_sys::plugin::*;
 use clap_sys::process::*;
 use clap_sys::stream::*;
+use clap_sys::universal_plugin_id::clap_universal_plugin_id;
 use clap_sys::version::CLAP_VERSION;
 
 use crate::controller::HostHandle;
-use crate::view::{ControllerSlot, View, ViewContext, HostLink, ParentWindow, Shared, UiMsg};
 use crate::param::{self, ParamKind, Params};
 use crate::plugin::*;
 use crate::preset::{self, Source};
+use crate::view::{ControllerSlot, HostLink, ParentWindow, Shared, UiMsg, View, ViewContext};
 
 /// Most channels a main port may have.
 const MAX_CHANNELS: usize = 32;
@@ -103,7 +103,12 @@ impl Descriptor {
         let id = strings[0].clone();
         let mut all = strings;
         all.extend(feature_strings);
-        Self { raw, id, _strings: all, _features: features }
+        Self {
+            raw,
+            id,
+            _strings: all,
+            _features: features,
+        }
     }
 }
 
@@ -111,7 +116,11 @@ impl<P: Plugin> Entry<P> {
     /// The entry of a plugin type; `apf::export_plugin!` creates it in a static.
     #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
-        Self { factory: OnceLock::new(), presets: OnceLock::new(), _plugin: PhantomData }
+        Self {
+            factory: OnceLock::new(),
+            presets: OnceLock::new(),
+            _plugin: PhantomData,
+        }
     }
 
     fn factory(&self) -> &Factory {
@@ -152,8 +161,12 @@ impl<P: Plugin> Entry<P> {
         let id = CStr::from_ptr(factory_id);
         if id == CLAP_PLUGIN_FACTORY_ID {
             &self.factory().raw as *const clap_plugin_factory as *const c_void
-        } else if id == CLAP_PRESET_DISCOVERY_FACTORY_ID || id == CLAP_PRESET_DISCOVERY_FACTORY_ID_COMPAT {
-            let f = self.presets.get_or_init(|| PresetFactory::new(&P::INFO, P::FACTORY_PRESETS));
+        } else if id == CLAP_PRESET_DISCOVERY_FACTORY_ID
+            || id == CLAP_PRESET_DISCOVERY_FACTORY_ID_COMPAT
+        {
+            let f = self
+                .presets
+                .get_or_init(|| PresetFactory::new(&P::INFO, P::FACTORY_PRESETS));
             &f.raw as *const clap_preset_discovery_factory as *const c_void
         } else {
             ptr::null()
@@ -168,14 +181,22 @@ pub const fn plugin_entry(
     deinit: unsafe extern "C" fn(),
     get_factory: unsafe extern "C" fn(*const c_char) -> *const c_void,
 ) -> clap_plugin_entry {
-    clap_plugin_entry { clap_version: CLAP_VERSION, init: Some(init), deinit: Some(deinit), get_factory: Some(get_factory) }
+    clap_plugin_entry {
+        clap_version: CLAP_VERSION,
+        init: Some(init),
+        deinit: Some(deinit),
+        get_factory: Some(get_factory),
+    }
 }
 
 unsafe extern "C" fn factory_count(_f: *const clap_plugin_factory) -> u32 {
     1
 }
 
-unsafe extern "C" fn factory_descriptor(f: *const clap_plugin_factory, index: u32) -> *const clap_plugin_descriptor {
+unsafe extern "C" fn factory_descriptor(
+    f: *const clap_plugin_factory,
+    index: u32,
+) -> *const clap_plugin_descriptor {
     if index != 0 || f.is_null() {
         return ptr::null();
     }
@@ -194,7 +215,9 @@ unsafe extern "C" fn factory_create<P: Plugin>(
     if CStr::from_ptr(plugin_id) != factory.desc.id.as_c_str() {
         return ptr::null();
     }
-    let created = catch_unwind(AssertUnwindSafe(|| Instance::<P>::create(host, &factory.desc.raw)));
+    let created = catch_unwind(AssertUnwindSafe(|| {
+        Instance::<P>::create(host, &factory.desc.raw)
+    }));
     match created {
         Ok(instance) => instance,
         Err(_) => ptr::null(),
@@ -289,8 +312,12 @@ impl HostLink for HostPtrs {
     }
 
     fn preset_loaded(&self, source: &Source) {
-        let Some(loaded) = (unsafe { self.preset_load.as_ref() }).and_then(|p| p.loaded) else { return };
-        let Some((kind, location, key)) = location_of(source) else { return };
+        let Some(loaded) = (unsafe { self.preset_load.as_ref() }).and_then(|p| p.loaded) else {
+            return;
+        };
+        let Some((kind, location, key)) = location_of(source) else {
+            return;
+        };
         let location_ptr = location.as_ref().map_or(ptr::null(), |l| l.as_ptr());
         let key_ptr = key.as_ref().map_or(ptr::null(), |k| k.as_ptr());
         unsafe { loaded(self.host, kind, location_ptr, key_ptr) };
@@ -339,10 +366,16 @@ fn os_main_thread() -> bool {
 /// A preset as CLAP names it: location kind, location, load key.
 fn location_of(source: &Source) -> Option<(u32, Option<CString>, Option<CString>)> {
     match source {
-        Source::Factory(name) => Some((CLAP_PRESET_DISCOVERY_LOCATION_PLUGIN, None, Some(CString::new(name.as_str()).ok()?))),
-        Source::File(path) => {
-            Some((CLAP_PRESET_DISCOVERY_LOCATION_FILE, Some(CString::new(path.to_string_lossy().as_bytes()).ok()?), None))
-        }
+        Source::Factory(name) => Some((
+            CLAP_PRESET_DISCOVERY_LOCATION_PLUGIN,
+            None,
+            Some(CString::new(name.as_str()).ok()?),
+        )),
+        Source::File(path) => Some((
+            CLAP_PRESET_DISCOVERY_LOCATION_FILE,
+            Some(CString::new(path.to_string_lossy().as_bytes()).ok()?),
+            None,
+        )),
     }
 }
 
@@ -379,7 +412,10 @@ struct Instance<P: Plugin> {
 }
 
 impl<P: Plugin> Instance<P> {
-    unsafe fn create(host: *const clap_host, desc: *const clap_plugin_descriptor) -> *const clap_plugin {
+    unsafe fn create(
+        host: *const clap_host,
+        desc: *const clap_plugin_descriptor,
+    ) -> *const clap_plugin {
         let instance = Box::new(Self {
             raw: clap_plugin {
                 desc,
@@ -397,14 +433,21 @@ impl<P: Plugin> Instance<P> {
             },
             host,
             host_ptrs: OnceLock::new(),
-            shared: Arc::new(Shared::new(Params::new(P::PARAMS), P::INFO, P::FACTORY_PRESETS)),
+            shared: Arc::new(Shared::new(
+                Params::new(P::PARAMS),
+                P::INFO,
+                P::FACTORY_PRESETS,
+            )),
             plugin: UnsafeCell::new(P::new()),
             audio: UnsafeCell::new(AudioState {
                 sample_rate: 44100.0,
                 active: false,
                 touch: vec![0; P::PARAMS.len()].into_boxed_slice(),
             }),
-            gui: UnsafeCell::new(GuiState { view: None, open: false }),
+            gui: UnsafeCell::new(GuiState {
+                view: None,
+                open: false,
+            }),
             poisoned: AtomicBool::new(false),
         });
         let raw = Box::into_raw(instance);
@@ -436,14 +479,20 @@ unsafe extern "C" fn plugin_init<P: Plugin>(plugin: *const clap_plugin) -> bool 
         let ptrs = HostPtrs::query(inst.host);
         let _ = inst.host_ptrs.set(ptrs);
         let _ = inst.shared.host.set(Box::new(ptrs));
-        if let Err(e) = param::validate(P::PARAMS).and_then(|()| param::validate_pages(P::REMOTE_CONTROLS, P::PARAMS)) {
+        if let Err(e) = param::validate(P::PARAMS)
+            .and_then(|()| param::validate_pages(P::REMOTE_CONTROLS, P::PARAMS))
+        {
             inst.log(CLAP_LOG_ERROR, &format!("{}: {e}", P::INFO.name));
             return false;
         }
         if inst.shared.controller.get().is_none() {
-            if let Some(controller) = (*inst.plugin.get()).controller(HostHandle::new(&inst.shared)) {
+            if let Some(controller) = (*inst.plugin.get()).controller(HostHandle::new(&inst.shared))
+            {
                 let default = controller.save();
-                let _ = inst.shared.controller.set(ControllerSlot { controller, default });
+                let _ = inst.shared.controller.set(ControllerSlot {
+                    controller,
+                    default,
+                });
                 // A factory preset now also has to match the controller's (default) data.
                 inst.shared.name_current_sound();
             }
@@ -469,16 +518,29 @@ unsafe extern "C" fn plugin_destroy<P: Plugin>(plugin: *const clap_plugin) {
     })
 }
 
-unsafe extern "C" fn plugin_activate<P: Plugin>(plugin: *const clap_plugin, sample_rate: f64, min: u32, max: u32) -> bool {
+unsafe extern "C" fn plugin_activate<P: Plugin>(
+    plugin: *const clap_plugin,
+    sample_rate: f64,
+    min: u32,
+    max: u32,
+) -> bool {
     let inst = Instance::<P>::from_raw(plugin);
     guard(false, || {
         let audio = &mut *inst.audio.get();
         audio.sample_rate = sample_rate;
-        let config = ProcessConfig { sample_rate, min_frames: min, max_frames: max };
+        let config = ProcessConfig {
+            sample_rate,
+            min_frames: min,
+            max_frames: max,
+        };
         (*inst.plugin.get()).activate(&config, &inst.shared.params);
         // NoDAW patch: latency and tail are asked on the main thread, here, never while `process` runs.
-        inst.shared.latency.store((*inst.plugin.get()).latency(), Ordering::Release);
-        inst.shared.tail.store((*inst.plugin.get()).tail(), Ordering::Release);
+        inst.shared
+            .latency
+            .store((*inst.plugin.get()).latency(), Ordering::Release);
+        inst.shared
+            .tail
+            .store((*inst.plugin.get()).tail(), Ordering::Release);
         audio.active = true;
         inst.poisoned.store(false, Ordering::Relaxed);
         true
@@ -521,7 +583,10 @@ unsafe extern "C" fn plugin_on_main_thread<P: Plugin>(plugin: *const clap_plugin
     })
 }
 
-unsafe extern "C" fn plugin_get_extension<P: Plugin>(_plugin: *const clap_plugin, id: *const c_char) -> *const c_void {
+unsafe extern "C" fn plugin_get_extension<P: Plugin>(
+    _plugin: *const clap_plugin,
+    id: *const c_char,
+) -> *const c_void {
     if id.is_null() {
         return ptr::null();
     }
@@ -549,7 +614,9 @@ unsafe extern "C" fn plugin_get_extension<P: Plugin>(_plugin: *const clap_plugin
         ext!(clap_plugin_tail, TAIL)
     } else if id == CLAP_EXT_AUV2_PARAM_ORDERING {
         ext!(ClapPluginAuv2ParamOrdering, AUV2_PARAM_ORDERING)
-    } else if (id == CLAP_EXT_REMOTE_CONTROLS || id == CLAP_EXT_REMOTE_CONTROLS_COMPAT) && !P::PARAMS.is_empty() {
+    } else if (id == CLAP_EXT_REMOTE_CONTROLS || id == CLAP_EXT_REMOTE_CONTROLS_COMPAT)
+        && !P::PARAMS.is_empty()
+    {
         ext!(clap_plugin_remote_controls, REMOTE_CONTROLS)
     } else if id == CLAP_EXT_PRESET_LOAD || id == CLAP_EXT_PRESET_LOAD_COMPAT {
         ext!(clap_plugin_preset_load, PRESET_LOAD)
@@ -575,18 +642,34 @@ impl<P: Plugin> Ext<P> {
         text_to_value: Some(params_text_to_value::<P>),
         flush: Some(params_flush::<P>),
     };
-    const STATE: clap_plugin_state = clap_plugin_state { save: Some(state_save::<P>), load: Some(state_load::<P>) };
-    const AUDIO_PORTS: clap_plugin_audio_ports =
-        clap_plugin_audio_ports { count: Some(audio_ports_count::<P>), get: Some(audio_ports_get::<P>) };
-    const LATENCY: clap_plugin_latency = clap_plugin_latency { get: Some(latency_get::<P>) };
-    const TAIL: clap_plugin_tail = clap_plugin_tail { get: Some(tail_get::<P>) };
-    const NOTE_PORTS: clap_plugin_note_ports =
-        clap_plugin_note_ports { count: Some(note_ports_count::<P>), get: Some(note_ports_get::<P>) };
-    const AUV2_PARAM_ORDERING: ClapPluginAuv2ParamOrdering =
-        ClapPluginAuv2ParamOrdering { get_param_order: Some(auv2_get_param_order::<P>) };
-    const REMOTE_CONTROLS: clap_plugin_remote_controls =
-        clap_plugin_remote_controls { count: Some(remote_controls_count::<P>), get: Some(remote_controls_get::<P>) };
-    const PRESET_LOAD: clap_plugin_preset_load = clap_plugin_preset_load { from_location: Some(preset_load_from_location::<P>) };
+    const STATE: clap_plugin_state = clap_plugin_state {
+        save: Some(state_save::<P>),
+        load: Some(state_load::<P>),
+    };
+    const AUDIO_PORTS: clap_plugin_audio_ports = clap_plugin_audio_ports {
+        count: Some(audio_ports_count::<P>),
+        get: Some(audio_ports_get::<P>),
+    };
+    const LATENCY: clap_plugin_latency = clap_plugin_latency {
+        get: Some(latency_get::<P>),
+    };
+    const TAIL: clap_plugin_tail = clap_plugin_tail {
+        get: Some(tail_get::<P>),
+    };
+    const NOTE_PORTS: clap_plugin_note_ports = clap_plugin_note_ports {
+        count: Some(note_ports_count::<P>),
+        get: Some(note_ports_get::<P>),
+    };
+    const AUV2_PARAM_ORDERING: ClapPluginAuv2ParamOrdering = ClapPluginAuv2ParamOrdering {
+        get_param_order: Some(auv2_get_param_order::<P>),
+    };
+    const REMOTE_CONTROLS: clap_plugin_remote_controls = clap_plugin_remote_controls {
+        count: Some(remote_controls_count::<P>),
+        get: Some(remote_controls_get::<P>),
+    };
+    const PRESET_LOAD: clap_plugin_preset_load = clap_plugin_preset_load {
+        from_location: Some(preset_load_from_location::<P>),
+    };
     const GUI: clap_plugin_gui = clap_plugin_gui {
         is_api_supported: Some(gui_is_api_supported),
         get_preferred_api: Some(gui_get_preferred_api),
@@ -690,7 +773,10 @@ impl Drop for NoDenormals {
     }
 }
 
-unsafe extern "C" fn plugin_process<P: Plugin>(plugin: *const clap_plugin, process: *const clap_process) -> clap_process_status {
+unsafe extern "C" fn plugin_process<P: Plugin>(
+    plugin: *const clap_plugin,
+    process: *const clap_process,
+) -> clap_process_status {
     let _no_denormals = NoDenormals::new();
     let inst = Instance::<P>::from_raw(plugin);
     if process.is_null() {
@@ -756,7 +842,11 @@ unsafe extern "C" fn plugin_process<P: Plugin>(plugin: *const clap_plugin, proce
         let mut run = BlockRun {
             plugin: &mut *inst.plugin.get(),
             channels,
-            ctx: ProcessContext { params: &shared.params, sample_rate: audio.sample_rate, transport },
+            ctx: ProcessContext {
+                params: &shared.params,
+                sample_rate: audio.sample_rate,
+                transport,
+            },
             status: ProcessStatus::Continue,
             transport: (transport, 0),
         };
@@ -766,7 +856,9 @@ unsafe extern "C" fn plugin_process<P: Plugin>(plugin: *const clap_plugin, proce
         if let Some(events) = p.in_events.as_ref() {
             let count = events.size.map_or(0, |f| f(events));
             for i in 0..count {
-                let Some(header) = events.get.map(|f| f(events, i)).filter(|h| !h.is_null()) else { continue };
+                let Some(header) = events.get.map(|f| f(events, i)).filter(|h| !h.is_null()) else {
+                    continue;
+                };
                 let header = &*header;
                 if header.space_id != CLAP_CORE_EVENT_SPACE_ID {
                     continue;
@@ -776,21 +868,35 @@ unsafe extern "C" fn plugin_process<P: Plugin>(plugin: *const clap_plugin, proce
                     run.run(cursor, at);
                     cursor = at;
                 }
-                if header.type_ == CLAP_EVENT_TRANSPORT && header.size as usize >= size_of::<clap_event_transport>() {
+                if header.type_ == CLAP_EVENT_TRANSPORT
+                    && header.size as usize >= size_of::<clap_event_transport>()
+                {
                     // The host's transport changed inside the block (a jump, a tempo change).
-                    run.transport = (read_transport(header as *const _ as *const clap_event_transport), at);
+                    run.transport = (
+                        read_transport(header as *const _ as *const clap_event_transport),
+                        at,
+                    );
                     continue;
                 }
                 run.seek(at);
                 if let Some(event) = handle_event(shared, header) {
                     match event {
-                        Event::ControlChange { cc, value, .. } => shared.note_controller(cc, (value * 127.0).round() as u8),
+                        Event::ControlChange { cc, value, .. } => {
+                            shared.note_controller(cc, (value * 127.0).round() as u8)
+                        }
                         Event::PitchBend { value, .. } => shared.note_pitch_bend(value),
                         _ => {}
                     }
                     if let Event::ControlChange { cc, value, .. } = event {
                         if let Some(index) = shared.learn_cc(cc).or_else(|| shared.cc_target(cc)) {
-                            controller_moved(shared, audio, out_events, index, value, at.min(frames.saturating_sub(1)) as u32);
+                            controller_moved(
+                                shared,
+                                audio,
+                                out_events,
+                                index,
+                                value,
+                                at.min(frames.saturating_sub(1)) as u32,
+                            );
                             continue;
                         }
                     }
@@ -822,7 +928,9 @@ unsafe extern "C" fn plugin_process<P: Plugin>(plugin: *const clap_plugin, proce
 }
 
 unsafe fn read_transport(t: *const clap_event_transport) -> Transport {
-    let Some(t) = t.as_ref() else { return Transport::default() };
+    let Some(t) = t.as_ref() else {
+        return Transport::default();
+    };
     let has = |flag| t.flags & flag != 0;
     Transport {
         playing: has(CLAP_TRANSPORT_IS_PLAYING),
@@ -830,7 +938,8 @@ unsafe fn read_transport(t: *const clap_event_transport) -> Transport {
         tempo: has(CLAP_TRANSPORT_HAS_TEMPO).then_some(t.tempo),
         song_pos_beats: has(CLAP_TRANSPORT_HAS_BEATS_TIMELINE)
             .then(|| t.song_pos_beats as f64 / clap_sys::fixedpoint::CLAP_BEATTIME_FACTOR as f64),
-        time_signature: has(CLAP_TRANSPORT_HAS_TIME_SIGNATURE).then_some((t.tsig_num, t.tsig_denom)),
+        time_signature: has(CLAP_TRANSPORT_HAS_TIME_SIGNATURE)
+            .then_some((t.tsig_num, t.tsig_denom)),
     }
 }
 
@@ -848,7 +957,14 @@ fn transport_at(base: &Transport, frames: usize, sample_rate: f64) -> Transport 
 
 /// A MIDI-learned controller moved parameter `index` to `value` (0..1): set it and tell the
 /// host, inside one gesture per knob turn.
-unsafe fn controller_moved(shared: &Shared, audio: &mut AudioState, out: Option<&clap_output_events>, index: usize, value: f32, time: u32) {
+unsafe fn controller_moved(
+    shared: &Shared,
+    audio: &mut AudioState,
+    out: Option<&clap_output_events>,
+    index: usize,
+    value: f32,
+    time: u32,
+) {
     let def = &shared.params.defs()[index];
     let v = def.normalized_to_host(value as f64);
     shared.params.set_host_value(index, v);
@@ -857,7 +973,13 @@ unsafe fn controller_moved(shared: &Shared, audio: &mut AudioState, out: Option<
     if let Some(push) = out.and_then(|o| o.try_push.map(|f| (o, f))) {
         let (out, try_push) = push;
         if audio.touch[index] == 0 {
-            push_gesture(out, try_push, CLAP_EVENT_PARAM_GESTURE_BEGIN, param_id, time);
+            push_gesture(
+                out,
+                try_push,
+                CLAP_EVENT_PARAM_GESTURE_BEGIN,
+                param_id,
+                time,
+            );
         }
         let e = clap_event_param_value {
             header: clap_event_header {
@@ -881,13 +1003,26 @@ unsafe fn controller_moved(shared: &Shared, audio: &mut AudioState, out: Option<
 }
 
 /// Count down the open controller gestures by `frames` and end those that ran out.
-unsafe fn end_cc_gestures(shared: &Shared, audio: &mut AudioState, out: Option<&clap_output_events>, frames: u32) {
-    let Some((out, try_push)) = out.and_then(|o| o.try_push.map(|f| (o, f))) else { return };
+unsafe fn end_cc_gestures(
+    shared: &Shared,
+    audio: &mut AudioState,
+    out: Option<&clap_output_events>,
+    frames: u32,
+) {
+    let Some((out, try_push)) = out.and_then(|o| o.try_push.map(|f| (o, f))) else {
+        return;
+    };
     for (i, t) in audio.touch.iter_mut().enumerate() {
         if *t > 0 {
             *t = t.saturating_sub(frames);
             if *t == 0 {
-                push_gesture(out, try_push, CLAP_EVENT_PARAM_GESTURE_END, shared.params.defs()[i].host_id(), frames.saturating_sub(1));
+                push_gesture(
+                    out,
+                    try_push,
+                    CLAP_EVENT_PARAM_GESTURE_END,
+                    shared.params.defs()[i].host_id(),
+                    frames.saturating_sub(1),
+                );
             }
         }
     }
@@ -895,9 +1030,21 @@ unsafe fn end_cc_gestures(shared: &Shared, audio: &mut AudioState, out: Option<&
 
 type TryPush = unsafe extern "C" fn(*const clap_output_events, *const clap_event_header) -> bool;
 
-unsafe fn push_gesture(out: &clap_output_events, try_push: TryPush, type_: u16, param_id: clap_id, time: u32) {
+unsafe fn push_gesture(
+    out: &clap_output_events,
+    try_push: TryPush,
+    type_: u16,
+    param_id: clap_id,
+    time: u32,
+) {
     let e = clap_event_param_gesture {
-        header: clap_event_header { size: size_of::<clap_event_param_gesture>() as u32, time, space_id: CLAP_CORE_EVENT_SPACE_ID, type_, flags: 0 },
+        header: clap_event_header {
+            size: size_of::<clap_event_param_gesture>() as u32,
+            time,
+            space_id: CLAP_CORE_EVENT_SPACE_ID,
+            type_,
+            flags: 0,
+        },
         param_id,
     };
     try_push(out, &e.header);
@@ -906,7 +1053,11 @@ unsafe fn push_gesture(out: &clap_output_events, try_push: TryPush, type_: u16, 
 /// MIDI pitch bend, 14 bits, to -1..1 with both ends reached exactly.
 fn bend_value(lsb: u8, msb: u8) -> f32 {
     let v = (((msb & 0x7f) as i32) << 7 | (lsb & 0x7f) as i32) - 8192;
-    if v >= 0 { v as f32 / 8191.0 } else { v as f32 / 8192.0 }
+    if v >= 0 {
+        v as f32 / 8191.0
+    } else {
+        v as f32 / 8192.0
+    }
 }
 
 /// Apply a parameter event to the store, or turn a note/MIDI event into an [`Event`].
@@ -922,11 +1073,26 @@ unsafe fn handle_event(shared: &Shared, header: &clap_event_header) -> Option<Ev
         }
         CLAP_EVENT_NOTE_ON | CLAP_EVENT_NOTE_OFF | CLAP_EVENT_NOTE_CHOKE => {
             let e = &*(header as *const _ as *const clap_event_note);
-            let (key, channel, note_id, velocity) = (e.key, e.channel, e.note_id, e.velocity as f32);
+            let (key, channel, note_id, velocity) =
+                (e.key, e.channel, e.note_id, e.velocity as f32);
             Some(match header.type_ {
-                CLAP_EVENT_NOTE_ON => Event::NoteOn { key, channel, velocity, note_id },
-                CLAP_EVENT_NOTE_OFF => Event::NoteOff { key, channel, velocity, note_id },
-                _ => Event::Choke { key, channel, note_id },
+                CLAP_EVENT_NOTE_ON => Event::NoteOn {
+                    key,
+                    channel,
+                    velocity,
+                    note_id,
+                },
+                CLAP_EVENT_NOTE_OFF => Event::NoteOff {
+                    key,
+                    channel,
+                    velocity,
+                    note_id,
+                },
+                _ => Event::Choke {
+                    key,
+                    channel,
+                    note_id,
+                },
             })
         }
         CLAP_EVENT_MIDI => {
@@ -935,11 +1101,31 @@ unsafe fn handle_event(shared: &Shared, header: &clap_event_header) -> Option<Ev
             let channel = (status & 0x0f) as i16;
             let key = (d1 & 0x7f) as i16;
             Some(match status & 0xf0 {
-                0x90 if d2 > 0 => Event::NoteOn { key, channel, velocity: d2 as f32 / 127.0, note_id: -1 },
-                0x80 | 0x90 => Event::NoteOff { key, channel, velocity: d2 as f32 / 127.0, note_id: -1 },
-                0xb0 => Event::ControlChange { channel, cc: d1 & 0x7f, value: (d2 & 0x7f) as f32 / 127.0 },
-                0xe0 => Event::PitchBend { channel, value: bend_value(d1, d2) },
-                0xd0 => Event::ChannelPressure { channel, value: (d1 & 0x7f) as f32 / 127.0 },
+                0x90 if d2 > 0 => Event::NoteOn {
+                    key,
+                    channel,
+                    velocity: d2 as f32 / 127.0,
+                    note_id: -1,
+                },
+                0x80 | 0x90 => Event::NoteOff {
+                    key,
+                    channel,
+                    velocity: d2 as f32 / 127.0,
+                    note_id: -1,
+                },
+                0xb0 => Event::ControlChange {
+                    channel,
+                    cc: d1 & 0x7f,
+                    value: (d2 & 0x7f) as f32 / 127.0,
+                },
+                0xe0 => Event::PitchBend {
+                    channel,
+                    value: bend_value(d1, d2),
+                },
+                0xd0 => Event::ChannelPressure {
+                    channel,
+                    value: (d1 & 0x7f) as f32 / 127.0,
+                },
                 _ => Event::Midi { data: e.data },
             })
         }
@@ -952,12 +1138,26 @@ unsafe fn handle_event(shared: &Shared, header: &clap_event_header) -> Option<Ev
                 // wheel position, so the plugin's own bend range applies in every format.
                 CLAP_NOTE_EXPRESSION_TUNING if channel_wide => {
                     let v = (e.value / 2.0) as f32;
-                    Event::PitchBend { channel: e.channel, value: if v > 0.0 { (v * 8192.0 / 8191.0).min(1.0) } else { v.max(-1.0) } }
+                    Event::PitchBend {
+                        channel: e.channel,
+                        value: if v > 0.0 {
+                            (v * 8192.0 / 8191.0).min(1.0)
+                        } else {
+                            v.max(-1.0)
+                        },
+                    }
                 }
-                CLAP_NOTE_EXPRESSION_PRESSURE if channel_wide => {
-                    Event::ChannelPressure { channel: e.channel, value: e.value.clamp(0.0, 1.0) as f32 }
-                }
-                id => Event::NoteExpression { expression: id, key: e.key, channel: e.channel, note_id: e.note_id, value: e.value },
+                CLAP_NOTE_EXPRESSION_PRESSURE if channel_wide => Event::ChannelPressure {
+                    channel: e.channel,
+                    value: e.value.clamp(0.0, 1.0) as f32,
+                },
+                id => Event::NoteExpression {
+                    expression: id,
+                    key: e.key,
+                    channel: e.channel,
+                    note_id: e.note_id,
+                    value: e.value,
+                },
             })
         }
         _ => None,
@@ -972,11 +1172,20 @@ unsafe fn drain_ui_queue(shared: &Shared, out: &clap_output_events) {
             UiMsg::Begin(i) | UiMsg::Value(i, _) | UiMsg::End(i) => i as usize,
         };
         let param_id = shared.params.defs()[index].host_id();
-        let header = |type_, size| clap_event_header { size, time: 0, space_id: CLAP_CORE_EVENT_SPACE_ID, type_, flags: 0 };
+        let header = |type_, size| clap_event_header {
+            size,
+            time: 0,
+            space_id: CLAP_CORE_EVENT_SPACE_ID,
+            type_,
+            flags: 0,
+        };
         match msg {
             UiMsg::Value(_, value) => {
                 let e = clap_event_param_value {
-                    header: header(CLAP_EVENT_PARAM_VALUE, size_of::<clap_event_param_value>() as u32),
+                    header: header(
+                        CLAP_EVENT_PARAM_VALUE,
+                        size_of::<clap_event_param_value>() as u32,
+                    ),
                     param_id,
                     cookie: ptr::null_mut(),
                     note_id: -1,
@@ -988,8 +1197,15 @@ unsafe fn drain_ui_queue(shared: &Shared, out: &clap_output_events) {
                 try_push(out, &e.header);
             }
             UiMsg::Begin(_) | UiMsg::End(_) => {
-                let type_ = if matches!(msg, UiMsg::Begin(_)) { CLAP_EVENT_PARAM_GESTURE_BEGIN } else { CLAP_EVENT_PARAM_GESTURE_END };
-                let e = clap_event_param_gesture { header: header(type_, size_of::<clap_event_param_gesture>() as u32), param_id };
+                let type_ = if matches!(msg, UiMsg::Begin(_)) {
+                    CLAP_EVENT_PARAM_GESTURE_BEGIN
+                } else {
+                    CLAP_EVENT_PARAM_GESTURE_END
+                };
+                let e = clap_event_param_gesture {
+                    header: header(type_, size_of::<clap_event_param_gesture>() as u32),
+                    param_id,
+                };
                 try_push(out, &e.header);
             }
         }
@@ -1015,8 +1231,14 @@ unsafe extern "C" fn params_count<P: Plugin>(_plugin: *const clap_plugin) -> u32
     P::PARAMS.len() as u32
 }
 
-unsafe extern "C" fn params_get_info<P: Plugin>(_plugin: *const clap_plugin, index: u32, info: *mut clap_param_info) -> bool {
-    let (Some(def), Some(info)) = (P::PARAMS.get(index as usize), info.as_mut()) else { return false };
+unsafe extern "C" fn params_get_info<P: Plugin>(
+    _plugin: *const clap_plugin,
+    index: u32,
+    info: *mut clap_param_info,
+) -> bool {
+    let (Some(def), Some(info)) = (P::PARAMS.get(index as usize), info.as_mut()) else {
+        return false;
+    };
     let mut flags = 0;
     if def.automatable {
         flags |= CLAP_PARAM_IS_AUTOMATABLE;
@@ -1045,7 +1267,11 @@ unsafe extern "C" fn params_get_info<P: Plugin>(_plugin: *const clap_plugin, ind
     true
 }
 
-unsafe extern "C" fn params_get_value<P: Plugin>(plugin: *const clap_plugin, id: clap_id, out: *mut f64) -> bool {
+unsafe extern "C" fn params_get_value<P: Plugin>(
+    plugin: *const clap_plugin,
+    id: clap_id,
+    out: *mut f64,
+) -> bool {
     let inst = Instance::<P>::from_raw(plugin);
     match (inst.shared.index_of(id), out.as_mut()) {
         (Some(i), Some(out)) => {
@@ -1064,14 +1290,19 @@ unsafe extern "C" fn params_value_to_text<P: Plugin>(
     capacity: u32,
 ) -> bool {
     let inst = Instance::<P>::from_raw(plugin);
-    let Some(i) = inst.shared.index_of(id) else { return false };
+    let Some(i) = inst.shared.index_of(id) else {
+        return false;
+    };
     if out.is_null() || capacity == 0 {
         return false;
     }
     guard(false, || {
         let mut text = String::new();
         P::PARAMS[i].format(value, &mut text);
-        copy_str(std::slice::from_raw_parts_mut(out, capacity as usize), &text);
+        copy_str(
+            std::slice::from_raw_parts_mut(out, capacity as usize),
+            &text,
+        );
         true
     })
 }
@@ -1083,11 +1314,15 @@ unsafe extern "C" fn params_text_to_value<P: Plugin>(
     out: *mut f64,
 ) -> bool {
     let inst = Instance::<P>::from_raw(plugin);
-    let Some(i) = inst.shared.index_of(id) else { return false };
+    let Some(i) = inst.shared.index_of(id) else {
+        return false;
+    };
     if text.is_null() || out.is_null() {
         return false;
     }
-    let Ok(text) = CStr::from_ptr(text).to_str() else { return false };
+    let Ok(text) = CStr::from_ptr(text).to_str() else {
+        return false;
+    };
     match guard(None, || P::PARAMS[i].parse(text)) {
         Some(v) => {
             *out = v;
@@ -1097,14 +1332,20 @@ unsafe extern "C" fn params_text_to_value<P: Plugin>(
     }
 }
 
-unsafe extern "C" fn params_flush<P: Plugin>(plugin: *const clap_plugin, input: *const clap_input_events, out: *const clap_output_events) {
+unsafe extern "C" fn params_flush<P: Plugin>(
+    plugin: *const clap_plugin,
+    input: *const clap_input_events,
+    out: *const clap_output_events,
+) {
     let inst = Instance::<P>::from_raw(plugin);
     let shared = &*inst.shared;
     if let Some(events) = input.as_ref() {
         let count = events.size.map_or(0, |f| f(events));
         for i in 0..count {
             if let Some(header) = events.get.map(|f| f(events, i)).and_then(|h| h.as_ref()) {
-                if header.space_id == CLAP_CORE_EVENT_SPACE_ID && header.type_ == CLAP_EVENT_PARAM_VALUE {
+                if header.space_id == CLAP_CORE_EVENT_SPACE_ID
+                    && header.type_ == CLAP_EVENT_PARAM_VALUE
+                {
                     handle_event(shared, header);
                 }
             }
@@ -1121,15 +1362,26 @@ unsafe extern "C" fn params_flush<P: Plugin>(plugin: *const clap_plugin, input: 
 // ---------------------------------------------------------------------------------------------
 // State
 
-unsafe extern "C" fn state_save<P: Plugin>(plugin: *const clap_plugin, stream: *const clap_ostream) -> bool {
+unsafe extern "C" fn state_save<P: Plugin>(
+    plugin: *const clap_plugin,
+    stream: *const clap_ostream,
+) -> bool {
     let inst = Instance::<P>::from_raw(plugin);
-    let Some(stream) = stream.as_ref() else { return false };
-    let Some(write) = stream.write else { return false };
+    let Some(stream) = stream.as_ref() else {
+        return false;
+    };
+    let Some(write) = stream.write else {
+        return false;
+    };
     guard(false, || {
         let bytes = crate::state::save_with(&inst.shared.params, &state_chunks(&inst.shared));
         let mut done = 0;
         while done < bytes.len() {
-            let n = write(stream, bytes[done..].as_ptr() as *const c_void, (bytes.len() - done) as u64);
+            let n = write(
+                stream,
+                bytes[done..].as_ptr() as *const c_void,
+                (bytes.len() - done) as u64,
+            );
             if n <= 0 {
                 return false;
             }
@@ -1139,15 +1391,26 @@ unsafe extern "C" fn state_save<P: Plugin>(plugin: *const clap_plugin, stream: *
     })
 }
 
-unsafe extern "C" fn state_load<P: Plugin>(plugin: *const clap_plugin, stream: *const clap_istream) -> bool {
+unsafe extern "C" fn state_load<P: Plugin>(
+    plugin: *const clap_plugin,
+    stream: *const clap_istream,
+) -> bool {
     let inst = Instance::<P>::from_raw(plugin);
-    let Some(stream) = stream.as_ref() else { return false };
-    let Some(read) = stream.read else { return false };
+    let Some(stream) = stream.as_ref() else {
+        return false;
+    };
+    let Some(read) = stream.read else {
+        return false;
+    };
     guard(false, || {
         let mut bytes = Vec::new();
         let mut chunk = [0u8; 4096];
         loop {
-            let n = read(stream, chunk.as_mut_ptr() as *mut c_void, chunk.len() as u64);
+            let n = read(
+                stream,
+                chunk.as_mut_ptr() as *mut c_void,
+                chunk.len() as u64,
+            );
             if n < 0 {
                 return false;
             }
@@ -1166,13 +1429,19 @@ unsafe extern "C" fn state_load<P: Plugin>(plugin: *const clap_plugin, stream: *
                 match applied {
                     Ok(()) => true,
                     Err(e) => {
-                        inst.log(CLAP_LOG_ERROR, &format!("{}: cannot load the session: {e}", P::INFO.name));
+                        inst.log(
+                            CLAP_LOG_ERROR,
+                            &format!("{}: cannot load the session: {e}", P::INFO.name),
+                        );
                         false
                     }
                 }
             }
             Err(e) => {
-                inst.log(CLAP_LOG_ERROR, &format!("{}: cannot load state: {e}", P::INFO.name));
+                inst.log(
+                    CLAP_LOG_ERROR,
+                    &format!("{}: cannot load state: {e}", P::INFO.name),
+                );
                 false
             }
         }
@@ -1241,7 +1510,9 @@ fn apply_state_chunks(shared: &Shared, chunks: &[crate::state::Chunk]) -> Result
     if let Some(c) = shared.controller() {
         match chunks.iter().find(|(tag, _)| *tag == CHUNK_CONTROLLER) {
             Some((_, body)) => {
-                let loaded = std::str::from_utf8(body).map_err(|_| "the controller data is not UTF-8".to_string()).and_then(|t| c.load(t));
+                let loaded = std::str::from_utf8(body)
+                    .map_err(|_| "the controller data is not UTF-8".to_string())
+                    .and_then(|t| c.load(t));
                 if let Err(e) = loaded {
                     c.reset();
                     result = Err(e);
@@ -1272,7 +1543,9 @@ fn apply_state_chunks(shared: &Shared, chunks: &[crate::state::Chunk]) -> Result
         } else if *tag == CHUNK_MIDI_LEARN {
             let count = get_u32(&mut b).unwrap_or(0);
             for _ in 0..count.min(128) {
-                let (Some(cc), Some(id)) = (get_u32(&mut b), get_u32(&mut b)) else { break };
+                let (Some(cc), Some(id)) = (get_u32(&mut b), get_u32(&mut b)) else {
+                    break;
+                };
                 if let (Ok(cc @ 0..=127), Some(index)) = (u8::try_from(cc), shared.index_of(id)) {
                     shared.cc_map[cc as usize].store(index as u32 + 1, Ordering::Release);
                 }
@@ -1289,15 +1562,25 @@ fn apply_state_chunks(shared: &Shared, chunks: &[crate::state::Chunk]) -> Result
 // Remote controls: pages of eight parameters for controller knobs (Bitwig, REAPER, ...)
 
 fn remote_pages<P: Plugin>() -> usize {
-    if P::REMOTE_CONTROLS.is_empty() { (!P::PARAMS.is_empty()) as usize } else { P::REMOTE_CONTROLS.len() }
+    if P::REMOTE_CONTROLS.is_empty() {
+        (!P::PARAMS.is_empty()) as usize
+    } else {
+        P::REMOTE_CONTROLS.len()
+    }
 }
 
 unsafe extern "C" fn remote_controls_count<P: Plugin>(_plugin: *const clap_plugin) -> u32 {
     remote_pages::<P>() as u32
 }
 
-unsafe extern "C" fn remote_controls_get<P: Plugin>(_plugin: *const clap_plugin, index: u32, page: *mut clap_remote_controls_page) -> bool {
-    let Some(page) = page.as_mut() else { return false };
+unsafe extern "C" fn remote_controls_get<P: Plugin>(
+    _plugin: *const clap_plugin,
+    index: u32,
+    page: *mut clap_remote_controls_page,
+) -> bool {
+    let Some(page) = page.as_mut() else {
+        return false;
+    };
     if index as usize >= remote_pages::<P>() {
         return false;
     }
@@ -1335,23 +1618,48 @@ unsafe extern "C" fn preset_load_from_location<P: Plugin>(
     load_key: *const c_char,
 ) -> bool {
     let inst = Instance::<P>::from_raw(plugin);
-    let text = |p: *const c_char| if p.is_null() { None } else { CStr::from_ptr(p).to_str().ok().map(str::to_owned) };
+    let text = |p: *const c_char| {
+        if p.is_null() {
+            None
+        } else {
+            CStr::from_ptr(p).to_str().ok().map(str::to_owned)
+        }
+    };
     let source = match location_kind {
         CLAP_PRESET_DISCOVERY_LOCATION_PLUGIN => text(load_key).map(Source::Factory),
-        CLAP_PRESET_DISCOVERY_LOCATION_FILE => text(location).filter(|l| !l.is_empty()).map(|l| Source::File(l.into())),
+        CLAP_PRESET_DISCOVERY_LOCATION_FILE => text(location)
+            .filter(|l| !l.is_empty())
+            .map(|l| Source::File(l.into())),
         _ => None,
     };
     let result = match source {
-        Some(source) => guard(Err("loading the preset panicked".to_string()), || inst.shared.load_preset(&source, false)),
+        Some(source) => guard(Err("loading the preset panicked".to_string()), || {
+            inst.shared.load_preset(&source, false)
+        }),
         None => Err("unknown preset location".to_string()),
     };
     match result {
         Ok(()) => true,
         Err(e) => {
-            inst.log(CLAP_LOG_ERROR, &format!("{}: cannot load the preset: {e}", P::INFO.name));
-            if let Some(on_error) = inst.host_ptrs.get().and_then(|h| h.preset_load.as_ref()).and_then(|p| p.on_error) {
+            inst.log(
+                CLAP_LOG_ERROR,
+                &format!("{}: cannot load the preset: {e}", P::INFO.name),
+            );
+            if let Some(on_error) = inst
+                .host_ptrs
+                .get()
+                .and_then(|h| h.preset_load.as_ref())
+                .and_then(|p| p.on_error)
+            {
                 if let Ok(msg) = CString::new(e) {
-                    on_error(inst.host, location_kind, location, load_key, 0, msg.as_ptr());
+                    on_error(
+                        inst.host,
+                        location_kind,
+                        location,
+                        load_key,
+                        0,
+                        msg.as_ptr(),
+                    );
                 }
             }
             false
@@ -1377,7 +1685,12 @@ unsafe impl Sync for PresetFactory {}
 impl PresetFactory {
     fn new(info: &PluginInfo, factory_presets: &'static [&'static str]) -> Box<Self> {
         let c = |s: &str| CString::new(s).unwrap_or_default();
-        let strings = vec![c(&format!("{}.presets", info.id)), c(&format!("{} presets", info.name)), c(info.vendor), c(info.id)];
+        let strings = vec![
+            c(&format!("{}.presets", info.id)),
+            c(&format!("{} presets", info.name)),
+            c(info.vendor),
+            c(info.id),
+        ];
         Box::new(Self {
             raw: clap_preset_discovery_factory {
                 count: Some(presets_count),
@@ -1397,7 +1710,10 @@ impl PresetFactory {
     }
 
     fn plugin_id(&self) -> clap_universal_plugin_id {
-        clap_universal_plugin_id { abi: c"clap".as_ptr(), id: self.strings[3].as_ptr() }
+        clap_universal_plugin_id {
+            abi: c"clap".as_ptr(),
+            id: self.strings[3].as_ptr(),
+        }
     }
 }
 
@@ -1412,7 +1728,10 @@ unsafe extern "C" fn presets_count(_f: *const clap_preset_discovery_factory) -> 
     1
 }
 
-unsafe extern "C" fn presets_descriptor(f: *const clap_preset_discovery_factory, index: u32) -> *const clap_preset_discovery_provider_descriptor {
+unsafe extern "C" fn presets_descriptor(
+    f: *const clap_preset_discovery_factory,
+    index: u32,
+) -> *const clap_preset_discovery_provider_descriptor {
     if f.is_null() || index != 0 {
         return ptr::null();
     }
@@ -1455,7 +1774,9 @@ unsafe extern "C" fn provider_init(p: *const clap_preset_discovery_provider) -> 
     guard(false, || {
         let provider = provider_of(p);
         let factory = &*provider.factory;
-        let Some(indexer) = provider.indexer.as_ref() else { return false };
+        let Some(indexer) = provider.indexer.as_ref() else {
+            return false;
+        };
         if let Some(declare) = indexer.declare_filetype {
             let ext = CString::new(preset::EXTENSION).unwrap_or_default();
             let filetype = clap_preset_discovery_filetype {
@@ -1465,7 +1786,9 @@ unsafe extern "C" fn provider_init(p: *const clap_preset_discovery_provider) -> 
             };
             declare(indexer, &filetype);
         }
-        let Some(declare) = indexer.declare_location else { return true };
+        let Some(declare) = indexer.declare_location else {
+            return true;
+        };
         if !factory.factory_presets.is_empty() {
             let location = clap_preset_discovery_location {
                 flags: CLAP_PRESET_DISCOVERY_IS_FACTORY_CONTENT,
@@ -1503,15 +1826,21 @@ unsafe extern "C" fn provider_get_metadata(
     location: *const c_char,
     receiver: *const clap_preset_discovery_metadata_receiver,
 ) -> bool {
-    let Some(r) = receiver.as_ref() else { return false };
+    let Some(r) = receiver.as_ref() else {
+        return false;
+    };
     guard(false, || {
         let factory = &*provider_of(p).factory;
         let id = factory.plugin_id();
-        let (Some(begin), Some(add_id)) = (r.begin_preset, r.add_plugin_id) else { return false };
+        let (Some(begin), Some(add_id)) = (r.begin_preset, r.add_plugin_id) else {
+            return false;
+        };
         match location_kind {
             CLAP_PRESET_DISCOVERY_LOCATION_PLUGIN => {
                 for p in preset::Factory::shared(factory.factory_presets).presets() {
-                    let Ok(name) = CString::new(p.name.as_str()) else { continue };
+                    let Ok(name) = CString::new(p.name.as_str()) else {
+                        continue;
+                    };
                     if !begin(r, name.as_ptr(), name.as_ptr()) {
                         break;
                     }
@@ -1524,13 +1853,21 @@ unsafe extern "C" fn provider_get_metadata(
                 true
             }
             CLAP_PRESET_DISCOVERY_LOCATION_FILE if !location.is_null() => {
-                let path = std::path::PathBuf::from(CStr::from_ptr(location).to_string_lossy().into_owned());
+                let path = std::path::PathBuf::from(
+                    CStr::from_ptr(location).to_string_lossy().into_owned(),
+                );
                 match preset::read(&Source::File(path), &preset::Factory::default()) {
                     Ok(preset) => {
-                        if preset.plugin.as_deref().is_some_and(|other| other != factory.info.id) {
+                        if preset
+                            .plugin
+                            .as_deref()
+                            .is_some_and(|other| other != factory.info.id)
+                        {
                             return true; // another plugin's preset: nothing for this one
                         }
-                        let Ok(name) = CString::new(preset.name) else { return false };
+                        let Ok(name) = CString::new(preset.name) else {
+                            return false;
+                        };
                         if begin(r, name.as_ptr(), ptr::null()) {
                             add_id(r, &id);
                             report_metadata(r, &preset.meta);
@@ -1556,7 +1893,10 @@ unsafe extern "C" fn provider_get_metadata(
 unsafe fn report_metadata(r: &clap_preset_discovery_metadata_receiver, meta: &preset::Metadata) {
     if let Some(add_feature) = r.add_feature {
         let mut sent: Vec<String> = Vec::new();
-        for word in [&meta.category, &meta.subcategory].into_iter().chain(&meta.tags) {
+        for word in [&meta.category, &meta.subcategory]
+            .into_iter()
+            .chain(&meta.tags)
+        {
             let feature = word.trim().to_lowercase();
             if feature.is_empty() || sent.contains(&feature) {
                 continue;
@@ -1579,7 +1919,10 @@ unsafe fn report_metadata(r: &clap_preset_discovery_metadata_receiver, meta: &pr
     }
 }
 
-unsafe extern "C" fn provider_get_extension(_p: *const clap_preset_discovery_provider, _id: *const c_char) -> *const c_void {
+unsafe extern "C" fn provider_get_extension(
+    _p: *const clap_preset_discovery_provider,
+    _id: *const c_char,
+) -> *const c_void {
     ptr::null()
 }
 
@@ -1594,10 +1937,16 @@ const CLAP_EXT_AUV2_PARAM_ORDERING: &CStr = c"clap.plugin-auv2-param-ordering/0"
 
 #[repr(C)]
 struct ClapPluginAuv2ParamOrdering {
-    get_param_order: Option<unsafe extern "C" fn(plugin: *const clap_plugin, order: *mut usize, count: usize) -> bool>,
+    get_param_order: Option<
+        unsafe extern "C" fn(plugin: *const clap_plugin, order: *mut usize, count: usize) -> bool,
+    >,
 }
 
-unsafe extern "C" fn auv2_get_param_order<P: Plugin>(_plugin: *const clap_plugin, order: *mut usize, count: usize) -> bool {
+unsafe extern "C" fn auv2_get_param_order<P: Plugin>(
+    _plugin: *const clap_plugin,
+    order: *mut usize,
+    count: usize,
+) -> bool {
     if order.is_null() || count != P::PARAMS.len() {
         return false;
     }
@@ -1620,8 +1969,15 @@ unsafe extern "C" fn tail_get<P: Plugin>(plugin: *const clap_plugin) -> u32 {
     inst.shared.tail.load(Ordering::Acquire)
 }
 
-unsafe extern "C" fn audio_ports_count<P: Plugin>(_plugin: *const clap_plugin, is_input: bool) -> u32 {
-    let channels = if is_input { P::LAYOUT.main_input } else { P::LAYOUT.main_output };
+unsafe extern "C" fn audio_ports_count<P: Plugin>(
+    _plugin: *const clap_plugin,
+    is_input: bool,
+) -> u32 {
+    let channels = if is_input {
+        P::LAYOUT.main_input
+    } else {
+        P::LAYOUT.main_output
+    };
     (channels > 0) as u32
 }
 
@@ -1631,14 +1987,23 @@ unsafe extern "C" fn audio_ports_get<P: Plugin>(
     is_input: bool,
     info: *mut clap_audio_port_info,
 ) -> bool {
-    let channels = if is_input { P::LAYOUT.main_input } else { P::LAYOUT.main_output };
-    let Some(info) = info.as_mut() else { return false };
+    let channels = if is_input {
+        P::LAYOUT.main_input
+    } else {
+        P::LAYOUT.main_output
+    };
+    let Some(info) = info.as_mut() else {
+        return false;
+    };
     if index != 0 || channels == 0 {
         return false;
     }
     let paired = P::LAYOUT.main_input > 0 && P::LAYOUT.main_output > 0;
     info.id = 0;
-    copy_str(&mut info.name, if is_input { "Main In" } else { "Main Out" });
+    copy_str(
+        &mut info.name,
+        if is_input { "Main In" } else { "Main Out" },
+    );
     info.flags = CLAP_AUDIO_PORT_IS_MAIN;
     info.channel_count = channels;
     info.port_type = match channels {
@@ -1650,7 +2015,10 @@ unsafe extern "C" fn audio_ports_get<P: Plugin>(
     true
 }
 
-unsafe extern "C" fn note_ports_count<P: Plugin>(_plugin: *const clap_plugin, is_input: bool) -> u32 {
+unsafe extern "C" fn note_ports_count<P: Plugin>(
+    _plugin: *const clap_plugin,
+    is_input: bool,
+) -> u32 {
     (is_input && P::LAYOUT.note_input) as u32
 }
 
@@ -1660,7 +2028,9 @@ unsafe extern "C" fn note_ports_get<P: Plugin>(
     is_input: bool,
     info: *mut clap_note_port_info,
 ) -> bool {
-    let Some(info) = info.as_mut() else { return false };
+    let Some(info) = info.as_mut() else {
+        return false;
+    };
     if index != 0 || !is_input || !P::LAYOUT.note_input {
         return false;
     }
@@ -1689,11 +2059,19 @@ unsafe fn gui<'a, P: Plugin>(plugin: *const clap_plugin) -> &'a mut GuiState {
     &mut *Instance::<P>::from_raw(plugin).gui.get()
 }
 
-unsafe extern "C" fn gui_is_api_supported(_plugin: *const clap_plugin, api: *const c_char, is_floating: bool) -> bool {
+unsafe extern "C" fn gui_is_api_supported(
+    _plugin: *const clap_plugin,
+    api: *const c_char,
+    is_floating: bool,
+) -> bool {
     api_ok(api, is_floating)
 }
 
-unsafe extern "C" fn gui_get_preferred_api(_plugin: *const clap_plugin, api: *mut *const c_char, is_floating: *mut bool) -> bool {
+unsafe extern "C" fn gui_get_preferred_api(
+    _plugin: *const clap_plugin,
+    api: *mut *const c_char,
+    is_floating: *mut bool,
+) -> bool {
     if api.is_null() || is_floating.is_null() {
         return false;
     }
@@ -1702,7 +2080,11 @@ unsafe extern "C" fn gui_get_preferred_api(_plugin: *const clap_plugin, api: *mu
     true
 }
 
-unsafe extern "C" fn gui_create<P: Plugin>(plugin: *const clap_plugin, api: *const c_char, is_floating: bool) -> bool {
+unsafe extern "C" fn gui_create<P: Plugin>(
+    plugin: *const clap_plugin,
+    api: *const c_char,
+    is_floating: bool,
+) -> bool {
     if !api_ok(api, is_floating) {
         return false;
     }
@@ -1711,7 +2093,8 @@ unsafe extern "C" fn gui_create<P: Plugin>(plugin: *const clap_plugin, api: *con
     if gui.view.is_none() {
         gui.view = guard(None, P::view);
         // Reopen a resizable view at the size the user left it (hosts mostly do not keep it).
-        if let (Some(view), Some((w, h))) = (gui.view.as_mut(), inst.shared.remembered_view_size()) {
+        if let (Some(view), Some((w, h))) = (gui.view.as_mut(), inst.shared.remembered_view_size())
+        {
             if view.resizable() {
                 guard(false, || view.set_size(w, h));
             }
@@ -1739,7 +2122,9 @@ unsafe extern "C" fn gui_set_scale<P: Plugin>(plugin: *const clap_plugin, scale:
     // Where sizes are logical pixels (macOS) the webview follows the OS scale on its own; on
     // Windows the view converts the host's physical pixels with it.
     let inst = Instance::<P>::from_raw(plugin);
-    let Some(view) = (*inst.gui.get()).view.as_mut() else { return false };
+    let Some(view) = (*inst.gui.get()).view.as_mut() else {
+        return false;
+    };
     let taken = guard(false, || view.set_scale(scale));
     inst.shared.set_view_scale(view.scale());
     taken
@@ -1757,8 +2142,14 @@ fn from_host(view: &dyn View, (w, h): (u32, u32)) -> (u32, u32) {
     ((w as f64 / s).round() as u32, (h as f64 / s).round() as u32)
 }
 
-unsafe extern "C" fn gui_get_size<P: Plugin>(plugin: *const clap_plugin, width: *mut u32, height: *mut u32) -> bool {
-    let Some(view) = gui::<P>(plugin).view.as_ref() else { return false };
+unsafe extern "C" fn gui_get_size<P: Plugin>(
+    plugin: *const clap_plugin,
+    width: *mut u32,
+    height: *mut u32,
+) -> bool {
+    let Some(view) = gui::<P>(plugin).view.as_ref() else {
+        return false;
+    };
     if width.is_null() || height.is_null() {
         return false;
     }
@@ -1767,12 +2158,20 @@ unsafe extern "C" fn gui_get_size<P: Plugin>(plugin: *const clap_plugin, width: 
 }
 
 unsafe extern "C" fn gui_can_resize<P: Plugin>(plugin: *const clap_plugin) -> bool {
-    gui::<P>(plugin).view.as_ref().is_some_and(|e| e.resizable())
+    gui::<P>(plugin)
+        .view
+        .as_ref()
+        .is_some_and(|e| e.resizable())
 }
 
-unsafe extern "C" fn gui_get_resize_hints<P: Plugin>(plugin: *const clap_plugin, hints: *mut clap_gui_resize_hints) -> bool {
+unsafe extern "C" fn gui_get_resize_hints<P: Plugin>(
+    plugin: *const clap_plugin,
+    hints: *mut clap_gui_resize_hints,
+) -> bool {
     let resizable = gui_can_resize::<P>(plugin);
-    let Some(hints) = hints.as_mut() else { return false };
+    let Some(hints) = hints.as_mut() else {
+        return false;
+    };
     hints.can_resize_horizontally = resizable;
     hints.can_resize_vertically = resizable;
     hints.preserve_aspect_ratio = false;
@@ -1781,11 +2180,21 @@ unsafe extern "C" fn gui_get_resize_hints<P: Plugin>(plugin: *const clap_plugin,
     true
 }
 
-unsafe extern "C" fn gui_adjust_size<P: Plugin>(plugin: *const clap_plugin, width: *mut u32, height: *mut u32) -> bool {
+unsafe extern "C" fn gui_adjust_size<P: Plugin>(
+    plugin: *const clap_plugin,
+    width: *mut u32,
+    height: *mut u32,
+) -> bool {
     if !gui_can_resize::<P>(plugin) {
         return gui_get_size::<P>(plugin, width, height);
     }
-    let (Some(view), Some(w), Some(h)) = (gui::<P>(plugin).view.as_ref(), width.as_mut(), height.as_mut()) else { return false };
+    let (Some(view), Some(w), Some(h)) = (
+        gui::<P>(plugin).view.as_ref(),
+        width.as_mut(),
+        height.as_mut(),
+    ) else {
+        return false;
+    };
     (*w, *h) = guard((*w, *h), || {
         let (lw, lh) = from_host(view.as_ref(), (*w, *h));
         to_host(view.as_ref(), view.adjust_size(lw, lh))
@@ -1793,15 +2202,25 @@ unsafe extern "C" fn gui_adjust_size<P: Plugin>(plugin: *const clap_plugin, widt
     true
 }
 
-unsafe extern "C" fn gui_set_size<P: Plugin>(plugin: *const clap_plugin, width: u32, height: u32) -> bool {
+unsafe extern "C" fn gui_set_size<P: Plugin>(
+    plugin: *const clap_plugin,
+    width: u32,
+    height: u32,
+) -> bool {
     let inst = Instance::<P>::from_raw(plugin);
-    let Some(view) = (*inst.gui.get()).view.as_mut() else { return false };
+    let Some(view) = (*inst.gui.get()).view.as_mut() else {
+        return false;
+    };
     guard(false, || {
         let before = view.size();
         let asked = (width, height);
         let (width, height) = from_host(view.as_ref(), asked);
         // Hosts are to pass a size `adjust_size` returned; not all of them do.
-        let (width, height) = if view.resizable() { view.adjust_size(width, height) } else { (width, height) };
+        let (width, height) = if view.resizable() {
+            view.adjust_size(width, height)
+        } else {
+            (width, height)
+        };
         if view.set_size(width, height) {
             if view.resizable() && before != (width, height) {
                 inst.shared.remember_view_size(width, height);
@@ -1813,10 +2232,15 @@ unsafe extern "C" fn gui_set_size<P: Plugin>(plugin: *const clap_plugin, width: 
     })
 }
 
-unsafe extern "C" fn gui_set_parent<P: Plugin>(plugin: *const clap_plugin, window: *const clap_window) -> bool {
+unsafe extern "C" fn gui_set_parent<P: Plugin>(
+    plugin: *const clap_plugin,
+    window: *const clap_window,
+) -> bool {
     let inst = Instance::<P>::from_raw(plugin);
     let gui = &mut *inst.gui.get();
-    let (Some(view), Some(window)) = (gui.view.as_mut(), window.as_ref()) else { return false };
+    let (Some(view), Some(window)) = (gui.view.as_mut(), window.as_ref()) else {
+        return false;
+    };
     if !api_ok(window.api, false) {
         return false;
     }
@@ -1831,21 +2255,31 @@ unsafe extern "C" fn gui_set_parent<P: Plugin>(plugin: *const clap_plugin, windo
         view.close();
         gui.open = false;
     }
-    let ctx = ViewContext { shared: inst.shared.clone() };
-    match guard(Err("the view panicked".to_string()), || view.open(parent, ctx)) {
+    let ctx = ViewContext {
+        shared: inst.shared.clone(),
+    };
+    match guard(Err("the view panicked".to_string()), || {
+        view.open(parent, ctx)
+    }) {
         Ok(()) => {
             gui.open = true;
             inst.shared.set_view_scale(view.scale());
             true
         }
         Err(e) => {
-            inst.log(CLAP_LOG_ERROR, &format!("{}: cannot open the view: {e}", P::INFO.name));
+            inst.log(
+                CLAP_LOG_ERROR,
+                &format!("{}: cannot open the view: {e}", P::INFO.name),
+            );
             false
         }
     }
 }
 
-unsafe extern "C" fn gui_set_transient(_plugin: *const clap_plugin, _window: *const clap_window) -> bool {
+unsafe extern "C" fn gui_set_transient(
+    _plugin: *const clap_plugin,
+    _window: *const clap_window,
+) -> bool {
     false
 }
 
@@ -1853,14 +2287,18 @@ unsafe extern "C" fn gui_suggest_title(_plugin: *const clap_plugin, _title: *con
 
 unsafe extern "C" fn gui_show<P: Plugin>(plugin: *const clap_plugin) -> bool {
     let gui = gui::<P>(plugin);
-    let Some(view) = gui.view.as_mut() else { return false };
+    let Some(view) = gui.view.as_mut() else {
+        return false;
+    };
     guard((), || view.set_visible(true));
     true
 }
 
 unsafe extern "C" fn gui_hide<P: Plugin>(plugin: *const clap_plugin) -> bool {
     let gui = gui::<P>(plugin);
-    let Some(view) = gui.view.as_mut() else { return false };
+    let Some(view) = gui.view.as_mut() else {
+        return false;
+    };
     guard((), || view.set_visible(false));
     true
 }
@@ -1876,13 +2314,23 @@ mod tests {
     use std::sync::atomic::AtomicU64;
 
     const DEFS: &[ParamDef] = &[ParamDef::float("a", "A", 0.0, 1.0, 0.5)];
-    const INFO: PluginInfo =
-        PluginInfo { id: "dev.test.state", name: "State", vendor: "Test", url: "", version: "1", description: "", features: &[] };
+    const INFO: PluginInfo = PluginInfo {
+        id: "dev.test.state",
+        name: "State",
+        vendor: "Test",
+        url: "",
+        version: "1",
+        description: "",
+        features: &[],
+    };
 
     fn shared(controller: Option<Arc<TestController>>) -> Shared {
         let s = Shared::new(Params::new(DEFS), INFO, &[]);
         if let Some(c) = controller {
-            let _ = s.controller.set(ControllerSlot { controller: c.clone(), default: c.save() });
+            let _ = s.controller.set(ControllerSlot {
+                controller: c.clone(),
+                default: c.save(),
+            });
         }
         s
     }
@@ -1949,9 +2397,16 @@ mod tests {
         }
     }
 
-    unsafe extern "C" fn collect(list: *const clap_output_events, e: *const clap_event_header) -> bool {
+    unsafe extern "C" fn collect(
+        list: *const clap_output_events,
+        e: *const clap_event_header,
+    ) -> bool {
         let v = &mut *((*list).ctx as *mut Vec<(u16, u32, f64)>);
-        let value = if (*e).type_ == CLAP_EVENT_PARAM_VALUE { (*(e as *const clap_event_param_value)).value } else { -1.0 };
+        let value = if (*e).type_ == CLAP_EVENT_PARAM_VALUE {
+            (*(e as *const clap_event_param_value)).value
+        } else {
+            -1.0
+        };
         let id = if (*e).type_ == CLAP_EVENT_PARAM_VALUE {
             (*(e as *const clap_event_param_value)).param_id
         } else {
@@ -1972,7 +2427,11 @@ mod tests {
         assert!(host.begin_edit(0));
         assert!(host.set_param(0, 0.25));
         assert!(host.set_param_plain(0, 0.75));
-        assert_eq!(shared.params.host_value(0), 0.75, "the plugin has the value at once");
+        assert_eq!(
+            shared.params.host_value(0),
+            0.75,
+            "the plugin has the value at once"
+        );
         assert!(host.end_edit(0));
         assert!(host.edit_param(0, 1.0));
         assert!(!host.edit_param(1, 1.0), "no parameter 1");
@@ -1983,7 +2442,10 @@ mod tests {
 
         // What process/flush hand the host.
         let mut events: Vec<(u16, u32, f64)> = Vec::new();
-        let out = clap_output_events { ctx: &mut events as *mut _ as *mut c_void, try_push: Some(collect) };
+        let out = clap_output_events {
+            ctx: &mut events as *mut _ as *mut c_void,
+            try_push: Some(collect),
+        };
         unsafe { drain_ui_queue(&shared, &out) };
         assert_eq!(
             events,
@@ -2011,22 +2473,39 @@ mod tests {
     static NOTE_AT: AtomicU64 = AtomicU64::new(0);
 
     impl Plugin for Clock {
-        const INFO: PluginInfo =
-            PluginInfo { id: "dev.test.clock", name: "Clock", vendor: "Test", url: "", version: "1", description: "", features: &["instrument"] };
+        const INFO: PluginInfo = PluginInfo {
+            id: "dev.test.clock",
+            name: "Clock",
+            vendor: "Test",
+            url: "",
+            version: "1",
+            description: "",
+            features: &["instrument"],
+        };
         const LAYOUT: crate::AudioLayout = crate::AudioLayout::INSTRUMENT_STEREO;
         fn new() -> Self {
             Clock
         }
         fn event(&mut self, e: &crate::Event, ctx: &crate::ProcessContext) {
             if matches!(e, crate::Event::NoteOn { .. }) {
-                NOTE_AT.store(ctx.transport.song_pos_beats.unwrap_or(-1.0).to_bits(), Ordering::Relaxed);
+                NOTE_AT.store(
+                    ctx.transport.song_pos_beats.unwrap_or(-1.0).to_bits(),
+                    Ordering::Relaxed,
+                );
             }
         }
-        fn process(&mut self, audio: &mut crate::AudioBuffer, ctx: &crate::ProcessContext) -> crate::ProcessStatus {
+        fn process(
+            &mut self,
+            audio: &mut crate::AudioBuffer,
+            ctx: &crate::ProcessContext,
+        ) -> crate::ProcessStatus {
             let n = COUNT.fetch_add(1, Ordering::Relaxed) as usize;
             if n < 8 {
                 CALLS[n].store(audio.len() as u64, Ordering::Relaxed);
-                BEATS[n].store(ctx.transport.song_pos_beats.unwrap_or(-1.0).to_bits(), Ordering::Relaxed);
+                BEATS[n].store(
+                    ctx.transport.song_pos_beats.unwrap_or(-1.0).to_bits(),
+                    Ordering::Relaxed,
+                );
             }
             crate::ProcessStatus::Continue
         }
@@ -2049,7 +2528,8 @@ mod tests {
         }
         unsafe {
             assert!(ENTRY.init(ptr::null()));
-            let factory = &*(ENTRY.get_factory(CLAP_PLUGIN_FACTORY_ID.as_ptr()) as *const clap_plugin_factory);
+            let factory = &*(ENTRY.get_factory(CLAP_PLUGIN_FACTORY_ID.as_ptr())
+                as *const clap_plugin_factory);
             let host = Box::leak(Box::new(clap_host {
                 clap_version: CLAP_VERSION,
                 host_data: ptr::null_mut(),
@@ -2069,8 +2549,16 @@ mod tests {
 
             // Playing at 120 BPM from beat 8: 24000 frames per beat.
             let transport = |time: u32, beats: f64| clap_event_transport {
-                header: clap_event_header { size: size_of::<clap_event_transport>() as u32, time, space_id: CLAP_CORE_EVENT_SPACE_ID, type_: CLAP_EVENT_TRANSPORT, flags: 0 },
-                flags: CLAP_TRANSPORT_HAS_TEMPO | CLAP_TRANSPORT_HAS_BEATS_TIMELINE | CLAP_TRANSPORT_IS_PLAYING,
+                header: clap_event_header {
+                    size: size_of::<clap_event_transport>() as u32,
+                    time,
+                    space_id: CLAP_CORE_EVENT_SPACE_ID,
+                    type_: CLAP_EVENT_TRANSPORT,
+                    flags: 0,
+                },
+                flags: CLAP_TRANSPORT_HAS_TEMPO
+                    | CLAP_TRANSPORT_HAS_BEATS_TIMELINE
+                    | CLAP_TRANSPORT_IS_PLAYING,
                 song_pos_beats: (beats * CLAP_BEATTIME_FACTOR as f64) as i64,
                 song_pos_seconds: 0,
                 tempo: 120.0,
@@ -2093,10 +2581,20 @@ mod tests {
             let n = &mut *(&mut note as *mut clap_event_transport as *mut clap_event_note);
             (n.note_id, n.port_index, n.channel, n.key, n.velocity) = (-1, 0, 0, 60, 1.0);
             let events = vec![note, transport(360, 100.0)];
-            let input = clap_input_events { ctx: &events as *const _ as *mut c_void, size: Some(size), get: Some(get) };
+            let input = clap_input_events {
+                ctx: &events as *const _ as *mut c_void,
+                size: Some(size),
+                get: Some(get),
+            };
             let (mut l, mut r) = (vec![0f32; 480], vec![0f32; 480]);
             let mut chans = [l.as_mut_ptr(), r.as_mut_ptr()];
-            let mut out = clap_audio_buffer { data32: chans.as_mut_ptr(), data64: ptr::null_mut(), channel_count: 2, latency: 0, constant_mask: 0 };
+            let mut out = clap_audio_buffer {
+                data32: chans.as_mut_ptr(),
+                data64: ptr::null_mut(),
+                channel_count: 2,
+                latency: 0,
+                constant_mask: 0,
+            };
             let process = clap_process {
                 steady_time: -1,
                 frames_count: 480,
@@ -2110,23 +2608,50 @@ mod tests {
             };
             ((*raw).process.unwrap())(raw, &process);
             let calls: Vec<(u64, f64)> = (0..COUNT.load(Ordering::Relaxed) as usize)
-                .map(|i| (CALLS[i].load(Ordering::Relaxed), f64::from_bits(BEATS[i].load(Ordering::Relaxed))))
+                .map(|i| {
+                    (
+                        CALLS[i].load(Ordering::Relaxed),
+                        f64::from_bits(BEATS[i].load(Ordering::Relaxed)),
+                    )
+                })
                 .collect();
             assert_eq!(calls, [(240, 8.0), (120, 8.01), (120, 100.0)]);
-            assert_eq!(f64::from_bits(NOTE_AT.load(Ordering::Relaxed)), 8.01, "the note sees the position of its frame");
+            assert_eq!(
+                f64::from_bits(NOTE_AT.load(Ordering::Relaxed)),
+                8.01,
+                "the note sees the position of its frame"
+            );
             ((*raw).destroy.unwrap())(raw);
         }
         // Stopped, or no tempo: the position stays.
-        let stopped = Transport { playing: false, tempo: Some(120.0), song_pos_beats: Some(4.0), ..Default::default() };
-        assert_eq!(transport_at(&stopped, 4800, 48000.0).song_pos_beats, Some(4.0));
-        let no_tempo = Transport { playing: true, song_pos_beats: Some(4.0), ..Default::default() };
-        assert_eq!(transport_at(&no_tempo, 4800, 48000.0).song_pos_beats, Some(4.0));
+        let stopped = Transport {
+            playing: false,
+            tempo: Some(120.0),
+            song_pos_beats: Some(4.0),
+            ..Default::default()
+        };
+        assert_eq!(
+            transport_at(&stopped, 4800, 48000.0).song_pos_beats,
+            Some(4.0)
+        );
+        let no_tempo = Transport {
+            playing: true,
+            song_pos_beats: Some(4.0),
+            ..Default::default()
+        };
+        assert_eq!(
+            transport_at(&no_tempo, 4800, 48000.0).song_pos_beats,
+            Some(4.0)
+        );
     }
 
     #[test]
     fn the_view_size_is_kept_with_the_session() {
         let a = shared(None);
-        assert!(!state_chunks(&a).iter().any(|(t, _)| *t == CHUNK_VIEW_SIZE), "not saved while never resized");
+        assert!(
+            !state_chunks(&a).iter().any(|(t, _)| *t == CHUNK_VIEW_SIZE),
+            "not saved while never resized"
+        );
         a.remember_view_size(1400, 900);
         let b = shared(None);
         load(&b, &save(&a)).unwrap();

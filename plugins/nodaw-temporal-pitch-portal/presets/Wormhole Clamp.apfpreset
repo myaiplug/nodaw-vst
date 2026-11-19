@@ -1,0 +1,21 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Wormhole Clamp",
+  "type": "Warp Zones",
+  "subtype": "Down",
+  "mood": [
+    "Dark",
+    "Heavy"
+  ],
+  "description": "Moderately slowed and deep: 80 % time, -8 st",
+  "author": "NoDAW",
+  "params": {
+    "time": 80,
+    "pitch": -8.0,
+    "tone": -30,
+    "echo_mix": 12,
+    "echo_time": 500,
+    "echo_fb": 40
+  }
+}

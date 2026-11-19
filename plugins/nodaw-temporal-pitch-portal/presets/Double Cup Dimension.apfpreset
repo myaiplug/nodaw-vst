@@ -1,0 +1,24 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Double Cup Dimension",
+  "type": "ScrewAI Flavors",
+  "subtype": "Chopped",
+  "mood": [
+    "Syrupy",
+    "Dark"
+  ],
+  "description": "Deep chopped sound: 60 % time, -6 st on tape",
+  "author": "NoDAW",
+  "params": {
+    "time": 60,
+    "pitch": -6.0,
+    "warp_mode": "Tape",
+    "tone": -40,
+    "drift": 10.0,
+    "drift_rate": 0.25,
+    "echo_mix": 15,
+    "echo_time": 750,
+    "echo_fb": 45
+  }
+}

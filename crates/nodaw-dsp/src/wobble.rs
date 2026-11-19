@@ -17,7 +17,8 @@ pub const MAX_EXCURSION_SECONDS: f32 = 0.007;
 /// A sine delay modulation `e(t) = E sin(2π f t)` bends the pitch by `E·2πf` (as a ratio).
 pub fn excursion_ms(cents: f32, rate_hz: f32) -> f32 {
     let eps = 2f32.powf(cents / 1200.0) - 1.0;
-    (eps / (2.0 * std::f32::consts::PI * rate_hz.max(0.01)) * 1000.0).min(MAX_EXCURSION_SECONDS * 1000.0)
+    (eps / (2.0 * std::f32::consts::PI * rate_hz.max(0.01)) * 1000.0)
+        .min(MAX_EXCURSION_SECONDS * 1000.0)
 }
 
 /// Stereo wobble.
@@ -108,7 +109,9 @@ mod tests {
     fn zero_depth_is_a_pure_delay_of_the_centre() {
         let mut w = Wobble::new(48_000.0);
         let lat = w.latency();
-        let x: Vec<f32> = (0..3000).map(|i| ((i * 13 % 89) as f32 - 44.0) / 50.0).collect();
+        let x: Vec<f32> = (0..3000)
+            .map(|i| ((i * 13 % 89) as f32 - 44.0) / 50.0)
+            .collect();
         let y: Vec<f32> = x.iter().map(|&v| w.tick(v, v, 0.0, 1.0, 0.0).0).collect();
         for i in lat..x.len() {
             assert_eq!(y[i], x[i - lat]);
@@ -142,7 +145,17 @@ mod tests {
             hi = hi.max(f);
         }
         let cents = |f: f32| 1200.0 * (f / 1000.0).log2();
-        assert!(cents(hi) > 20.0 && cents(lo) < -20.0, "{} {}", cents(lo), cents(hi));
-        assert!(cents(hi) < 40.0 && cents(lo) > -40.0, "{} {}", cents(lo), cents(hi));
+        assert!(
+            cents(hi) > 20.0 && cents(lo) < -20.0,
+            "{} {}",
+            cents(lo),
+            cents(hi)
+        );
+        assert!(
+            cents(hi) < 40.0 && cents(lo) > -40.0,
+            "{} {}",
+            cents(lo),
+            cents(hi)
+        );
     }
 }

@@ -1,0 +1,19 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Slowed Portal",
+  "type": "ScrewAI Flavors",
+  "subtype": "Slowed",
+  "mood": [
+    "Laid back"
+  ],
+  "description": "Laid-back vibe: 70 % time, -3 st",
+  "author": "NoDAW",
+  "params": {
+    "time": 70,
+    "pitch": -3.0,
+    "tone": -25,
+    "drift": 6.0,
+    "drift_rate": 0.3
+  }
+}

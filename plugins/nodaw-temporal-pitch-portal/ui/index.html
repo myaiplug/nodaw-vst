@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NoDAW Temporal Pitch Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- apf.js is served by the framework: window.apf, and it binds every data-param* element. -->
+<script src="/__apf/apf.js"></script>
+<link rel="stylesheet" href="kit.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app" class="app look-dark">
+  <nav class="zones" aria-label="Warp zones and flavors">
+    <div class="z-fams" id="z-fams" role="tablist"></div>
+    <div class="z-list" id="z-list"></div>
+    <div class="looks" id="looks" role="group" aria-label="Faceplate">
+      <button type="button" data-look="dark" title="Interdimensional dark">Dark</button>
+      <button type="button" data-look="light" title="Light">Light</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <aside class="panel coords" aria-label="Dimensional coordinates">
+      <h3>Coordinates</h3>
+      <div class="co"><span class="co-n">Pitch</span><b id="co-pitch">0.00</b><i>st</i></div>
+      <div class="co"><span class="co-n">Temporal pull</span><b id="co-time">100</b><i>%</i></div>
+      <div class="co"><span class="co-n">Drift</span><b id="co-drift">0.0</b><i>ct</i></div>
+      <div class="co"><span class="co-n">Speed ripple</span><b id="co-ripple">1.000</b><i>×</i></div>
+      <div class="co-sep"></div>
+      <span class="co-l">Warp</span>
+      <div id="c-mode"></div>
+      <span class="co-l">Sync</span>
+      <div id="c-sync"></div>
+    </aside>
+
+    <section class="stage">
+      <canvas id="portal" aria-label="The portal: rings turn with the time shift, warp with the pitch; the outer arc is the warp period"></canvas>
+      <div class="hist" id="hist" aria-label="Dimensional history: click a bubble to go back to it"></div>
+      <div class="spec-strip"><canvas id="spec" aria-label="Input and output spectrum"></canvas></div>
+    </section>
+
+    <aside class="panel side"><canvas id="meters"></canvas></aside>
+  </main>
+
+  <section class="ctrl">
+    <div class="panel cc portal-c"><h3>Portal</h3><div class="grid g3" id="g-portal"></div></div>
+    <div class="panel cc"><h3>Drift</h3><div class="grid g2" id="g-drift"></div></div>
+    <div class="panel cc"><h3>Tone</h3><div class="grid" id="g-tone"></div></div>
+    <div class="panel cc"><h3>Echo <i class="led" id="echo-led"></i></h3><div class="grid g3" id="g-echo"></div></div>
+    <div class="panel cc"><h3>Master</h3><div class="grid g2" id="g-master"></div></div>
+  </section>
+</div>
+<script src="kit.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

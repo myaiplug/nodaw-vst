@@ -29,9 +29,17 @@ fn tp_coeffs() -> [[f32; TAPS]; 3] {
         let f = (k + 1) as f64 / 4.0;
         for (m, c) in row.iter_mut().enumerate() {
             let d = m as f64 - (HALF as f64 - 1.0) - f;
-            let sinc = if d.abs() < 1e-9 { 1.0 } else { (std::f64::consts::PI * d).sin() / (std::f64::consts::PI * d) };
+            let sinc = if d.abs() < 1e-9 {
+                1.0
+            } else {
+                (std::f64::consts::PI * d).sin() / (std::f64::consts::PI * d)
+            };
             let r = d / HALF as f64;
-            let w = if r.abs() >= 1.0 { 0.0 } else { bessel0(beta * (1.0 - r * r).sqrt()) / i0 };
+            let w = if r.abs() >= 1.0 {
+                0.0
+            } else {
+                bessel0(beta * (1.0 - r * r).sqrt()) / i0
+            };
             *c = (sinc * w) as f32;
         }
     }
@@ -100,6 +108,11 @@ impl Limiter {
         self.ceil = 10f32.powf((db - 0.3) * 0.05);
     }
 
+    /// Change the release time (no allocation; safe on the audio thread).
+    pub fn set_release_ms(&mut self, sample_rate: f64, release_ms: f32) {
+        self.rel = 1.0 - (-1.0 / (release_ms.max(0.1) as f64 / 1000.0 * sample_rate)).exp() as f32;
+    }
+
     /// Effectively switch the limiter off (a huge ceiling) while keeping its latency.
     pub fn set_off(&mut self) {
         self.ceil = 1.0e4;
@@ -134,7 +147,9 @@ impl Limiter {
             if a > peak {
                 peak = a;
             }
-            let loud = h[HALF - 4..HALF + 4].iter().fold(0.0f32, |m, v| m.max(v.abs()));
+            let loud = h[HALF - 4..HALF + 4]
+                .iter()
+                .fold(0.0f32, |m, v| m.max(v.abs()));
             if loud > th {
                 for k in 0..3 {
                     let y: f32 = self.tp[k].iter().zip(h.iter()).map(|(a, b)| a * b).sum();
@@ -144,7 +159,11 @@ impl Limiter {
                 }
             }
         }
-        let t = if peak > self.ceil { self.ceil / peak } else { 1.0 };
+        let t = if peak > self.ceil {
+            self.ceil / peak
+        } else {
+            1.0
+        };
         let cap = self.dq_val.len();
         let s = self.n;
         self.n += 1;
@@ -219,8 +238,14 @@ mod tests {
                 let (a, b, _) = lim.tick(x, -x * 0.7);
                 peak = peak.max(a.abs()).max(b.abs());
             }
-            assert!(peak <= ceil * 1.002, "sr {sr}: peak {peak} vs ceiling {ceil}");
-            assert!(peak > ceil * 0.8, "the limiter should not over-attenuate: {peak}");
+            assert!(
+                peak <= ceil * 1.002,
+                "sr {sr}: peak {peak} vs ceiling {ceil}"
+            );
+            assert!(
+                peak > ceil * 0.8,
+                "the limiter should not over-attenuate: {peak}"
+            );
         }
     }
 

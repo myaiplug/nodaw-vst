@@ -1,0 +1,19 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-weaver",
+  "name": "Frozen Choir",
+  "type": "Freeze",
+  "subtype": "Hold",
+  "mood": [
+    "Airy"
+  ],
+  "description": "A freeze that fades over ~25 s with scattered phases: choir-like",
+  "author": "NoDAW",
+  "params": {
+    "freeze": true,
+    "sustain": 65,
+    "cloud": 45,
+    "grain": 300,
+    "scatter": 40
+  }
+}

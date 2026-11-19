@@ -1,0 +1,24 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.harmonic-space",
+  "name": "Small Booth",
+  "type": "Space",
+  "subtype": "Space",
+  "mood": [
+    "Intimate"
+  ],
+  "description": "Low, short reverb and a hint of echo, like a tight vocal booth.",
+  "author": "NoDAW",
+  "params": {
+    "hpf": 77.6,
+    "lpf": 19000,
+    "dly_mix": 3,
+    "dly_time": 127,
+    "rev_mix": 8.0,
+    "b2_gain": -0.48,
+    "b4_gain": 0.48,
+    "b5_gain": 0.48,
+    "b6_gain": 0.48,
+    "b7_gain": 0.48
+  }
+}

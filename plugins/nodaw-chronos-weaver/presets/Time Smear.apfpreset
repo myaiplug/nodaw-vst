@@ -1,0 +1,18 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-weaver",
+  "name": "Time Smear",
+  "type": "Morph",
+  "subtype": "Past",
+  "mood": [
+    "Hazy"
+  ],
+  "description": "Half-way to what played 250 ms ago: notes bleed into each other",
+  "author": "NoDAW",
+  "params": {
+    "morph": 50,
+    "weave": 250,
+    "cloud": 25,
+    "grain": 120
+  }
+}

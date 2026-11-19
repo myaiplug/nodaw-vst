@@ -1,0 +1,19 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-weaver",
+  "name": "Breathing Morph",
+  "type": "Morph",
+  "subtype": "Snapshot",
+  "mood": [
+    "Moving"
+  ],
+  "description": "Blend toward the capture and back every bar",
+  "author": "NoDAW",
+  "params": {
+    "morph": 50,
+    "source": "Snapshot",
+    "lfo_depth": 100,
+    "lfo_sync": "1 Bar",
+    "lfo_shape": "Triangle"
+  }
+}

@@ -27,9 +27,16 @@ impl LevelMeter {
             if !peak.is_finite() {
                 peak = 0.0;
             }
-            let rms = if x.is_empty() { 0.0 } else { (sum / x.len() as f32).sqrt() };
+            let rms = if x.is_empty() {
+                0.0
+            } else {
+                (sum / x.len() as f32).sqrt()
+            };
             self.peak[c].fetch_max(peak.to_bits(), Ordering::Relaxed);
-            self.rms[c].fetch_max(if rms.is_finite() { rms } else { 0.0 }.to_bits(), Ordering::Relaxed);
+            self.rms[c].fetch_max(
+                if rms.is_finite() { rms } else { 0.0 }.to_bits(),
+                Ordering::Relaxed,
+            );
         }
     }
     /// UI thread: `[peak_l, peak_r, rms_l, rms_r]` since the last call; starts a new interval.
@@ -80,14 +87,21 @@ impl ScopeRing {
     /// A ring of `capacity` samples (rounded up to a power of two).
     pub fn new(capacity: usize) -> Self {
         let n = capacity.max(2).next_power_of_two();
-        Self { buf: (0..n).map(|_| AtomicU32::new(0)).collect(), mask: n - 1, head: AtomicUsize::new(0) }
+        Self {
+            buf: (0..n).map(|_| AtomicU32::new(0)).collect(),
+            mask: n - 1,
+            head: AtomicUsize::new(0),
+        }
     }
     /// Audio thread: append the mono sum of a stereo block.
     pub fn push_stereo(&self, l: &[f32], r: &[f32]) {
         let mut h = self.head.load(Ordering::Relaxed);
         for (a, b) in l.iter().zip(r) {
             let m = 0.5 * (a + b);
-            self.buf[h & self.mask].store((if m.is_finite() { m } else { 0.0 }).to_bits(), Ordering::Relaxed);
+            self.buf[h & self.mask].store(
+                (if m.is_finite() { m } else { 0.0 }).to_bits(),
+                Ordering::Relaxed,
+            );
             h = h.wrapping_add(1);
         }
         self.head.store(h, Ordering::Release);
@@ -98,7 +112,8 @@ impl ScopeRing {
         let n = out.len().min(self.buf.len());
         let start = h.wrapping_sub(n);
         for (i, o) in out[..n].iter_mut().enumerate() {
-            *o = f32::from_bits(self.buf[start.wrapping_add(i) & self.mask].load(Ordering::Relaxed));
+            *o =
+                f32::from_bits(self.buf[start.wrapping_add(i) & self.mask].load(Ordering::Relaxed));
         }
     }
 }
@@ -147,6 +162,9 @@ mod tests {
         assert_eq!(out, [15.0, 16.0, 17.0, 18.0, 19.0]);
         let mut big = [0.0; 100];
         r.snapshot(&mut big);
-        assert_eq!(big[7], 19.0, "asking for more than the ring holds gives what it has");
+        assert_eq!(
+            big[7], 19.0,
+            "asking for more than the ring holds gives what it has"
+        );
     }
 }

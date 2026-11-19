@@ -1,0 +1,21 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.racks",
+  "name": "Loud Reactor",
+  "type": "Master",
+  "subtype": "Loud",
+  "mood": [
+    "Loud",
+    "Dense"
+  ],
+  "description": "Hard-pushed limiter with adaptive release for dense masters",
+  "author": "NoDAW",
+  "params": {
+    "sat_curve": "Tape",
+    "sat_drive": 8,
+    "lim_gain": 10,
+    "lim_ceiling": -0.5,
+    "lim_release": 90,
+    "lim_adaptive": true
+  }
+}

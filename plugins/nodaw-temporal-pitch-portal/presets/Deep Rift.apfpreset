@@ -1,0 +1,19 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Deep Rift",
+  "type": "Warp Zones",
+  "subtype": "Down",
+  "mood": [
+    "Dark",
+    "Slow"
+  ],
+  "description": "Slowed and pitched down: 65 % time, -5 st",
+  "author": "NoDAW",
+  "params": {
+    "time": 65,
+    "pitch": -5.0,
+    "tone": -20,
+    "glide": 120
+  }
+}

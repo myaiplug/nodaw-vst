@@ -1,0 +1,13 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-dynamic-eq",
+  "name": "Init",
+  "type": "Utility",
+  "subtype": "Default",
+  "mood": [
+    "Clean"
+  ],
+  "description": "Seven flat static bands: a clean start",
+  "author": "NoDAW",
+  "params": {}
+}

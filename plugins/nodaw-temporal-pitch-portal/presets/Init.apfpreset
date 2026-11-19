@@ -1,0 +1,13 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.temporal-pitch-portal",
+  "name": "Init",
+  "type": "Utility",
+  "subtype": "Default",
+  "mood": [
+    "Clean"
+  ],
+  "description": "Straight through: 100 % time, 0 st",
+  "author": "NoDAW",
+  "params": {}
+}

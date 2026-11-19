@@ -1,0 +1,38 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-dynamic-eq",
+  "name": "Resonance Hunter",
+  "type": "Fix-it",
+  "subtype": "Surgical",
+  "mood": [
+    "Surgical"
+  ],
+  "description": "Three narrow dynamic notches on common room resonances",
+  "author": "NoDAW",
+  "params": {
+    "b2_freq": 180,
+    "b2_q": 8,
+    "b2_mode": "Compress",
+    "b2_thresh": -34,
+    "b2_ratio": 10,
+    "b2_range": 12,
+    "b2_attack": 5,
+    "b2_release": 150,
+    "b3_freq": 420,
+    "b3_q": 8,
+    "b3_mode": "Compress",
+    "b3_thresh": -34,
+    "b3_ratio": 10,
+    "b3_range": 12,
+    "b3_attack": 5,
+    "b3_release": 150,
+    "b4_freq": 1100,
+    "b4_q": 8,
+    "b4_mode": "Compress",
+    "b4_thresh": -36,
+    "b4_ratio": 10,
+    "b4_range": 12,
+    "b4_attack": 5,
+    "b4_release": 150
+  }
+}

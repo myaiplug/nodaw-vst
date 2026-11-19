@@ -1,0 +1,17 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-weaver",
+  "name": "Formant Swap",
+  "type": "Morph",
+  "subtype": "Snapshot",
+  "mood": [
+    "Hybrid"
+  ],
+  "description": "Cross-synthesis: the captured sound's envelope on the live one (capture B first)",
+  "author": "NoDAW",
+  "params": {
+    "morph": 100,
+    "morph_mode": "Cross",
+    "source": "Snapshot"
+  }
+}

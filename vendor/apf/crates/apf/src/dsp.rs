@@ -31,7 +31,11 @@ pub struct Smoother {
 impl Smoother {
     /// A smoother resting at `value`. Set its speed with [`set_time`](Self::set_time).
     pub fn new(value: f32) -> Self {
-        Self { current: value, target: value, coeff: 1.0 }
+        Self {
+            current: value,
+            target: value,
+            coeff: 1.0,
+        }
     }
 
     /// Reach ~63 % of a step in `time_ms`.
@@ -60,7 +64,11 @@ impl Smoother {
         // target: it would stall short of it, by up to 1/(2·coeff) units in the last place and
         // by an amount that depends on where it came from. It lands on the target instead, so
         // a value sounds the same whatever its history (a restored session as it was saved).
-        self.current = if next == self.current { self.target } else { next };
+        self.current = if next == self.current {
+            self.target
+        } else {
+            next
+        };
         self.current
     }
 
@@ -86,13 +94,25 @@ pub struct AdsrShape {
 
 impl Default for AdsrShape {
     fn default() -> Self {
-        Self { attack_step: 1.0, decay_mul: 0.0, sustain: 1.0, release_mul: 0.0 }
+        Self {
+            attack_step: 1.0,
+            decay_mul: 0.0,
+            sustain: 1.0,
+            release_mul: 0.0,
+        }
     }
 }
 
 impl AdsrShape {
     /// Times in milliseconds, `sustain` 0..1.
-    pub fn set(&mut self, sample_rate: f32, attack_ms: f32, decay_ms: f32, sustain: f32, release_ms: f32) {
+    pub fn set(
+        &mut self,
+        sample_rate: f32,
+        attack_ms: f32,
+        decay_ms: f32,
+        sustain: f32,
+        release_ms: f32,
+    ) {
         let samples = |ms: f32| (ms * 0.001 * sample_rate).max(1.0);
         // exp(-6.9) = 0.001, -60 dB
         let mul = |ms: f32| (-1.0 / (ms * 0.001 * sample_rate / 6.9).max(1.0)).exp();
@@ -129,7 +149,10 @@ impl Adsr {
     /// Below this the envelope counts as silent and ends.
     pub const SILENT: f32 = 1e-4;
     /// An envelope that is not sounding.
-    pub const IDLE: Adsr = Adsr { stage: AdsrStage::Idle, level: 0.0 };
+    pub const IDLE: Adsr = Adsr {
+        stage: AdsrStage::Idle,
+        level: 0.0,
+    };
 
     /// Start from silence.
     pub fn start(&mut self) {
@@ -226,7 +249,11 @@ mod tests {
         for _ in 0..200 {
             env.tick(&shape);
         }
-        assert!(env.level < 0.8 * 0.0011, "release reaches -60 dB in its time: {}", env.level);
+        assert!(
+            env.level < 0.8 * 0.0011,
+            "release reaches -60 dB in its time: {}",
+            env.level
+        );
         for _ in 0..200 {
             env.tick(&shape);
         }

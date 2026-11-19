@@ -1,0 +1,30 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.chronos-dynamic-eq",
+  "name": "Vocal Presence Pop",
+  "type": "Vocal",
+  "subtype": "Lead",
+  "mood": [
+    "Present"
+  ],
+  "description": "The 3 kHz presence comes forward on loud phrases, mud stays tucked",
+  "author": "NoDAW",
+  "params": {
+    "b3_freq": 250,
+    "b3_q": 1.2,
+    "b3_mode": "Compress",
+    "b3_thresh": -24,
+    "b3_ratio": 3,
+    "b3_range": 4,
+    "b3_attack": 10,
+    "b3_release": 150,
+    "b5_freq": 3200,
+    "b5_q": 1.1,
+    "b5_mode": "Expand",
+    "b5_thresh": -30,
+    "b5_ratio": 3,
+    "b5_range": 4,
+    "b5_attack": 5,
+    "b5_release": 120
+  }
+}

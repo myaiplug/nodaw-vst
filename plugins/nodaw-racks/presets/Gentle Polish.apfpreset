@@ -1,0 +1,22 @@
+{
+  "apf-preset": 1,
+  "plugin": "com.nodaw.racks",
+  "name": "Gentle Polish",
+  "type": "Master",
+  "subtype": "Polish",
+  "mood": [
+    "Clean",
+    "Smooth"
+  ],
+  "description": "Barely-there saturation, a smile curve and a light ceiling",
+  "author": "NoDAW",
+  "params": {
+    "sat_drive": 3,
+    "sat_mix": 60,
+    "eq1_gain": 1,
+    "eq7_gain": 1.5,
+    "eq4_gain": -0.8,
+    "lim_gain": 1.5,
+    "lim_release": 250
+  }
+}

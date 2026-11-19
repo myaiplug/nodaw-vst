@@ -18,7 +18,13 @@ fn main() {
             o.push(',');
         }
         let kind = match d.kind {
-            ParamKind::Float { min, max, default, curve, decimals } => {
+            ParamKind::Float {
+                min,
+                max,
+                default,
+                curve,
+                decimals,
+            } => {
                 let (c, e) = match curve {
                     Curve::Linear => ("lin", 1.0),
                     Curve::Log => ("log", 1.0),
@@ -26,14 +32,27 @@ fn main() {
                 };
                 format!("\"kind\":\"float\",\"min\":{min},\"max\":{max},\"default\":{default},\"curve\":\"{c}\",\"exp\":{e},\"decimals\":{decimals}")
             }
-            ParamKind::Int { min, max, default } => format!("\"kind\":\"int\",\"min\":{min},\"max\":{max},\"default\":{default}"),
-            ParamKind::Bool { default } => format!("\"kind\":\"bool\",\"default\":{}", default as u8),
+            ParamKind::Int { min, max, default } => {
+                format!("\"kind\":\"int\",\"min\":{min},\"max\":{max},\"default\":{default}")
+            }
+            ParamKind::Bool { default } => {
+                format!("\"kind\":\"bool\",\"default\":{}", default as u8)
+            }
             ParamKind::Choice { options, default } => {
                 let opts: Vec<String> = options.iter().map(|s| format!("\"{}\"", esc(s))).collect();
-                format!("\"kind\":\"choice\",\"default\":{default},\"options\":[{}]", opts.join(","))
+                format!(
+                    "\"kind\":\"choice\",\"default\":{default},\"options\":[{}]",
+                    opts.join(",")
+                )
             }
         };
-        o.push_str(&format!("{{\"key\":\"{}\",\"name\":\"{}\",\"unit\":\"{}\",\"module\":\"{}\",{kind}}}", d.key, esc(d.name), esc(d.unit), esc(d.module)));
+        o.push_str(&format!(
+            "{{\"key\":\"{}\",\"name\":\"{}\",\"unit\":\"{}\",\"module\":\"{}\",{kind}}}",
+            d.key,
+            esc(d.name),
+            esc(d.unit),
+            esc(d.module)
+        ));
     }
     o.push_str("],\"ranges\":");
     o.push_str(&shared::ranges_json());

@@ -1,0 +1,13 @@
+NoDAW plugins - Windows x64 (VST3 + CLAP) - 14-day free trial
+
+Install (or use the NoDAW-Plugins-win64-trial-setup.exe installer instead):
+  * Copy each "NoDAW <Name>.vst3" folder into   C:\Program Files\Common Files\VST3\
+  * Copy each "NoDAW <Name>.clap" file into      C:\Program Files\Common Files\CLAP\
+  * Rescan plugins in your DAW.
+
+Trial: every plugin is fully featured for 14 days from its first launch. After that it keeps
+working but goes silent for half a second every 45 seconds until you activate it with the license
+key from your purchase (click the key / Activate button in the plugin window).
+
+Needs the Microsoft Edge WebView2 runtime (preinstalled on most Windows 10/11 PCs).
+These builds are not code-signed yet, so Windows may show a SmartScreen warning.
