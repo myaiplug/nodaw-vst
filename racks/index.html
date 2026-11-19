@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" style="--acc:#60a5fa;--acc2:#a78bfa">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoDAW Racks · browser demo (preview, unreleased)</title>
+<meta name="description" content="Try NoDAW Racks in your browser: the plugin's DSP engine ported to Web Audio, with all 54 parameters and 12 factory presets. Unreleased preview from NoDAW Labs, not for sale.">
+<meta property="og:title" content="NoDAW Racks · browser demo (preview)">
+<meta property="og:description" content="A modular channel strip: Saturator, 7-band EQ, Spatial and Reactor in a chain you reorder by dragging the module headers, each with its own power switch, then a master section.">
+<meta property="og:image" content="https://myaiplug.github.io/nodaw-vst/assets/racks-hero.webp">
+<meta name="theme-color" content="#0b0912">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/demo.css">
+</head>
+<body>
+<div class="wrap">
+<nav><a class="brand" href="../">NODAW<span>RACKS</span></a><div class="navr"><a class="back" href="../">← All six plugins</a><div class="pill"><i></i>Preview · unreleased · not for sale</div></div></nav>
+
+<header class="hero">
+ <div>
+  <div class="kicker">NoDAW Racks · modular channel rack</div>
+  <h1>Four modules.<br><em>Any order.</em></h1>
+  <p class="lede">A modular channel strip: Saturator, 7-band EQ, Spatial and Reactor in a chain you reorder by dragging the module headers, each with its own power switch, then a master section.</p>
+  <div class="specs"><div><b>54</b><small>Automatable params</small></div><div><b>12</b><small>Factory presets</small></div><div><b>2.3 ms</b><small>Latency @ 48 kHz</small></div><div><b>24</b><small>Chain orders</small></div><div><b>4</b><small>Modules</small></div><div><b>4</b><small>Skins</small></div></div>
+  <div class="cta"><a class="btn primary" href="#try">▶ Try the browser demo</a><a class="btn" href="#inside">What’s ported</a></div>
+ </div>
+ <div class="shot"><img src="../assets/racks-hero.webp" alt="NoDAW Racks plugin UI" width="1440" height="900"><div class="tag">Plugin UI preview · mock host</div></div>
+</header>
+
+<section id="try">
+ <div class="honest"><b>Browser demo</b><span>The plugin’s DSP engine, ported line by line from its Rust source to a Web Audio AudioWorklet. It really processes the audio you hear. It is not bit-identical to the plugin, and the plugin adds its own UI, analyser and DAW integration.</span></div>
+ <div class="console" id="demo" data-plugin="racks" data-proc="nodaw-racks" data-preset="Diode Crunch Drums">
+  <div class="in">
+   <div class="top">
+    <div class="screen">
+     <canvas id="spec" aria-label="Spectrum: input and output"></canvas>
+     <div class="legend"><span><i style="background:rgba(220,214,236,.6)"></i>Input</span><span><i style="background:var(--acc)"></i>Output</span></div>
+     <div class="readout"></div>
+     <canvas class="wave" aria-label="Waveform: click to jump"></canvas>
+     <div class="steps" aria-label="Chop steps"></div>
+    </div>
+    <div class="side">
+     <div class="box transport"><button class="btn play" type="button">▶ Play</button>
+      <div class="ab" style="grid-column:1/-1"><button class="a sel" type="button">A · Effect</button><button class="b" type="button">B · Bypass</button></div></div>
+     <div class="box"><span class="lbl">Factory preset</span><select id="preset" aria-label="Factory preset"></select><div class="pdesc"></div></div>
+     <div class="box"><span class="lbl">Source</span><div class="srcrow"><div class="srcname">Loading demo loop…</div><div><span class="lbl" style="margin:0 0 4px">BPM</span><input id="bpm" type="number" min="40" max="240" step="1" value="90" aria-label="Tempo in BPM"></div></div>
+      <div class="transport" style="margin-top:8px"><button class="btn load" type="button">Load file</button><button class="btn usedemo" type="button">Demo loop</button></div>
+      <input id="file" type="file" accept="audio/*" hidden><div class="hint bpmhint" style="display:none">Set BPM to your track’s tempo for synced effects.</div></div>
+     <div class="box"><span class="lbl">Output</span><div class="meter"><span>L</span><div class="bar l"><i></i><b></b></div><span>R</span><div class="bar r"><i></i><b></b></div><div class="mval">peak — dBFS</div></div></div>
+     <button class="btn exp" type="button">⤓ Export WAV</button>
+    </div>
+   </div>
+   <div class="ctls"></div>
+   <p class="hint">Change Chain Order to hear the same settings in a different order. Drop any audio file on this panel to use your own. Double-click a slider to reset it. Space plays and stops. Export renders offline with the current settings.</p>
+   <div class="err" role="alert"></div>
+  </div>
+ </div>
+</section>
+
+<section id="inside">
+ <div class="kicker">In this demo vs the plugin</div>
+ <h2>What’s <em>real</em> here.</h2>
+ <div class="split">
+  <ul class="list">
+   <li><b>Ported</b><span>The engine: all four modules (Saturator with Tape/Tube/Diode and 2× oversampling, the 7-band EQ, Spatial with Haas and Mono Bass, the Reactor true-peak limiter), all 24 chain orders and the master section.</span></li>
+   <li><b>Params</b><span>All 53 parameters plus bypass, with the plugin’s own ranges, units and curves (54 host parameters in the plugin).</span></li>
+   <li><b>Presets</b><span>All 12 factory presets, by name and value, read from the plugin’s preset files.</span></li>
+   <li><b>A/B</b><span>Bypass uses the engine’s own crossfade to the latency-delayed dry signal, so the switch never clicks.</span></li>
+  </ul>
+  <ul class="list">
+   <li class="no"><b>Plugin only</b><span>Drag-to-reorder module headers (here the order is a dropdown with the same 24 orders)</span></li><li class="no"><b>Plugin only</b><span>The four skins, the EQ nodes you drag on the analyser and the plugin’s meters</span></li><li class="no"><b>Plugin only</b><span>DAW automation, MIDI learn, undo/redo, A/B slots and user presets</span></li>
+   
+   <li class="no"><b>Status</b><span>The Racks plugin (VST3 + CLAP, Windows x64) is in development: unreleased, not for sale, no price yet.</span></li>
+  </ul>
+ </div>
+</section>
+
+<section>
+ <div class="kicker">Signal flow</div>
+ <h2>Racks, <em>stage by stage.</em></h2>
+ <div class="chain"><span>Input</span><s>→</s><span>Saturator</span><s>→</s><span>7-band EQ</span><s>→</s><span>Spatial</span><s>→</s><span>Reactor limiter</span><s>→</s><span>Mix</span><s>→</s><span>Output</span></div>
+ <div class="grid3"><div class="card"><img src="../assets/racks-04-eq-band-select.webp" alt="NoDAW Racks: Drag the EQ on the analyser" loading="lazy" width="960" height="600"><h3>Drag the EQ on the analyser</h3><p>Seven bands: bands 1 and 7 switch between shelf and 12 dB/oct cut, the rest are bells. Drag the nodes on the spectrum.</p></div><div class="card"><img src="../assets/racks-07-preset-diode-crunch-drums.webp" alt="NoDAW Racks: Tape, Tube or Diode" loading="lazy" width="960" height="600"><h3>Tape, Tube or Diode</h3><p>The Saturator has three curves with 2× oversampling, plus Drive, Tone, Sat Mix and Auto Gain.</p></div><div class="card"><img src="../assets/racks-05-skin-silver.webp" alt="NoDAW Racks: Four skins" loading="lazy" width="960" height="600"><h3>Four skins</h3><p>Cobalt, obsidian, silver and plastic, with a spectrum, the EQ curve, in/out meters and gain reduction.</p></div></div>
+ <div class="feat"><div class="card"><h3>Spatial</h3><p>Width, Haas, Pan, Mid and Side gain, and Mono Bass below a set frequency, with a correlation meter.</p></div><div class="card"><h3>Reactor</h3><p>A limiter with a fixed 1.5 ms lookahead and true-peak detection: Push, Ceiling, Release and Adaptive release.</p></div><div class="card"><h3>Master</h3><p>Input, Mix and Output, with bypass and mix sample-aligned to the latency-delayed dry signal.</p></div></div>
+</section>
+
+<section>
+ <div class="kicker">The NoDAW plugin line · browser demos</div>
+ <h2>Try the <em>other five.</em></h2>
+ <div class="others"><a href="../screw/" style="--acc:#a78bfa"><img src="../assets/screw-01-default-960x600.webp" alt="NoDAW Screw" loading="lazy" width="960" height="600"><b>Screw</b><small>Chopped & screwed</small></a><a href="../harmonic-space/" style="--acc:#22d3ee"><img src="../assets/harmonic-space-hero.webp" alt="NoDAW Harmonic Space" loading="lazy" width="960" height="600"><b>Harmonic Space</b><small>Spectral Space Designer</small></a><a href="../chronos-dynamic-eq/" style="--acc:#fbbf24"><img src="../assets/chronos-dynamic-eq-hero.webp" alt="NoDAW Chronos Dynamic EQ" loading="lazy" width="960" height="600"><b>Chronos Dynamic EQ</b><small>Seven dynamic bands</small></a><a href="../temporal-pitch-portal/" style="--acc:#e879f9"><img src="../assets/temporal-pitch-portal-hero.webp" alt="NoDAW Temporal Pitch Portal" loading="lazy" width="960" height="600"><b>Temporal Pitch Portal</b><small>Tempo-synced time warp</small></a><a href="../chronos-weaver/" style="--acc:#c084fc"><img src="../assets/chronos-weaver-hero.webp" alt="NoDAW Chronos Weaver" loading="lazy" width="960" height="600"><b>Chronos Weaver</b><small>Spectral morph, freeze & cloud</small></a></div>
+</section>
+
+<footer><div>© NoDAW Labs · <a href="../">NoDAW plugin line</a> · <a href="https://nodaw-labs-hub.vercel.app/">NoDAW Labs hub</a></div><div class="mono">Demo loop synthesised in code · no samples · preview page</div></footer>
+</div>
+<script type="module" src="../shared/demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" style="--acc:#22d3ee;--acc2:#a78bfa">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoDAW Harmonic Space · browser demo (preview, unreleased)</title>
+<meta name="description" content="Try NoDAW Harmonic Space in your browser: the plugin's DSP engine ported to Web Audio, with all 58 parameters and 21 factory presets. Unreleased preview from NoDAW Labs, not for sale.">
+<meta property="og:title" content="NoDAW Harmonic Space · browser demo (preview)">
+<meta property="og:description" content="Amp, a 7-band EQ, sub shelf and filters feed three parallel returns: a ping-pong delay, an FDN reverb and a stereo flanger. The 20 Space Recipes from the browser prototype are the factory presets.">
+<meta property="og:image" content="https://myaiplug.github.io/nodaw-vst/assets/harmonic-space-hero.webp">
+<meta name="theme-color" content="#0b0912">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/demo.css">
+</head>
+<body>
+<div class="wrap">
+<nav><a class="brand" href="../">NODAW<span>HARMONIC SPACE</span></a><div class="navr"><a class="back" href="../">← All six plugins</a><div class="pill"><i></i>Preview · unreleased · not for sale</div></div></nav>
+
+<header class="hero">
+ <div>
+  <div class="kicker">NoDAW Harmonic Space · the Spectral Space Designer as a plugin</div>
+  <h1>Twenty Space Recipes.<br><em>In your DAW.</em></h1>
+  <p class="lede">Amp, a 7-band EQ, sub shelf and filters feed three parallel returns: a ping-pong delay, an FDN reverb and a stereo flanger. The 20 Space Recipes from the browser prototype are the factory presets.</p>
+  <div class="specs"><div><b>58</b><small>Automatable params</small></div><div><b>21</b><small>Factory presets</small></div><div><b>0 ms</b><small>Latency</small></div><div><b>7</b><small>EQ bands</small></div><div><b>3</b><small>Parallel returns</small></div><div><b>2</b><small>Faceplates</small></div></div>
+  <div class="cta"><a class="btn primary" href="#try">▶ Try the browser demo</a><a class="btn" href="#inside">What’s ported</a></div>
+ </div>
+ <div class="shot"><img src="../assets/harmonic-space-hero.webp" alt="NoDAW Harmonic Space plugin UI" width="1440" height="900"><div class="tag">Plugin UI preview · mock host</div></div>
+</header>
+
+<section id="try">
+ <div class="honest"><b>Browser demo</b><span>The plugin’s DSP engine, ported line by line from its Rust source to a Web Audio AudioWorklet. It really processes the audio you hear. It is not bit-identical to the plugin, and the plugin adds its own UI, analyser and DAW integration.</span></div>
+ <div class="console" id="demo" data-plugin="harmonic-space" data-proc="nodaw-harmonic-space" data-preset="Ping-Pong Hook">
+  <div class="in">
+   <div class="top">
+    <div class="screen">
+     <canvas id="spec" aria-label="Spectrum: input and output"></canvas>
+     <div class="legend"><span><i style="background:rgba(220,214,236,.6)"></i>Input</span><span><i style="background:var(--acc)"></i>Output</span></div>
+     <div class="readout"></div>
+     <canvas class="wave" aria-label="Waveform: click to jump"></canvas>
+     <div class="steps" aria-label="Chop steps"></div>
+    </div>
+    <div class="side">
+     <div class="box transport"><button class="btn play" type="button">▶ Play</button>
+      <div class="ab" style="grid-column:1/-1"><button class="a sel" type="button">A · Effect</button><button class="b" type="button">B · Bypass</button></div></div>
+     <div class="box"><span class="lbl">Factory preset</span><select id="preset" aria-label="Factory preset"></select><div class="pdesc"></div></div>
+     <div class="box"><span class="lbl">Source</span><div class="srcrow"><div class="srcname">Loading demo loop…</div><div><span class="lbl" style="margin:0 0 4px">BPM</span><input id="bpm" type="number" min="40" max="240" step="1" value="90" aria-label="Tempo in BPM"></div></div>
+      <div class="transport" style="margin-top:8px"><button class="btn load" type="button">Load file</button><button class="btn usedemo" type="button">Demo loop</button></div>
+      <input id="file" type="file" accept="audio/*" hidden><div class="hint bpmhint" style="display:none">Set BPM to your track’s tempo for synced effects.</div></div>
+     <div class="box"><span class="lbl">Output</span><div class="meter"><span>L</span><div class="bar l"><i></i><b></b></div><span>R</span><div class="bar r"><i></i><b></b></div><div class="mval">peak — dBFS</div></div></div>
+     <button class="btn exp" type="button">⤓ Export WAV</button>
+    </div>
+   </div>
+   <div class="ctls"></div>
+   <p class="hint">Try Band Solo to audition one band’s region, then a Space Recipe preset. Drop any audio file on this panel to use your own. Double-click a slider to reset it. Space plays and stops. Export renders offline with the current settings.</p>
+   <div class="err" role="alert"></div>
+  </div>
+ </div>
+</section>
+
+<section id="inside">
+ <div class="kicker">In this demo vs the plugin</div>
+ <h2>What’s <em>real</em> here.</h2>
+ <div class="split">
+  <ul class="list">
+   <li><b>Ported</b><span>The engine: Amp, the 7-band EQ with per-band Solo and Mute, the sub shelf, HPF/LPF, the ping-pong delay, FDN reverb and stereo flanger returns, and width.</span></li>
+   <li><b>Params</b><span>All 57 parameters plus bypass, with the plugin’s own ranges, units and curves (58 host parameters in the plugin).</span></li>
+   <li><b>Presets</b><span>All 21 factory presets, by name and value, read from the plugin’s preset files.</span></li>
+   <li><b>A/B</b><span>Bypass uses the engine’s own crossfade to the latency-delayed dry signal, so the switch never clicks.</span></li>
+  </ul>
+  <ul class="list">
+   <li class="no"><b>Plugin only</b><span>The plugin’s analyser with draggable band nodes, effect LEDs and the two faceplates</span></li><li class="no"><b>Plugin only</b><span>DAW automation, MIDI learn, undo/redo, A/B slots and user presets</span></li>
+   
+   <li class="no"><b>Status</b><span>The Harmonic Space plugin (VST3 + CLAP, Windows x64) is in development: unreleased, not for sale, no price yet.</span></li>
+  </ul>
+ </div>
+</section>
+
+<section>
+ <div class="kicker">Signal flow</div>
+ <h2>Harmonic Space, <em>stage by stage.</em></h2>
+ <div class="chain"><span>Amp</span><s>→</s><span>7-band EQ</span><s>→</s><span>Sub shelf</span><s>→</s><span>HPF / LPF</span><s>→</s><span>Delay · Reverb · Flanger</span><s>→</s><span>Width</span><s>→</s><span>Output</span><s>→</s><span>Mix</span></div>
+ <div class="grid3"><div class="card"><img src="../assets/harmonic-space-04-band-solo.webp" alt="NoDAW Harmonic Space: Band Solo and Mute" loading="lazy" width="960" height="600"><h3>Band Solo and Mute</h3><p>Solo auditions a band’s region with a crossfaded band-pass (or low/high-pass on the shelves). Mute takes the band to −36 dB.</p></div><div class="card"><img src="../assets/harmonic-space-07-preset-ping-pong-hook.webp" alt="NoDAW Harmonic Space: Recipes by family" loading="lazy" width="960" height="600"><h3>Recipes by family</h3><p>Presets are grouped as Vocals, Low end, Space, Character and Fix-it, converted with the prototype’s own knob mappings.</p></div><div class="card"><img src="../assets/harmonic-space-05-light-faceplate.webp" alt="NoDAW Harmonic Space: Dark or brushed aluminium" loading="lazy" width="960" height="600"><h3>Dark or brushed aluminium</h3><p>The analyser shows the whole shape with a node per band plus the filter nodes, effect activity LEDs and a correlation meter.</p></div></div>
+ <div class="feat"><div class="card"><h3>EQ</h3><p>60 Hz low shelf, five bells and a 16 kHz high shelf, then 12 dB/oct high- and low-pass.</p></div><div class="card"><h3>Reverb</h3><p>An FDN reverb with decay, size, pre-delay and damping.</p></div><div class="card"><h3>Delay</h3><p>A feedback delay with tone and ping-pong, alongside a stereo flanger.</p></div></div>
+</section>
+
+<section>
+ <div class="kicker">The NoDAW plugin line · browser demos</div>
+ <h2>Try the <em>other five.</em></h2>
+ <div class="others"><a href="../screw/" style="--acc:#a78bfa"><img src="../assets/screw-01-default-960x600.webp" alt="NoDAW Screw" loading="lazy" width="960" height="600"><b>Screw</b><small>Chopped & screwed</small></a><a href="../racks/" style="--acc:#60a5fa"><img src="../assets/racks-hero.webp" alt="NoDAW Racks" loading="lazy" width="960" height="600"><b>Racks</b><small>Modular channel rack</small></a><a href="../chronos-dynamic-eq/" style="--acc:#fbbf24"><img src="../assets/chronos-dynamic-eq-hero.webp" alt="NoDAW Chronos Dynamic EQ" loading="lazy" width="960" height="600"><b>Chronos Dynamic EQ</b><small>Seven dynamic bands</small></a><a href="../temporal-pitch-portal/" style="--acc:#e879f9"><img src="../assets/temporal-pitch-portal-hero.webp" alt="NoDAW Temporal Pitch Portal" loading="lazy" width="960" height="600"><b>Temporal Pitch Portal</b><small>Tempo-synced time warp</small></a><a href="../chronos-weaver/" style="--acc:#c084fc"><img src="../assets/chronos-weaver-hero.webp" alt="NoDAW Chronos Weaver" loading="lazy" width="960" height="600"><b>Chronos Weaver</b><small>Spectral morph, freeze & cloud</small></a></div>
+</section>
+
+<footer><div>© NoDAW Labs · <a href="../">NoDAW plugin line</a> · <a href="https://nodaw-labs-hub.vercel.app/">NoDAW Labs hub</a></div><div class="mono">Demo loop synthesised in code · no samples · preview page</div></footer>
+</div>
+<script type="module" src="../shared/demo.js"></script>
+</body>
+</html>
